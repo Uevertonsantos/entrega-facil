@@ -142,7 +142,7 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerenciar Entrega #{delivery.id}</DialogTitle>
           <DialogDescription>
