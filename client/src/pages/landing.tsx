@@ -8,13 +8,11 @@ export default function Landing() {
   };
 
   const handleMerchantLogin = () => {
-    localStorage.setItem("userType", "merchant");
-    window.location.href = "/api/login";
+    window.location.href = "/merchant-login";
   };
 
   const handleDelivererLogin = () => {
-    localStorage.setItem("userType", "deliverer");
-    window.location.href = "/api/login";
+    window.location.href = "/deliverer-login";
   };
 
   const handleAdminLogin = () => {

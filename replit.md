@@ -92,7 +92,24 @@ This is a full-stack web application for managing a local delivery network. The 
 ## Changelog
 
 - July 08, 2025. Initial setup
+- July 08, 2025. Implemented local authentication system with JWT tokens for all user types (admin, merchant, deliverer)
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Authentication System
+
+### Local Authentication
+- **Admin Login**: admin@deliveryexpress.com / admin123
+- **Merchant Login**: Email and phone number from database
+- **Deliverer Login**: Email and phone number from database
+
+### Test Credentials
+- **Merchant**: joao@padaria.com / 123456789
+- **Deliverer**: maria@entregador.com / 987654321
+
+### Token Management
+- JWT tokens with 24-hour expiration
+- Stored in localStorage with user type identification
+- Automatic token validation and cleanup on expiration

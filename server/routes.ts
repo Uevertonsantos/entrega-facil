@@ -73,6 +73,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant login endpoint
+  app.post('/api/merchant/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Get merchant by email
+      const merchant = await storage.getMerchantByEmail(email);
+      
+      if (!merchant) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas" 
+        });
+      }
+      
+      // For simplicity, using email as password check (in production, use bcrypt)
+      if (merchant.email === email && merchant.phone === password) {
+        const token = jwt.sign(
+          { id: merchant.id, email: merchant.email, role: 'merchant' },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+          success: true, 
+          token,
+          merchant,
+          message: "Login realizado com sucesso" 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas" 
+        });
+      }
+    } catch (error) {
+      console.error("Error in merchant login:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Deliverer login endpoint
+  app.post('/api/deliverer/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Get deliverer by email
+      const deliverer = await storage.getDelivererByEmail(email);
+      
+      if (!deliverer) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas" 
+        });
+      }
+      
+      // For simplicity, using email as password check (in production, use bcrypt)
+      if (deliverer.email === email && deliverer.phone === password) {
+        const token = jwt.sign(
+          { id: deliverer.id, email: deliverer.email, role: 'deliverer' },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+          success: true, 
+          token,
+          deliverer,
+          message: "Login realizado com sucesso" 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas" 
+        });
+      }
+    } catch (error) {
+      console.error("Error in deliverer login:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

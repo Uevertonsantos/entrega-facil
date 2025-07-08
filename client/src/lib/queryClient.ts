@@ -12,12 +12,19 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Add admin token if available
+  // Add tokens if available
   const adminToken = localStorage.getItem("adminToken");
+  const merchantToken = localStorage.getItem("merchantToken");
+  const delivererToken = localStorage.getItem("delivererToken");
   const headers: any = data ? { "Content-Type": "application/json" } : {};
   
+  // Add appropriate token based on endpoint
   if (adminToken && url.includes('/admin/')) {
     headers.Authorization = `Bearer ${adminToken}`;
+  } else if (merchantToken && url.includes('/merchant/')) {
+    headers.Authorization = `Bearer ${merchantToken}`;
+  } else if (delivererToken && url.includes('/deliverer/')) {
+    headers.Authorization = `Bearer ${delivererToken}`;
   }
   
   const res = await fetch(url, {

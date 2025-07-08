@@ -14,30 +14,32 @@ import Financial from "@/pages/financial";
 import DelivererApp from "@/pages/deliverer-app";
 import MerchantApp from "@/pages/merchant-app";
 import AdminLogin from "@/pages/admin-login";
+import MerchantLogin from "@/pages/merchant-login";
+import DelivererLogin from "@/pages/deliverer-login";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
 function Router() {
-  const { isAuthenticated, isLoading, isAdmin } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer } = useAuth();
 
   if (isLoading || !isAuthenticated) {
     return (
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/merchant-login" component={MerchantLogin} />
+        <Route path="/deliverer-login" component={DelivererLogin} />
         <Route component={NotFound} />
       </Switch>
     );
   }
 
-  // Check user type and redirect appropriately
-  const userType = localStorage.getItem("userType");
-  
-  if (userType === "merchant") {
+  // Route based on user type
+  if (isMerchant) {
     return <MerchantApp />;
   }
   
-  if (userType === "deliverer") {
+  if (isDeliverer) {
     return <DelivererApp />;
   }
   
@@ -63,6 +65,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/admin-login" component={AdminLogin} />
+      <Route path="/merchant-login" component={MerchantLogin} />
+      <Route path="/deliverer-login" component={DelivererLogin} />
       <Route component={NotFound} />
     </Switch>
   );
