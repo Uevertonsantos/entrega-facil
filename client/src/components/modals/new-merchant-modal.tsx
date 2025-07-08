@@ -32,6 +32,7 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
     defaultValues: {
       name: "",
       businessName: "",
+      cnpjCpf: "",
       phone: "",
       email: "",
       password: "",
@@ -118,6 +119,61 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="cnpjCpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CNPJ/CPF</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="00.000.000/0000-00 ou 000.000.000-00"
+                      onBlur={async (e) => {
+                        field.onBlur(e);
+                        const value = e.target.value.replace(/\D/g, '');
+                        
+                        // Se for CNPJ (14 dígitos), buscar informações
+                        if (value.length === 14) {
+                          try {
+                            const response = await fetch('/api/cnpj/lookup', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({ cnpj: value }),
+                            });
+                            
+                            if (response.ok) {
+                              const cnpjData = await response.json();
+                              
+                              // Preencher campos automaticamente
+                              form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
+                              form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
+                              if (cnpjData.telefone) {
+                                form.setValue('phone', cnpjData.telefone);
+                              }
+                              if (cnpjData.email) {
+                                form.setValue('email', cnpjData.email);
+                              }
+                              
+                              toast({
+                                title: "CNPJ encontrado",
+                                description: "Informações preenchidas automaticamente",
+                              });
+                            }
+                          } catch (error) {
+                            console.error('Erro ao buscar CNPJ:', error);
+                          }
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <FormField

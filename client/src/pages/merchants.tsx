@@ -30,6 +30,7 @@ import type { Merchant } from "@shared/schema";
 const merchantFormSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   businessName: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres"),
+  cnpjCpf: z.string().min(11, "CNPJ/CPF deve ter pelo menos 11 caracteres"),
   phone: z.string().min(10, "Telefone deve ter pelo menos 10 caracteres"),
   email: z.string().email("Email inválido"),
   address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
@@ -57,6 +58,7 @@ export default function Merchants() {
     defaultValues: {
       name: "",
       businessName: "",
+      cnpjCpf: "",
       phone: "",
       email: "",
       address: "",
@@ -146,6 +148,7 @@ export default function Merchants() {
     form.reset({
       name: merchant.name,
       businessName: merchant.businessName,
+      cnpjCpf: merchant.cnpjCpf || "",
       phone: merchant.phone,
       email: merchant.email,
       address: merchant.address,
@@ -230,6 +233,61 @@ export default function Merchants() {
                       <FormLabel>Nome da Empresa</FormLabel>
                       <FormControl>
                         <Input placeholder="Ex: Padaria do João LTDA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cnpjCpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CNPJ/CPF</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="00.000.000/0000-00 ou 000.000.000-00" 
+                          {...field}
+                          onBlur={async (e) => {
+                            field.onBlur(e);
+                            const value = e.target.value.replace(/\D/g, '');
+                            
+                            // Se for CNPJ (14 dígitos), buscar informações
+                            if (value.length === 14) {
+                              try {
+                                const response = await fetch('/api/cnpj/lookup', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ cnpj: value }),
+                                });
+                                
+                                if (response.ok) {
+                                  const cnpjData = await response.json();
+                                  
+                                  // Preencher campos automaticamente
+                                  form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
+                                  form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
+                                  if (cnpjData.telefone) {
+                                    form.setValue('phone', cnpjData.telefone);
+                                  }
+                                  if (cnpjData.email) {
+                                    form.setValue('email', cnpjData.email);
+                                  }
+                                  
+                                  toast({
+                                    title: "CNPJ encontrado",
+                                    description: "Informações preenchidas automaticamente",
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('Erro ao buscar CNPJ:', error);
+                              }
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -481,6 +539,23 @@ export default function Merchants() {
                                       <FormLabel>Nome da Empresa</FormLabel>
                                       <FormControl>
                                         <Input placeholder="Ex: Padaria do João LTDA" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="cnpjCpf"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>CNPJ/CPF</FormLabel>
+                                      <FormControl>
+                                        <Input 
+                                          placeholder="00.000.000/0000-00 ou 000.000.000-00" 
+                                          {...field}
+                                        />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>

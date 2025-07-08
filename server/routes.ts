@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
@@ -174,6 +175,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false, 
         message: "Erro interno do servidor" 
       });
+    }
+  });
+
+  // CNPJ lookup route
+  app.post("/api/cnpj/lookup", async (req, res) => {
+    const { cnpj } = req.body;
+    
+    if (!cnpj) {
+      return res.status(400).json({ message: "CNPJ é obrigatório" });
+    }
+    
+    // Valida CNPJ
+    if (!validateCnpj(cnpj)) {
+      return res.status(400).json({ message: "CNPJ inválido" });
+    }
+    
+    try {
+      const cnpjInfo = await fetchCnpjInfo(cnpj);
+      
+      if (!cnpjInfo) {
+        return res.status(404).json({ message: "CNPJ não encontrado" });
+      }
+      
+      res.json(cnpjInfo);
+    } catch (error) {
+      console.error("CNPJ lookup error:", error);
+      res.status(500).json({ message: "Erro ao buscar informações do CNPJ" });
     }
   });
 

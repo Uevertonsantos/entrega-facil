@@ -41,6 +41,7 @@ export const merchants = pgTable("merchants", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
   businessName: varchar("business_name").notNull(),
+  cnpjCpf: varchar("cnpj_cpf").notNull(),
   phone: varchar("phone").notNull(),
   email: varchar("email").notNull().unique(),
   password: varchar("password").notNull(),

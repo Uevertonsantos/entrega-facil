@@ -99,6 +99,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 08, 2025. Enhanced user feedback with meaningful error messages for form validation
 - July 08, 2025. Fixed endpoint routing conflicts - moved specific endpoints before generic ones (/current before /:id)
 - July 08, 2025. Resolved portal access issues for both deliverer and merchant applications
+- July 08, 2025. Added CNPJ/CPF field to merchant registration with automatic data fetching from Receita Federal API
+- July 08, 2025. Implemented CNPJ validation service with automatic form filling for business information
+- July 08, 2025. Fixed merchant schema inconsistencies by removing planValue and type fields
 
 ## User Preferences
 
