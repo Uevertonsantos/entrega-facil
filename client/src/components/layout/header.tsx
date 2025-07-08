@@ -10,7 +10,13 @@ export default function Header({ onNewDelivery }: HeaderProps) {
   const { user } = useAuth();
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    // Clear all tokens from localStorage
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("merchantToken");
+    localStorage.removeItem("delivererToken");
+    
+    // Redirect to landing page
+    window.location.href = "/";
   };
 
   return (

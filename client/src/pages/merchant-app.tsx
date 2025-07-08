@@ -33,12 +33,22 @@ export default function MerchantApp() {
   const queryClient = useQueryClient();
   
   const handleLogout = () => {
-    localStorage.removeItem("userType");
-    window.location.href = "/api/logout";
+    // Clear all tokens from localStorage
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("merchantToken");
+    localStorage.removeItem("delivererToken");
+    
+    // Redirect to landing page
+    window.location.href = "/";
   };
   
   const handleSwitchUser = () => {
-    localStorage.removeItem("userType");
+    // Clear all tokens from localStorage
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("merchantToken");
+    localStorage.removeItem("delivererToken");
+    
+    // Redirect to landing page
     window.location.href = "/";
   };
 
