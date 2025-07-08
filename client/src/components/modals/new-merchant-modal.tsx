@@ -145,11 +145,11 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                         variant="outline"
                         size="sm"
                         onClick={async () => {
-                          const value = field.value.replace(/\D/g, '');
-                          
-                          // Se for CNPJ (14 dígitos), buscar informações
-                          if (value.length === 14) {
-                            try {
+                          try {
+                            const value = field.value.replace(/\D/g, '');
+                            
+                            // Se for CNPJ (14 dígitos), buscar informações
+                            if (value.length === 14) {
                               const response = await fetch('/api/cnpj/lookup', {
                                 method: 'POST',
                                 headers: {
@@ -182,18 +182,18 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                                   variant: "destructive",
                                 });
                               }
-                            } catch (error) {
-                              console.error('Erro ao buscar CNPJ:', error);
+                            } else {
                               toast({
-                                title: "Erro",
-                                description: "Erro ao buscar informações do CNPJ",
+                                title: "CNPJ inválido",
+                                description: "Digite um CNPJ válido com 14 dígitos",
                                 variant: "destructive",
                               });
                             }
-                          } else {
+                          } catch (error) {
+                            console.error('Erro ao buscar CNPJ:', error);
                             toast({
-                              title: "CNPJ inválido",
-                              description: "Digite um CNPJ válido com 14 dígitos",
+                              title: "Erro",
+                              description: "Erro ao buscar informações do CNPJ",
                               variant: "destructive",
                             });
                           }
