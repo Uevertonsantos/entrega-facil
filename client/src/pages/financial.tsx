@@ -240,14 +240,14 @@ export default function Financial() {
                         </div>
                         <div className="ml-3">
                           <p className="font-medium text-gray-900">{merchant.name}</p>
-                          <p className="text-sm text-gray-500 capitalize">{merchant.type}</p>
+                          <p className="text-sm text-gray-500 capitalize">{merchant.businessType}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-900">
-                      {merchant.planType === "monthly" ? "Mensal" : "Por Entrega"}
+                      {merchant.planType === "mensal" ? "Mensal" : "Por Entrega"}
                       <div className="text-xs text-gray-500">
-                        R$ {merchant.planValue.toString()}
+                        {merchant.planType === "mensal" ? "R$ 149/mês" : "R$ 7-12/entrega"}
                       </div>
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-900">

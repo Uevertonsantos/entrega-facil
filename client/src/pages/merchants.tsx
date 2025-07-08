@@ -29,11 +29,13 @@ import type { Merchant } from "@shared/schema";
 
 const merchantFormSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  type: z.string().min(1, "Tipo é obrigatório"),
+  businessName: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres"),
   phone: z.string().min(10, "Telefone deve ter pelo menos 10 caracteres"),
+  email: z.string().email("Email inválido"),
   address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
-  planType: z.enum(["monthly", "per_delivery"]),
-  planValue: z.string().min(1, "Valor do plano é obrigatório"),
+  businessType: z.string().min(1, "Tipo de negócio é obrigatório"),
+  planType: z.enum(["por_entrega", "mensal"]),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 type MerchantFormData = z.infer<typeof merchantFormSchema>;
@@ -54,20 +56,19 @@ export default function Merchants() {
     resolver: zodResolver(merchantFormSchema),
     defaultValues: {
       name: "",
-      type: "",
+      businessName: "",
       phone: "",
+      email: "",
       address: "",
-      planType: "per_delivery",
-      planValue: "",
+      businessType: "padaria",
+      planType: "por_entrega",
+      password: "",
     },
   });
 
   const createMerchantMutation = useMutation({
     mutationFn: async (data: MerchantFormData) => {
-      await apiRequest("POST", "/api/merchants", {
-        ...data,
-        planValue: parseFloat(data.planValue),
-      });
+      await apiRequest("POST", "/api/merchants", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });
@@ -101,10 +102,7 @@ export default function Merchants() {
 
   const updateMerchantMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: MerchantFormData }) => {
-      await apiRequest("PUT", `/api/merchants/${id}`, {
-        ...data,
-        planValue: parseFloat(data.planValue),
-      });
+      await apiRequest("PUT", `/api/merchants/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });
@@ -147,11 +145,13 @@ export default function Merchants() {
     setEditingMerchant(merchant);
     form.reset({
       name: merchant.name,
-      type: merchant.type,
+      businessName: merchant.businessName,
       phone: merchant.phone,
+      email: merchant.email,
       address: merchant.address,
-      planType: merchant.planType as "monthly" | "per_delivery",
-      planValue: merchant.planValue.toString(),
+      businessType: merchant.businessType,
+      planType: merchant.planType as "por_entrega" | "mensal",
+      password: "", // Password should be reset for editing
     });
   };
 
@@ -160,16 +160,16 @@ export default function Merchants() {
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const getPlanLabel = (planType: string, planValue: string) => {
-    if (planType === "monthly") {
-      return `Mensal R$ ${planValue}`;
+  const getPlanLabel = (planType: string) => {
+    if (planType === "mensal") {
+      return `Mensal R$ 149`;
     }
-    return `Por Entrega R$ ${planValue}`;
+    return `Por Entrega R$ 7-12`;
   };
 
   const filteredMerchants = merchants?.filter(merchant =>
     merchant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    merchant.type.toLowerCase().includes(searchTerm.toLowerCase())
+    merchant.businessType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -224,10 +224,52 @@ export default function Merchants() {
                 
                 <FormField
                   control={form.control}
-                  name="type"
+                  name="businessName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo</FormLabel>
+                      <FormLabel>Nome da Empresa</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Padaria do João LTDA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="joao@padaria.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha</FormLabel>
+                      <FormControl>
+                        <Input placeholder="••••••••" type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="businessType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Negócio</FormLabel>
                       <FormControl>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <SelectTrigger>
@@ -288,8 +330,8 @@ export default function Merchants() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="monthly">Mensal</SelectItem>
-                            <SelectItem value="per_delivery">Por Entrega</SelectItem>
+                            <SelectItem value="mensal">Mensal (R$ 149)</SelectItem>
+                            <SelectItem value="por_entrega">Por Entrega (R$ 7-12)</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -298,24 +340,6 @@ export default function Merchants() {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="planValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor do Plano</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 
                 <div className="flex justify-end space-x-2">
                   <Button
@@ -396,12 +420,12 @@ export default function Merchants() {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-900 capitalize">
-                      {merchant.type}
+                      {merchant.businessType}
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-900">
                       <div className="flex items-center">
                         <DollarSign className="h-3 w-3 mr-1" />
-                        {getPlanLabel(merchant.planType, merchant.planValue.toString())}
+                        {getPlanLabel(merchant.planType)}
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -451,10 +475,52 @@ export default function Merchants() {
                                 
                                 <FormField
                                   control={form.control}
-                                  name="type"
+                                  name="businessName"
                                   render={({ field }) => (
                                     <FormItem>
-                                      <FormLabel>Tipo</FormLabel>
+                                      <FormLabel>Nome da Empresa</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="Ex: Padaria do João LTDA" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="email"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Email</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="joao@padaria.com" type="email" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="password"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Senha</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="••••••••" type="password" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="businessType"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Tipo de Negócio</FormLabel>
                                       <FormControl>
                                         <Select value={field.value} onValueChange={field.onChange}>
                                           <SelectTrigger>
@@ -515,8 +581,8 @@ export default function Merchants() {
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="monthly">Mensal</SelectItem>
-                                            <SelectItem value="per_delivery">Por Entrega</SelectItem>
+                                            <SelectItem value="mensal">Mensal (R$ 149)</SelectItem>
+                                            <SelectItem value="por_entrega">Por Entrega (R$ 7-12)</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </FormControl>
@@ -525,24 +591,6 @@ export default function Merchants() {
                                   )}
                                 />
                                 
-                                <FormField
-                                  control={form.control}
-                                  name="planValue"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Valor do Plano</FormLabel>
-                                      <FormControl>
-                                        <Input 
-                                          type="number" 
-                                          step="0.01" 
-                                          placeholder="0.00" 
-                                          {...field} 
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
                                 
                                 <div className="flex justify-end space-x-2">
                                   <Button
