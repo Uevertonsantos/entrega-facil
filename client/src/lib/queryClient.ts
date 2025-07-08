@@ -12,9 +12,17 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Add admin token if available
+  const adminToken = localStorage.getItem("adminToken");
+  const headers: any = data ? { "Content-Type": "application/json" } : {};
+  
+  if (adminToken && url.includes('/admin/')) {
+    headers.Authorization = `Bearer ${adminToken}`;
+  }
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });

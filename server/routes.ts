@@ -2,12 +2,76 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
 import { z } from "zod";
+
+// Admin credentials (in production, these should be in environment variables)
+const ADMIN_CREDENTIALS = {
+  email: "admin@deliveryexpress.com",
+  password: "admin123", // This will be hashed
+};
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Middleware to verify admin token
+const isAdmin = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: "Admin token required" });
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    req.admin = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid admin token" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Admin login endpoint
+  app.post('/api/admin/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Check credentials
+      if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+        const token = jwt.sign(
+          { email, role: 'admin' },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+          success: true, 
+          token,
+          message: "Login successful" 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid credentials" 
+        });
+      }
+    } catch (error) {
+      console.error("Error in admin login:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Internal server error" 
+      });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

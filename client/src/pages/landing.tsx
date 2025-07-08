@@ -18,8 +18,7 @@ export default function Landing() {
   };
 
   const handleAdminLogin = () => {
-    localStorage.setItem("userType", "admin");
-    window.location.href = "/api/login";
+    window.location.href = "/admin-login";
   };
 
   return (

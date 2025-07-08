@@ -13,59 +13,58 @@ import Reports from "@/pages/reports";
 import Financial from "@/pages/financial";
 import DelivererApp from "@/pages/deliverer-app";
 import MerchantApp from "@/pages/merchant-app";
+import AdminLogin from "@/pages/admin-login";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
 
   if (isLoading || !isAuthenticated) {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/admin-login" component={AdminLogin} />
         <Route component={NotFound} />
       </Switch>
     );
   }
 
-  // Get user type from localStorage to determine initial route
+  // Check user type and redirect appropriately
   const userType = localStorage.getItem("userType");
   
-  // Route based on user type
   if (userType === "merchant") {
-    return (
-      <Switch>
-        <Route path="/" component={MerchantApp} />
-        <Route path="/merchant-app" component={MerchantApp} />
-        <Route component={NotFound} />
-      </Switch>
-    );
+    return <MerchantApp />;
   }
   
   if (userType === "deliverer") {
+    return <DelivererApp />;
+  }
+  
+  // If user is admin, show admin dashboard
+  if (isAdmin) {
     return (
-      <Switch>
-        <Route path="/" component={DelivererApp} />
-        <Route path="/deliverer-app" component={DelivererApp} />
-        <Route component={NotFound} />
-      </Switch>
+      <Layout>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/deliveries" component={Deliveries} />
+          <Route path="/merchants" component={Merchants} />
+          <Route path="/deliverers" component={Deliverers} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/financial" component={Financial} />
+          <Route component={NotFound} />
+        </Switch>
+      </Layout>
     );
   }
-
+  
+  // Default to landing page if no specific user type
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/deliveries" component={Deliveries} />
-        <Route path="/merchants" component={Merchants} />
-        <Route path="/deliverers" component={Deliverers} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/financial" component={Financial} />
-        <Route path="/deliverer-app" component={DelivererApp} />
-        <Route path="/merchant-app" component={MerchantApp} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/" component={Landing} />
+      <Route path="/admin-login" component={AdminLogin} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
