@@ -276,13 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       if (!user || !user.email) {
-        return res.status(404).json({ message: "User not found" });
+        return res.json({ isDeliverer: false, message: "User not found" });
       }
       const deliverer = await storage.getDelivererByEmail(user.email);
       if (!deliverer) {
-        return res.status(404).json({ message: "Deliverer not found" });
+        return res.json({ isDeliverer: false, message: "User is not registered as a deliverer" });
       }
-      res.json(deliverer);
+      res.json({ isDeliverer: true, ...deliverer });
     } catch (error) {
       console.error("Error fetching current deliverer:", error);
       res.status(500).json({ message: "Failed to fetch current deliverer" });
@@ -347,13 +347,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       if (!user || !user.email) {
-        return res.status(404).json({ message: "User not found" });
+        return res.json({ isMerchant: false, message: "User not found" });
       }
       const merchant = await storage.getMerchantByEmail(user.email);
       if (!merchant) {
-        return res.status(404).json({ message: "Merchant not found" });
+        return res.json({ isMerchant: false, message: "User is not registered as a merchant" });
       }
-      res.json(merchant);
+      res.json({ isMerchant: true, ...merchant });
     } catch (error) {
       console.error("Error fetching current merchant:", error);
       res.status(500).json({ message: "Failed to fetch current merchant" });

@@ -24,10 +24,12 @@ export default function DelivererApp() {
     window.location.href = "/";
   };
 
-  const { data: deliverer, isLoading: delivererLoading } = useQuery({
+  const { data: delivererResponse, isLoading: delivererLoading } = useQuery({
     queryKey: ['/api/deliverers/current'],
     retry: false,
   });
+
+  const deliverer = delivererResponse?.isDeliverer ? delivererResponse : null;
 
   const { data: availableDeliveries = [], isLoading: deliveriesLoading } = useQuery({
     queryKey: ['/api/deliveries/available'],
@@ -137,14 +139,33 @@ export default function DelivererApp() {
 
   if (!deliverer) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <Card className="w-96">
           <CardHeader>
-            <CardTitle className="text-center text-red-600">Acesso Negado</CardTitle>
+            <CardTitle className="text-center text-blue-600">Área do Entregador</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
+            <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Você não está registrado como entregador.</p>
-            <p className="text-sm text-gray-500">Entre em contato com o administrador para ser cadastrado.</p>
+            <p className="text-sm text-gray-500 mb-6">Entre em contato com o administrador para ser cadastrado e começar a receber entregas na sua região.</p>
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                onClick={handleSwitchUser}
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Trocar Tipo de Usuário
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
