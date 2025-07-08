@@ -77,7 +77,13 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
   });
 
   const handleSubmit = (data: MerchantFormData) => {
-    createMerchant.mutate(data);
+    const formData = {
+      ...data,
+      password: data.password || "123456", // default password
+      type: "comerciante",
+      planValue: data.planType === "mensal" ? 149 : 0,
+    };
+    createMerchant.mutate(formData);
   };
 
   return (

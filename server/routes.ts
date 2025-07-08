@@ -335,17 +335,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/merchants', isAuthenticated, async (req, res) => {
     try {
+      console.log("Received merchant data:", req.body);
+      
       const merchantData = insertMerchantSchema.parse(req.body);
+      console.log("Parsed merchant data:", merchantData);
+      
       const merchant = await storage.createMerchant(merchantData);
+      console.log("Created merchant:", merchant);
+      
       res.status(201).json(merchant);
     } catch (error) {
+      console.error("Detailed error creating merchant:", error);
+      
       if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid merchant data", errors: error.errors });
       }
       
       // Check for duplicate email error
       if (error.code === '23505' && error.constraint === 'merchants_email_key') {
         return res.status(400).json({ message: "Este email já está cadastrado no sistema" });
+      }
+      
+      // Check for database connection errors
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        return res.status(500).json({ message: "Erro de conexão com o banco de dados" });
       }
       
       console.error("Error creating merchant:", error);

@@ -9,6 +9,7 @@ import {
   decimal,
   boolean,
   integer,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -40,14 +41,16 @@ export const users = pgTable("users", {
 export const merchants = pgTable("merchants", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
-  businessName: varchar("business_name").notNull(),
-  cnpjCpf: varchar("cnpj_cpf").notNull(),
+  businessName: varchar("business_name"),
+  cnpjCpf: varchar("cnpj_cpf").notNull().default(""),
   phone: varchar("phone").notNull(),
-  email: varchar("email").notNull().unique(),
-  password: varchar("password").notNull(),
+  email: varchar("email"),
+  password: varchar("password"),
   address: text("address").notNull(),
-  businessType: varchar("business_type").notNull(), // padaria, hortifruti, papelaria, etc.
-  planType: varchar("plan_type").notNull(), // "por_entrega" or "mensal"
+  businessType: varchar("business_type"),
+  type: varchar("type").notNull(),
+  planType: varchar("plan_type").notNull(),
+  planValue: numeric("plan_value").notNull(),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -119,6 +122,9 @@ export const insertMerchantSchema = createInsertSchema(merchants).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  type: z.string().default("comerciante"),
+  planValue: z.number().default(0),
 });
 
 export const insertDelivererSchema = createInsertSchema(deliverers).omit({
