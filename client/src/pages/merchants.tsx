@@ -445,7 +445,7 @@ export default function Merchants() {
           <CardTitle>Lista de Comerciantes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -511,7 +511,7 @@ export default function Merchants() {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
+                          <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Editar Comerciante</DialogTitle>
                             </DialogHeader>
