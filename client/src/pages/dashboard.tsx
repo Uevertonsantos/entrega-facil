@@ -18,11 +18,15 @@ import {
 } from "lucide-react";
 import KpiCard from "@/components/stats/kpi-card";
 import NewDeliveryModal from "@/components/modals/new-delivery-modal";
+import NewMerchantModal from "@/components/modals/new-merchant-modal";
+import NewDelivererModal from "@/components/modals/new-deliverer-modal";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const [isNewDeliveryOpen, setIsNewDeliveryOpen] = useState(false);
+  const [isNewMerchantOpen, setIsNewMerchantOpen] = useState(false);
+  const [isNewDelivererOpen, setIsNewDelivererOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -111,13 +115,31 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <Button
-          onClick={() => setIsNewDeliveryOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Entrega
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsNewMerchantOpen(true)}
+            variant="outline"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Comerciante
+          </Button>
+          <Button
+            onClick={() => setIsNewDelivererOpen(true)}
+            variant="outline"
+            className="border-green-500 text-green-500 hover:bg-green-50"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Entregador
+          </Button>
+          <Button
+            onClick={() => setIsNewDeliveryOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Entrega
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -312,10 +334,18 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* New Delivery Modal */}
+      {/* Modals */}
       <NewDeliveryModal
         isOpen={isNewDeliveryOpen}
         onClose={() => setIsNewDeliveryOpen(false)}
+      />
+      <NewMerchantModal
+        isOpen={isNewMerchantOpen}
+        onClose={() => setIsNewMerchantOpen(false)}
+      />
+      <NewDelivererModal
+        isOpen={isNewDelivererOpen}
+        onClose={() => setIsNewDelivererOpen(false)}
       />
     </div>
   );

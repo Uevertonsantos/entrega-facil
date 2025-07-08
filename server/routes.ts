@@ -46,6 +46,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/merchants/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid merchant ID" });
+      }
       const merchant = await storage.getMerchant(id);
       if (!merchant) {
         return res.status(404).json({ message: "Merchant not found" });
@@ -121,6 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/deliverers/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid deliverer ID" });
+      }
       const deliverer = await storage.getDeliverer(id);
       if (!deliverer) {
         return res.status(404).json({ message: "Deliverer not found" });
@@ -273,6 +279,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       const deliverer = await storage.getDelivererByEmail(user.email);
+      if (!deliverer) {
+        return res.status(404).json({ message: "Deliverer not found" });
+      }
       res.json(deliverer);
     } catch (error) {
       console.error("Error fetching current deliverer:", error);
@@ -341,6 +350,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       const merchant = await storage.getMerchantByEmail(user.email);
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
       res.json(merchant);
     } catch (error) {
       console.error("Error fetching current merchant:", error);
