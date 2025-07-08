@@ -73,7 +73,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
     mutationFn: async (data: DeliveryFormData) => {
       await apiRequest("POST", "/api/deliveries", {
         merchantId: parseInt(data.merchantId),
-        delivererId: data.delivererId ? parseInt(data.delivererId) : null,
+        delivererId: data.delivererId && data.delivererId !== "none" ? parseInt(data.delivererId) : null,
         customerName: data.customerName,
         customerPhone: data.customerPhone || null,
         pickupAddress: data.pickupAddress,
@@ -217,12 +217,12 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                   <FormItem>
                     <FormLabel>Entregador (Opcional)</FormLabel>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o entregador" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
+                          <SelectItem value="none">Nenhum</SelectItem>
                           {deliverers?.filter(d => d.isActive).map((deliverer) => (
                             <SelectItem key={deliverer.id} value={deliverer.id.toString()}>
                               {deliverer.name}
