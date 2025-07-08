@@ -69,8 +69,11 @@ export const deliveries = pgTable("deliveries", {
   delivererId: integer("deliverer_id"),
   customerName: varchar("customer_name").notNull(),
   customerPhone: varchar("customer_phone"),
+  pickupAddress: text("pickup_address").notNull(),
   deliveryAddress: text("delivery_address").notNull(),
-  status: varchar("status").notNull(), // "pending", "in_route", "completed", "cancelled"
+  status: varchar("status").notNull(), // "pending", "accepted", "in_transit", "delivered", "cancelled"
+  priority: varchar("priority").notNull().default("medium"), // "low", "medium", "high"
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   delivererPayment: decimal("deliverer_payment", { precision: 10, scale: 2 }),
   notes: text("notes"),

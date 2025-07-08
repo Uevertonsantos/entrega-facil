@@ -11,6 +11,8 @@ import Merchants from "@/pages/merchants";
 import Deliverers from "@/pages/deliverers";
 import Reports from "@/pages/reports";
 import Financial from "@/pages/financial";
+import DelivererApp from "@/pages/deliverer-app";
+import MerchantApp from "@/pages/merchant-app";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
@@ -35,6 +37,8 @@ function Router() {
         <Route path="/deliverers" component={Deliverers} />
         <Route path="/reports" component={Reports} />
         <Route path="/financial" component={Financial} />
+        <Route path="/deliverer-app" component={DelivererApp} />
+        <Route path="/merchant-app" component={MerchantApp} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

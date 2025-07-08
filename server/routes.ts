@@ -248,6 +248,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Patch route for delivery status updates
+  app.patch('/api/deliveries/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deliveryData = insertDeliverySchema.partial().parse(req.body);
+      const delivery = await storage.updateDelivery(id, deliveryData);
+      res.json(delivery);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid delivery data", errors: error.errors });
+      }
+      console.error("Error updating delivery:", error);
+      res.status(500).json({ message: "Failed to update delivery" });
+    }
+  });
+
+  // Deliverer app routes
+  app.get('/api/deliverers/current', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const deliverer = await storage.getDelivererByEmail(user.email);
+      res.json(deliverer);
+    } catch (error) {
+      console.error("Error fetching current deliverer:", error);
+      res.status(500).json({ message: "Failed to fetch current deliverer" });
+    }
+  });
+
+  app.get('/api/deliveries/available', isAuthenticated, async (req, res) => {
+    try {
+      const deliveries = await storage.getAvailableDeliveries();
+      res.json(deliveries);
+    } catch (error) {
+      console.error("Error fetching available deliveries:", error);
+      res.status(500).json({ message: "Failed to fetch available deliveries" });
+    }
+  });
+
+  app.get('/api/deliveries/my-deliveries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const deliverer = await storage.getDelivererByEmail(user.email);
+      if (!deliverer) {
+        return res.status(404).json({ message: "Deliverer not found" });
+      }
+      const deliveries = await storage.getDeliveriesByDeliverer(deliverer.id);
+      res.json(deliveries);
+    } catch (error) {
+      console.error("Error fetching my deliveries:", error);
+      res.status(500).json({ message: "Failed to fetch my deliveries" });
+    }
+  });
+
+  app.post('/api/deliveries/:id/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const deliverer = await storage.getDelivererByEmail(user.email);
+      if (!deliverer) {
+        return res.status(404).json({ message: "Deliverer not found" });
+      }
+      const delivery = await storage.updateDelivery(id, { 
+        delivererId: deliverer.id, 
+        status: 'accepted' 
+      });
+      res.json(delivery);
+    } catch (error) {
+      console.error("Error accepting delivery:", error);
+      res.status(500).json({ message: "Failed to accept delivery" });
+    }
+  });
+
+  // Merchant app routes
+  app.get('/api/merchants/current', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const merchant = await storage.getMerchantByEmail(user.email);
+      res.json(merchant);
+    } catch (error) {
+      console.error("Error fetching current merchant:", error);
+      res.status(500).json({ message: "Failed to fetch current merchant" });
+    }
+  });
+
+  app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const merchant = await storage.getMerchantByEmail(user.email);
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+      const deliveries = await storage.getDeliveriesByMerchant(merchant.id);
+      res.json(deliveries);
+    } catch (error) {
+      console.error("Error fetching my delivery requests:", error);
+      res.status(500).json({ message: "Failed to fetch my delivery requests" });
+    }
+  });
+
   // WhatsApp integration route (simulated)
   app.post('/api/whatsapp/send', isAuthenticated, async (req, res) => {
     try {

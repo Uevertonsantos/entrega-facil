@@ -7,7 +7,9 @@ import {
   Users, 
   FileText, 
   CreditCard,
-  Settings
+  Settings,
+  Smartphone,
+  ShoppingBag
 } from "lucide-react";
 
 const navigation = [
@@ -17,6 +19,8 @@ const navigation = [
   { name: "Entregadores", href: "/deliverers", icon: Users },
   { name: "Relatórios", href: "/reports", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: CreditCard },
+  { name: "App Entregador", href: "/deliverer-app", icon: Smartphone },
+  { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
   { name: "Configurações", href: "/settings", icon: Settings },
 ];
 
