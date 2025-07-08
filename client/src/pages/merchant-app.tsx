@@ -85,13 +85,10 @@ export default function MerchantApp() {
 
   const createDeliveryMutation = useMutation({
     mutationFn: async (data: DeliveryFormData) => {
-      await apiRequest('/api/deliveries', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          merchantId: merchant?.id,
-          status: 'pending',
-        }),
+      await apiRequest("POST", "/api/deliveries", {
+        ...data,
+        merchantId: merchant?.id,
+        status: 'pending',
       });
     },
     onSuccess: () => {
@@ -114,9 +111,8 @@ export default function MerchantApp() {
 
   const cancelDeliveryMutation = useMutation({
     mutationFn: async (deliveryId: number) => {
-      await apiRequest(`/api/deliveries/${deliveryId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: 'cancelled' }),
+      await apiRequest("PATCH", `/api/deliveries/${deliveryId}`, {
+        status: 'cancelled'
       });
     },
     onSuccess: () => {
