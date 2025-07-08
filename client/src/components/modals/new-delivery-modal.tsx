@@ -177,7 +177,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto modal-scroll">
         <DialogHeader>
           <DialogTitle>Nova Entrega</DialogTitle>
         </DialogHeader>
