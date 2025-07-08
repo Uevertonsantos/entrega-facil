@@ -246,48 +246,74 @@ export default function Merchants() {
                     <FormItem>
                       <FormLabel>CNPJ/CPF</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="00.000.000/0000-00 ou 000.000.000-00" 
-                          {...field}
-                          onBlur={async (e) => {
-                            field.onBlur(e);
-                            const value = e.target.value.replace(/\D/g, '');
-                            
-                            // Se for CNPJ (14 dígitos), buscar informações
-                            if (value.length === 14) {
-                              try {
-                                const response = await fetch('/api/cnpj/lookup', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  body: JSON.stringify({ cnpj: value }),
-                                });
-                                
-                                if (response.ok) {
-                                  const cnpjData = await response.json();
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="00.000.000/0000-00 ou 000.000.000-00" 
+                            {...field}
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              const value = field.value.replace(/\D/g, '');
+                              
+                              // Se for CNPJ (14 dígitos), buscar informações
+                              if (value.length === 14) {
+                                try {
+                                  const response = await fetch('/api/cnpj/lookup', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ cnpj: value }),
+                                  });
                                   
-                                  // Preencher campos automaticamente
-                                  form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
-                                  form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
-                                  if (cnpjData.telefone) {
-                                    form.setValue('phone', cnpjData.telefone);
+                                  if (response.ok) {
+                                    const cnpjData = await response.json();
+                                    
+                                    // Preencher campos automaticamente
+                                    form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
+                                    form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
+                                    if (cnpjData.telefone) {
+                                      form.setValue('phone', cnpjData.telefone);
+                                    }
+                                    if (cnpjData.email) {
+                                      form.setValue('email', cnpjData.email);
+                                    }
+                                    
+                                    toast({
+                                      title: "CNPJ encontrado",
+                                      description: "Informações preenchidas automaticamente",
+                                    });
+                                  } else {
+                                    toast({
+                                      title: "CNPJ não encontrado",
+                                      description: "Verifique o número e tente novamente",
+                                      variant: "destructive",
+                                    });
                                   }
-                                  if (cnpjData.email) {
-                                    form.setValue('email', cnpjData.email);
-                                  }
-                                  
+                                } catch (error) {
+                                  console.error('Erro ao buscar CNPJ:', error);
                                   toast({
-                                    title: "CNPJ encontrado",
-                                    description: "Informações preenchidas automaticamente",
+                                    title: "Erro",
+                                    description: "Erro ao buscar informações do CNPJ",
+                                    variant: "destructive",
                                   });
                                 }
-                              } catch (error) {
-                                console.error('Erro ao buscar CNPJ:', error);
+                              } else {
+                                toast({
+                                  title: "CNPJ inválido",
+                                  description: "Digite um CNPJ válido com 14 dígitos",
+                                  variant: "destructive",
+                                });
                               }
-                            }
-                          }}
-                        />
+                            }}
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -511,7 +537,7 @@ export default function Merchants() {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
+                          <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Editar Comerciante</DialogTitle>
                             </DialogHeader>
@@ -552,10 +578,74 @@ export default function Merchants() {
                                     <FormItem>
                                       <FormLabel>CNPJ/CPF</FormLabel>
                                       <FormControl>
-                                        <Input 
-                                          placeholder="00.000.000/0000-00 ou 000.000.000-00" 
-                                          {...field}
-                                        />
+                                        <div className="flex gap-2">
+                                          <Input 
+                                            placeholder="00.000.000/0000-00 ou 000.000.000-00" 
+                                            {...field}
+                                            className="flex-1"
+                                          />
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={async () => {
+                                              const value = field.value.replace(/\D/g, '');
+                                              
+                                              // Se for CNPJ (14 dígitos), buscar informações
+                                              if (value.length === 14) {
+                                                try {
+                                                  const response = await fetch('/api/cnpj/lookup', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                      'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({ cnpj: value }),
+                                                  });
+                                                  
+                                                  if (response.ok) {
+                                                    const cnpjData = await response.json();
+                                                    
+                                                    // Preencher campos automaticamente
+                                                    form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
+                                                    form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
+                                                    if (cnpjData.telefone) {
+                                                      form.setValue('phone', cnpjData.telefone);
+                                                    }
+                                                    if (cnpjData.email) {
+                                                      form.setValue('email', cnpjData.email);
+                                                    }
+                                                    
+                                                    toast({
+                                                      title: "CNPJ encontrado",
+                                                      description: "Informações preenchidas automaticamente",
+                                                    });
+                                                  } else {
+                                                    toast({
+                                                      title: "CNPJ não encontrado",
+                                                      description: "Verifique o número e tente novamente",
+                                                      variant: "destructive",
+                                                    });
+                                                  }
+                                                } catch (error) {
+                                                  console.error('Erro ao buscar CNPJ:', error);
+                                                  toast({
+                                                    title: "Erro",
+                                                    description: "Erro ao buscar informações do CNPJ",
+                                                    variant: "destructive",
+                                                  });
+                                                }
+                                              } else {
+                                                toast({
+                                                  title: "CNPJ inválido",
+                                                  description: "Digite um CNPJ válido com 14 dígitos",
+                                                  variant: "destructive",
+                                                });
+                                              }
+                                            }}
+                                          >
+                                            <Search className="h-4 w-4" />
+                                          </Button>
+                                        </div>
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>
