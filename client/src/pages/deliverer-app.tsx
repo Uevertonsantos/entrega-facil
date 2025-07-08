@@ -55,9 +55,8 @@ export default function DelivererApp() {
   const toggleOnlineMutation = useMutation({
     mutationFn: async (online: boolean) => {
       if (!deliverer) return;
-      await apiRequest(`/api/deliverers/${deliverer.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ isOnline: online }),
+      await apiRequest("PATCH", `/api/deliverers/${deliverer.id}`, {
+        isOnline: online
       });
     },
     onSuccess: () => {
@@ -71,9 +70,7 @@ export default function DelivererApp() {
 
   const acceptDeliveryMutation = useMutation({
     mutationFn: async (deliveryId: number) => {
-      await apiRequest(`/api/deliveries/${deliveryId}/accept`, {
-        method: "POST",
-      });
+      await apiRequest("POST", `/api/deliveries/${deliveryId}/accept`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deliveries/available'] });
@@ -87,9 +84,8 @@ export default function DelivererApp() {
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      await apiRequest(`/api/deliveries/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
+      await apiRequest("PATCH", `/api/deliveries/${id}`, {
+        status
       });
     },
     onSuccess: () => {
