@@ -125,6 +125,15 @@ export const insertDeliverySchema = createInsertSchema(deliveries).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).partial({
+  pickupAddress: true,
+  price: true,
+  deliveryFee: true,
+  delivererId: true,
+  customerPhone: true,
+  notes: true,
+  scheduledTime: true,
+  completedAt: true,
 });
 
 // Types
@@ -143,4 +152,5 @@ export type Delivery = typeof deliveries.$inferSelect;
 export type DeliveryWithRelations = Delivery & {
   merchant: Merchant;
   deliverer: Deliverer | null;
+  estimatedValue?: number; // Alias for price for frontend compatibility
 };

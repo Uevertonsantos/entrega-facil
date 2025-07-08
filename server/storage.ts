@@ -174,6 +174,7 @@ export class DatabaseStorage implements IStorage {
         ...row.deliveries,
         merchant: row.merchants!,
         deliverer: row.deliverers,
+        estimatedValue: row.deliveries.price ? parseFloat(row.deliveries.price.toString()) : 0,
       })));
   }
 
@@ -219,6 +220,7 @@ export class DatabaseStorage implements IStorage {
         ...row.deliveries,
         merchant: row.merchants!,
         deliverer: row.deliverers,
+        estimatedValue: row.deliveries.price ? parseFloat(row.deliveries.price.toString()) : 0,
       })));
   }
 

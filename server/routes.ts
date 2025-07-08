@@ -475,6 +475,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/deliveries/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid delivery ID" });
+      }
       const delivery = await storage.getDelivery(id);
       if (!delivery) {
         return res.status(404).json({ message: "Delivery not found" });
@@ -486,10 +489,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/deliveries', isAuthenticated, async (req, res) => {
+  app.post('/api/deliveries', isAuthenticated, async (req: any, res) => {
     try {
-      const deliveryData = insertDeliverySchema.parse(req.body);
-      const delivery = await storage.createDelivery(deliveryData);
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a merchant
+      if (userInfo.role !== 'merchant') {
+        return res.status(403).json({ message: "Only merchants can create deliveries" });
+      }
+      
+      // Map frontend fields to database fields
+      const deliveryData = {
+        merchantId: userInfo.id,
+        delivererId: null,
+        customerName: req.body.customerName,
+        customerPhone: req.body.customerPhone,
+        pickupAddress: "A definir", // Default pickup address
+        deliveryAddress: req.body.deliveryAddress,
+        status: 'pending',
+        priority: req.body.priority || 'medium',
+        price: String(req.body.estimatedValue || "0.00"),
+        deliveryFee: "10.00", // Default delivery fee
+        notes: req.body.notes || null,
+      };
+      
+      const parsedData = insertDeliverySchema.parse(deliveryData);
+      const delivery = await storage.createDelivery(parsedData);
       res.status(201).json(delivery);
     } catch (error) {
       if (error instanceof z.ZodError) {
