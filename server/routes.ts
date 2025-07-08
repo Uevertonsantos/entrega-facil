@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For simplicity, using email as password check (in production, use bcrypt)
+      // For simplicity, using phone as password check (in production, use bcrypt)
       if (deliverer.email === email && deliverer.phone === password) {
         const token = jwt.sign(
           { id: deliverer.id, email: deliverer.email, role: 'deliverer' },

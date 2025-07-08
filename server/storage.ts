@@ -93,10 +93,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMerchantByEmail(email: string): Promise<Merchant | undefined> {
-    // Since merchants don't have email field, we'll use the first merchant as fallback
-    // In a real system, you'd need to add email field to merchants table
-    const allMerchants = await db.select().from(merchants);
-    return allMerchants[0]; // Return first merchant for demo purposes
+    const [merchant] = await db.select().from(merchants).where(eq(merchants.email, email));
+    return merchant;
   }
 
   async createMerchant(merchant: InsertMerchant): Promise<Merchant> {
@@ -139,10 +137,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDelivererByEmail(email: string): Promise<Deliverer | undefined> {
-    // Since deliverers don't have email field, we'll use the first deliverer as fallback
-    // In a real system, you'd need to add email field to deliverers table
-    const allDeliverers = await db.select().from(deliverers);
-    return allDeliverers[0]; // Return first deliverer for demo purposes
+    const [deliverer] = await db.select().from(deliverers).where(eq(deliverers.email, email));
+    return deliverer;
   }
 
   async createDeliverer(deliverer: InsertDeliverer): Promise<Deliverer> {
