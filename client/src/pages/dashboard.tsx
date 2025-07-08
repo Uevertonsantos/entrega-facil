@@ -142,7 +142,7 @@ export default function Dashboard() {
         />
         <KpiCard
           title="Receita Hoje"
-          value={`R$ ${stats?.revenue?.toFixed(2) || '0,00'}`}
+          value={`R$ ${Number(stats?.revenue || 0).toFixed(2).replace('.', ',')}`}
           icon={DollarSign}
           color="bg-green-100 text-secondary"
         />
