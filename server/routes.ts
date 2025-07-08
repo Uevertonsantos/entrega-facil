@@ -297,6 +297,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid merchant data", errors: error.errors });
       }
+      
+      // Check for duplicate email error
+      if (error.code === '23505' && error.constraint === 'merchants_email_key') {
+        return res.status(400).json({ message: "Este email já está cadastrado no sistema" });
+      }
+      
       console.error("Error creating merchant:", error);
       res.status(500).json({ message: "Failed to create merchant" });
     }
@@ -375,6 +381,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid deliverer data", errors: error.errors });
       }
+      
+      // Check for duplicate email error
+      if (error.code === '23505' && error.constraint === 'deliverers_email_key') {
+        return res.status(400).json({ message: "Este email já está cadastrado no sistema" });
+      }
+      
       console.error("Error creating deliverer:", error);
       res.status(500).json({ message: "Failed to create deliverer" });
     }

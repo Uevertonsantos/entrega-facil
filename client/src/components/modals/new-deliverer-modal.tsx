@@ -54,9 +54,20 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
       onClose();
     },
     onError: (error) => {
+      let message = "Erro interno do servidor";
+      
+      // Extract meaningful error message from the error
+      if (error.message.includes("Este email já está cadastrado")) {
+        message = "Este email já está cadastrado no sistema";
+      } else if (error.message.includes("400:")) {
+        message = error.message.replace("400: ", "");
+      } else if (error.message.includes("Invalid deliverer data")) {
+        message = "Dados inválidos. Verifique os campos preenchidos.";
+      }
+      
       toast({
         title: "Erro",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     },

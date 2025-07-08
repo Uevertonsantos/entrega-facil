@@ -93,6 +93,10 @@ This is a full-stack web application for managing a local delivery network. The 
 
 - July 08, 2025. Initial setup
 - July 08, 2025. Implemented local authentication system with JWT tokens for all user types (admin, merchant, deliverer)
+- July 08, 2025. Fixed authentication middleware and token handling for all API endpoints
+- July 08, 2025. Corrected logout functionality to properly clear tokens and redirect users
+- July 08, 2025. Improved error handling for duplicate email addresses in registration forms
+- July 08, 2025. Enhanced user feedback with meaningful error messages for form validation
 
 ## User Preferences
 
