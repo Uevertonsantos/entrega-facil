@@ -300,11 +300,21 @@ export default function DelivererApp() {
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-700 mb-2">{delivery.description}</p>
-                            <div className="flex items-center justify-between">
+                            <div className="mb-3">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                <User className="h-4 w-4" />
+                                <span className="font-medium">Cliente:</span>
+                                {delivery.customerName}
+                                {delivery.customerPhone && (
+                                  <span className="text-gray-500">• {delivery.customerPhone}</span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <MapPin className="h-4 w-4" />
                                 {delivery.deliveryAddress}
                               </div>
+                            </div>
+                            <div className="flex justify-end">
                               <Button
                                 size="sm"
                                 onClick={() => handleAcceptDelivery(delivery.id)}
@@ -357,25 +367,33 @@ export default function DelivererApp() {
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-700 mb-2">{delivery.description}</p>
-                          <div className="flex items-center justify-between">
+                          <div className="space-y-2 mb-3">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <User className="h-4 w-4" />
+                              <span className="font-medium">Cliente:</span>
+                              {delivery.customerName}
+                              {delivery.customerPhone && (
+                                <span className="text-gray-500">• {delivery.customerPhone}</span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <MapPin className="h-4 w-4" />
                               {delivery.deliveryAddress}
                             </div>
-                            {delivery.status === 'in_progress' && (
-                              <div className="flex gap-2">
-                                <DeliveryManagementModal delivery={delivery}>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Gerenciar
-                                  </Button>
-                                </DeliveryManagementModal>
-                              </div>
-                            )}
                           </div>
+                          {delivery.status === 'in_progress' && (
+                            <div className="flex justify-end">
+                              <DeliveryManagementModal delivery={delivery}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Gerenciar
+                                </Button>
+                              </DeliveryManagementModal>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}

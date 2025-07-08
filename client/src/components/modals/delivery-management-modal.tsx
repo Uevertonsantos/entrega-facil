@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -145,6 +145,9 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Gerenciar Entrega #{delivery.id}</DialogTitle>
+          <DialogDescription>
+            Gerencie o status da entrega, adicione observações e atualize informações
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
