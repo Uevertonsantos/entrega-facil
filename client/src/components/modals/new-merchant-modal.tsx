@@ -82,16 +82,16 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="flex-shrink-0 p-6 pb-0">
           <DialogTitle>Novo Comerciante</DialogTitle>
           <DialogDescription>
             Cadastre um novo comerciante no sistema com todas as informações necessárias.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-4 px-6 py-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -309,7 +309,7 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
             </div>
             </div>
 
-            <div className="flex-shrink-0 flex justify-end space-x-2 pt-4 border-t">
+            <div className="flex-shrink-0 flex justify-end space-x-2 p-6 pt-4 border-t bg-gray-50">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
