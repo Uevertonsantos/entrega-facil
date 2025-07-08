@@ -32,7 +32,7 @@ export default function DelivererLogin() {
   const handleSubmit = async (data: DelivererLoginData) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/deliverer/login', 'POST', data);
+      const response = await apiRequest('POST', '/api/deliverer/login', data);
       const result = await response.json();
       
       if (result.success) {
