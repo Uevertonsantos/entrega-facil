@@ -144,59 +144,64 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={async () => {
-                          try {
-                            const value = field.value.replace(/\D/g, '');
-                            
-                            // Se for CNPJ (14 dígitos), buscar informações
-                            if (value.length === 14) {
-                              const response = await fetch('/api/cnpj/lookup', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ cnpj: value }),
-                              });
+                        onClick={() => {
+                          const handleCnpjLookup = async () => {
+                            try {
+                              const value = field.value.replace(/\D/g, '');
                               
-                              if (response.ok) {
-                                const cnpjData = await response.json();
-                                
-                                // Preencher campos automaticamente
-                                form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
-                                form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
-                                if (cnpjData.telefone) {
-                                  form.setValue('phone', cnpjData.telefone);
-                                }
-                                if (cnpjData.email) {
-                                  form.setValue('email', cnpjData.email);
-                                }
-                                
-                                toast({
-                                  title: "CNPJ encontrado",
-                                  description: "Informações preenchidas automaticamente",
+                              // Se for CNPJ (14 dígitos), buscar informações
+                              if (value.length === 14) {
+                                const response = await fetch('/api/cnpj/lookup', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({ cnpj: value }),
                                 });
+                                
+                                if (response.ok) {
+                                  const cnpjData = await response.json();
+                                  
+                                  // Preencher campos automaticamente
+                                  form.setValue('businessName', cnpjData.nome_fantasia || cnpjData.razao_social);
+                                  form.setValue('address', `${cnpjData.logradouro}, ${cnpjData.numero} - ${cnpjData.bairro}, ${cnpjData.municipio}/${cnpjData.uf}`);
+                                  if (cnpjData.telefone) {
+                                    form.setValue('phone', cnpjData.telefone);
+                                  }
+                                  if (cnpjData.email) {
+                                    form.setValue('email', cnpjData.email);
+                                  }
+                                  
+                                  toast({
+                                    title: "CNPJ encontrado",
+                                    description: "Informações preenchidas automaticamente",
+                                  });
+                                } else {
+                                  toast({
+                                    title: "CNPJ não encontrado",
+                                    description: "Verifique o número e tente novamente",
+                                    variant: "destructive",
+                                  });
+                                }
                               } else {
                                 toast({
-                                  title: "CNPJ não encontrado",
-                                  description: "Verifique o número e tente novamente",
+                                  title: "CNPJ inválido",
+                                  description: "Digite um CNPJ válido com 14 dígitos",
                                   variant: "destructive",
                                 });
                               }
-                            } else {
+                            } catch (error) {
+                              console.error('Erro ao buscar CNPJ:', error);
                               toast({
-                                title: "CNPJ inválido",
-                                description: "Digite um CNPJ válido com 14 dígitos",
+                                title: "Erro",
+                                description: "Erro ao buscar informações do CNPJ",
                                 variant: "destructive",
                               });
                             }
-                          } catch (error) {
-                            console.error('Erro ao buscar CNPJ:', error);
-                            toast({
-                              title: "Erro",
-                              description: "Erro ao buscar informações do CNPJ",
-                              variant: "destructive",
-                            });
-                          }
+                          };
+                          
+                          // Executar sem await para evitar promise rejeitada
+                          handleCnpjLookup().catch(console.error);
                         }}
                       >
                         <Search className="h-4 w-4" />

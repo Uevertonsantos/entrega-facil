@@ -62,6 +62,7 @@ export async function fetchCnpjInfo(cnpj: string): Promise<CnpjInfo | null> {
     };
   } catch (error) {
     console.error('Erro ao buscar CNPJ:', error);
+    // Não rejeitar a promise, apenas retornar null
     return null;
   }
 }

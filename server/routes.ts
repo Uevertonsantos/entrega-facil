@@ -180,18 +180,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // CNPJ lookup route
   app.post("/api/cnpj/lookup", async (req, res) => {
-    const { cnpj } = req.body;
-    
-    if (!cnpj) {
-      return res.status(400).json({ message: "CNPJ é obrigatório" });
-    }
-    
-    // Valida CNPJ
-    if (!validateCnpj(cnpj)) {
-      return res.status(400).json({ message: "CNPJ inválido" });
-    }
-    
     try {
+      const { cnpj } = req.body;
+      
+      if (!cnpj) {
+        return res.status(400).json({ message: "CNPJ é obrigatório" });
+      }
+      
+      // Valida CNPJ
+      if (!validateCnpj(cnpj)) {
+        return res.status(400).json({ message: "CNPJ inválido" });
+      }
+      
       const cnpjInfo = await fetchCnpjInfo(cnpj);
       
       if (!cnpjInfo) {

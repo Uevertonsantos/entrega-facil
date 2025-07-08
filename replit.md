@@ -101,7 +101,8 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 08, 2025. Resolved portal access issues for both deliverer and merchant applications
 - July 08, 2025. Added CNPJ/CPF field to merchant registration with automatic data fetching from Receita Federal API
 - July 08, 2025. Implemented CNPJ validation service with automatic form filling for business information
-- July 08, 2025. Fixed merchant schema inconsistencies by removing planValue and type fields
+- July 08, 2025. Fixed critical schema errors - added missing type and planValue fields to merchant database table
+- July 08, 2025. Resolved unhandledrejection errors in CNPJ lookup functionality with improved error handling
 
 ## User Preferences
 
