@@ -7,12 +7,22 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone } from "lucide-react";
+import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings } from "lucide-react";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
   const queryClient = useQueryClient();
+  
+  const handleLogout = () => {
+    localStorage.removeItem("userType");
+    window.location.href = "/api/logout";
+  };
+  
+  const handleSwitchUser = () => {
+    localStorage.removeItem("userType");
+    window.location.href = "/";
+  };
 
   const { data: deliverer, isLoading: delivererLoading } = useQuery({
     queryKey: ['/api/deliverers/current'],
@@ -154,6 +164,26 @@ export default function DelivererApp() {
                   <p className="text-gray-600">Painel do Entregador</p>
                 </div>
                 <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSwitchUser}
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Trocar Usuário
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm">Status:</span>
                     <Switch

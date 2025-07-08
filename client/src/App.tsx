@@ -28,6 +28,30 @@ function Router() {
     );
   }
 
+  // Get user type from localStorage to determine initial route
+  const userType = localStorage.getItem("userType");
+  
+  // Route based on user type
+  if (userType === "merchant") {
+    return (
+      <Switch>
+        <Route path="/" component={MerchantApp} />
+        <Route path="/merchant-app" component={MerchantApp} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+  
+  if (userType === "deliverer") {
+    return (
+      <Switch>
+        <Route path="/" component={DelivererApp} />
+        <Route path="/deliverer-app" component={DelivererApp} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
   return (
     <Layout>
       <Switch>

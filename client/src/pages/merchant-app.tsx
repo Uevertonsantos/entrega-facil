@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { MapPin, Clock, DollarSign, Package, Plus, Store, Phone, User } from "lucide-react";
+import { MapPin, Clock, DollarSign, Package, Plus, Store, Phone, User, LogOut, Settings } from "lucide-react";
 import type { DeliveryWithRelations, Merchant } from "@shared/schema";
 
 const deliveryFormSchema = z.object({
@@ -31,6 +31,16 @@ type DeliveryFormData = z.infer<typeof deliveryFormSchema>;
 export default function MerchantApp() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
+  
+  const handleLogout = () => {
+    localStorage.removeItem("userType");
+    window.location.href = "/api/logout";
+  };
+  
+  const handleSwitchUser = () => {
+    localStorage.removeItem("userType");
+    window.location.href = "/";
+  };
 
   const { data: merchant, isLoading: merchantLoading } = useQuery({
     queryKey: ['/api/merchants/current'],
@@ -40,12 +50,10 @@ export default function MerchantApp() {
   const { data: myDeliveries = [], isLoading: deliveriesLoading } = useQuery({
     queryKey: ['/api/deliveries/my-requests'],
     enabled: !!merchant,
-    refetchInterval: 10000, // Atualiza a cada 10 segundos
   });
 
   const { data: activeDeliverers = [] } = useQuery({
     queryKey: ['/api/deliverers/active'],
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
   });
 
   const form = useForm<DeliveryFormData>({
@@ -62,30 +70,25 @@ export default function MerchantApp() {
 
   const createDeliveryMutation = useMutation({
     mutationFn: async (data: DeliveryFormData) => {
-      const deliveryData = {
-        ...data,
-        merchantId: merchant.id,
-        pickupAddress: merchant.address,
-        price: parseFloat(data.estimatedValue),
-        status: 'pending',
-      };
-      
-      await apiRequest("/api/deliveries", {
-        method: "POST",
-        body: JSON.stringify(deliveryData),
+      await apiRequest('/api/deliveries', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...data,
+          merchantId: merchant?.id,
+          status: 'pending',
+        }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/deliveries/my-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/deliveries/available'] });
-      setIsModalOpen(false);
       form.reset();
+      setIsModalOpen(false);
       toast({
-        title: "Entrega solicitada!",
-        description: "Sua solicitação foi enviada para os entregadores disponíveis.",
+        title: "Entrega solicitada",
+        description: "Sua solicitação foi enviada com sucesso!",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Erro ao solicitar entrega",
         description: error.message,
@@ -211,124 +214,144 @@ export default function MerchantApp() {
                       <span className="font-semibold">{activeDeliverers.length}</span>
                     </div>
                   </div>
-                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Nova Entrega
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Solicitar Nova Entrega</DialogTitle>
-                      </DialogHeader>
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="customerName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nome do Cliente</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Digite o nome do cliente" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="customerPhone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Telefone do Cliente</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="(xx) xxxxx-xxxx" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="deliveryAddress"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Endereço de Entrega</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Rua, número, bairro" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="estimatedValue"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Valor da Entrega (R$)</FormLabel>
-                                <FormControl>
-                                  <Input type="number" step="0.01" placeholder="10.00" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="priority"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Prioridade</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSwitchUser}
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Trocar Usuário
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </Button>
+                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Nova Entrega
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Solicitar Nova Entrega</DialogTitle>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="customerName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nome do Cliente</FormLabel>
                                   <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Selecione a prioridade" />
-                                    </SelectTrigger>
+                                    <Input placeholder="Digite o nome do cliente" {...field} />
                                   </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="low">Baixa</SelectItem>
-                                    <SelectItem value="medium">Média</SelectItem>
-                                    <SelectItem value="high">Alta</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="notes"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Observações (opcional)</FormLabel>
-                                <FormControl>
-                                  <Textarea placeholder="Instruções especiais, referências, etc." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                              Cancelar
-                            </Button>
-                            <Button type="submit" disabled={createDeliveryMutation.isPending}>
-                              {createDeliveryMutation.isPending ? "Enviando..." : "Solicitar Entrega"}
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="customerPhone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Telefone do Cliente</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Digite o telefone do cliente" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="deliveryAddress"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Endereço de Entrega</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Digite o endereço completo" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="estimatedValue"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Valor Estimado (R$)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="0,00" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="priority"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Prioridade</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Selecione a prioridade" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="low">Baixa</SelectItem>
+                                      <SelectItem value="medium">Média</SelectItem>
+                                      <SelectItem value="high">Alta</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="notes"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Observações</FormLabel>
+                                  <FormControl>
+                                    <Textarea placeholder="Observações adicionais (opcional)" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="flex justify-end gap-2">
+                              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                                Cancelar
+                              </Button>
+                              <Button type="submit" disabled={createDeliveryMutation.isPending}>
+                                {createDeliveryMutation.isPending ? "Enviando..." : "Solicitar Entrega"}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -370,18 +393,20 @@ export default function MerchantApp() {
                             <Badge className={getPriorityColor(delivery.priority)}>
                               {getPriorityText(delivery.priority)}
                             </Badge>
-                            <Badge className="bg-green-100 text-green-800">
-                              R$ {Number(delivery.price).toFixed(2).replace('.', ',')}
-                            </Badge>
                           </div>
+                          
                           <div className="space-y-2 text-sm text-gray-600">
                             <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span>Para: {delivery.deliveryAddress}</span>
+                              <Phone className="h-4 w-4" />
+                              <span>{delivery.customerPhone}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4" />
-                              <span>Telefone: {delivery.customerPhone}</span>
+                              <MapPin className="h-4 w-4" />
+                              <span>{delivery.deliveryAddress}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4" />
+                              <span>R$ {delivery.estimatedValue}</span>
                             </div>
                             {delivery.deliverer && (
                               <div className="flex items-center gap-2">
@@ -389,21 +414,23 @@ export default function MerchantApp() {
                                 <span>Entregador: {delivery.deliverer.name}</span>
                               </div>
                             )}
-                            {delivery.notes && (
-                              <div className="flex items-start gap-2">
-                                <Clock className="h-4 w-4 mt-0.5" />
-                                <span>Obs: {delivery.notes}</span>
-                              </div>
-                            )}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 ml-4">
+                        
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-xs text-gray-500">
+                            {new Date(delivery.createdAt).toLocaleDateString('pt-BR')} às {' '}
+                            {new Date(delivery.createdAt).toLocaleTimeString('pt-BR', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
+                          
                           {delivery.status === 'pending' && (
                             <Button
-                              size="sm"
                               variant="outline"
+                              size="sm"
                               onClick={() => handleCancelDelivery(delivery.id)}
-                              disabled={cancelDeliveryMutation.isPending}
                               className="text-red-600 hover:text-red-700"
                             >
                               Cancelar

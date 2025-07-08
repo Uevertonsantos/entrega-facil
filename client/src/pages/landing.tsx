@@ -1,9 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, Users, Route, DollarSign } from "lucide-react";
+import { Truck, Users, Route, DollarSign, Store, User, Shield } from "lucide-react";
 
 export default function Landing() {
   const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  const handleMerchantLogin = () => {
+    localStorage.setItem("userType", "merchant");
+    window.location.href = "/api/login";
+  };
+
+  const handleDelivererLogin = () => {
+    localStorage.setItem("userType", "deliverer");
+    window.location.href = "/api/login";
+  };
+
+  const handleAdminLogin = () => {
+    localStorage.setItem("userType", "admin");
     window.location.href = "/api/login";
   };
 
@@ -65,6 +80,69 @@ export default function Landing() {
           </Card>
         </div>
 
+        {/* User Type Selection */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-center mb-8">Escolha seu Acesso</h2>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {/* Merchant Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Store className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Sou Comerciante</CardTitle>
+                <CardDescription>
+                  Solicite entregas para seus clientes de forma rápida e eficiente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleMerchantLogin}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Acessar como Comerciante
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Deliverer Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <User className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Sou Entregador</CardTitle>
+                <CardDescription>
+                  Receba notificações de entregas e ganhe dinheiro na sua região
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleDelivererLogin}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Acessar como Entregador
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Admin Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Shield className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Administrador</CardTitle>
+                <CardDescription>
+                  Gerencie a rede de entregas, usuários e relatórios do sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleAdminLogin}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  Acessar Painel Admin
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="text-center">
           <Card className="max-w-2xl mx-auto">
@@ -75,12 +153,9 @@ export default function Landing() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={handleLogin}
-                className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
-              >
-                Fazer Login
-              </Button>
+              <p className="text-sm text-gray-600 mb-4">
+                Escolha uma das opções acima para acessar o sistema
+              </p>
             </CardContent>
           </Card>
         </div>
