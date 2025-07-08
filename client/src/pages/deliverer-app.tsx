@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings } from "lucide-react";
+import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar } from "lucide-react";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [previousDeliveryCount, setPreviousDeliveryCount] = useState(0);
   const queryClient = useQueryClient();
   
   const handleLogout = () => {
@@ -50,6 +53,12 @@ export default function DelivererApp() {
   const { data: myDeliveries = [], isLoading: myDeliveriesLoading } = useQuery({
     queryKey: ['/api/deliveries/my-deliveries'],
     enabled: !!deliverer,
+  });
+
+  const { data: stats = {}, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['/api/deliverers/stats'],
+    enabled: !!deliverer,
+    refetchInterval: 30000,
   });
 
   const toggleOnlineMutation = useMutation({
@@ -110,23 +119,55 @@ export default function DelivererApp() {
     updateDeliveryStatusMutation.mutate({ id: deliveryId, status });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-blue-100 text-blue-800';
-      case 'in_transit': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  // Create notification sound using Web Audio API
+  const playNotificationSound = () => {
+    if (!soundEnabled) return;
+    
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.log("Erro ao reproduzir som:", error);
     }
   };
+
+  // Effect to play sound when new deliveries are available
+  useEffect(() => {
+    if (availableDeliveries.length > previousDeliveryCount && previousDeliveryCount > 0) {
+      playNotificationSound();
+      toast({
+        title: "Nova entrega disponível!",
+        description: "Uma nova entrega está aguardando para ser aceita.",
+        duration: 5000,
+      });
+    }
+    setPreviousDeliveryCount(availableDeliveries.length);
+  }, [availableDeliveries.length, previousDeliveryCount]);
+
+  useEffect(() => {
+    if (deliverer && deliverer.isOnline) {
+      setIsOnline(true);
+    }
+  }, [deliverer]);
 
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending': return 'Pendente';
-      case 'accepted': return 'Aceita';
-      case 'in_transit': return 'Em trânsito';
-      case 'delivered': return 'Entregue';
+      case 'in_progress': return 'Em andamento';
+      case 'completed': return 'Concluída';
       case 'cancelled': return 'Cancelada';
       default: return status;
     }
@@ -180,7 +221,7 @@ export default function DelivererApp() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <Card>
@@ -191,6 +232,14 @@ export default function DelivererApp() {
                   <p className="text-gray-600">Painel do Entregador</p>
                 </div>
                 <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-gray-500" />
+                    <Switch
+                      checked={soundEnabled}
+                      onCheckedChange={setSoundEnabled}
+                    />
+                    <span className="text-sm text-gray-600">Som</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -212,15 +261,14 @@ export default function DelivererApp() {
                     </Button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">Status:</span>
                     <Switch
                       checked={isOnline}
                       onCheckedChange={handleToggleOnline}
                       disabled={toggleOnlineMutation.isPending}
                     />
-                    <Badge variant={isOnline ? "default" : "secondary"}>
+                    <span className="text-sm font-medium">
                       {isOnline ? "Online" : "Offline"}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -228,160 +276,273 @@ export default function DelivererApp() {
           </Card>
         </div>
 
-        {/* Entregas Disponíveis */}
-        {isOnline && (
-          <div className="mb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Entregas Disponíveis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {deliveriesLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Buscando entregas...</p>
-                  </div>
-                ) : availableDeliveries.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Nenhuma entrega disponível no momento</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {availableDeliveries.map((delivery: DeliveryWithRelations) => (
-                      <Card key={delivery.id} className="border-l-4 border-l-blue-500">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-4 mb-2">
-                                <h3 className="font-semibold text-lg">{delivery.merchant.name}</h3>
-                                <Badge className="bg-green-100 text-green-800">
-                                  R$ {Number(delivery.price).toFixed(2).replace('.', ',')}
-                                </Badge>
+        {/* Tabs */}
+        <Tabs defaultValue="deliveries" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="deliveries">Entregas</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="financial">Financeiro</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="deliveries" className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Entregas Disponíveis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Entregas Disponíveis</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    {availableDeliveries.length} entrega(s) aguardando
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {isOnline ? (
+                    <div className="space-y-4">
+                      {availableDeliveries.length === 0 ? (
+                        <p className="text-center text-gray-500 py-4">
+                          Nenhuma entrega disponível no momento
+                        </p>
+                      ) : (
+                        availableDeliveries.map((delivery: DeliveryWithRelations) => (
+                          <div key={delivery.id} className="p-4 border rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-medium">{delivery.merchant.name}</h3>
+                                <p className="text-sm text-gray-600">{delivery.merchant.address}</p>
                               </div>
-                              <div className="space-y-2 text-sm text-gray-600">
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>De: {delivery.pickupAddress}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>Para: {delivery.deliveryAddress}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4" />
-                                  <span>Cliente: {delivery.customerName}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Phone className="h-4 w-4" />
-                                  <span>Telefone: {delivery.customerPhone}</span>
-                                </div>
-                              </div>
+                              <Badge variant="secondary">
+                                R$ {delivery.price.toFixed(2)}
+                              </Badge>
                             </div>
-                            <Button
-                              onClick={() => handleAcceptDelivery(delivery.id)}
-                              disabled={acceptDeliveryMutation.isPending}
-                              className="ml-4"
-                            >
-                              Aceitar Entrega
-                            </Button>
+                            <p className="text-sm text-gray-700 mb-2">{delivery.description}</p>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <MapPin className="h-4 w-4" />
+                                {delivery.deliveryAddress}
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleAcceptDelivery(delivery.id)}
+                                disabled={acceptDeliveryMutation.isPending}
+                              >
+                                Aceitar
+                              </Button>
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-gray-400 mb-4">
+                        <Package className="h-12 w-12 mx-auto" />
+                      </div>
+                      <p className="text-gray-600">
+                        Coloque-se online para ver entregas disponíveis
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-        {/* Minhas Entregas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              Minhas Entregas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {myDeliveriesLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Carregando suas entregas...</p>
-              </div>
-            ) : myDeliveries.length === 0 ? (
-              <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Você ainda não possui entregas</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {myDeliveries.map((delivery: DeliveryWithRelations) => (
-                  <Card key={delivery.id} className="border-l-4 border-l-green-500">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-4 mb-2">
-                            <h3 className="font-semibold text-lg">{delivery.merchant.name}</h3>
-                            <Badge className={getStatusColor(delivery.status)}>
+              {/* Minhas Entregas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Minhas Entregas</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    {myDeliveries.length} entrega(s) ativa(s)
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {myDeliveries.length === 0 ? (
+                      <p className="text-center text-gray-500 py-4">
+                        Nenhuma entrega ativa
+                      </p>
+                    ) : (
+                      myDeliveries.map((delivery: DeliveryWithRelations) => (
+                        <div key={delivery.id} className="p-4 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="font-medium">{delivery.merchant.name}</h3>
+                              <p className="text-sm text-gray-600">{delivery.merchant.address}</p>
+                            </div>
+                            <Badge variant={delivery.status === 'completed' ? 'default' : 'secondary'}>
                               {getStatusText(delivery.status)}
                             </Badge>
-                            <Badge className="bg-green-100 text-green-800">
-                              R$ {Number(delivery.price).toFixed(2).replace('.', ',')}
-                            </Badge>
                           </div>
-                          <div className="space-y-2 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
+                          <p className="text-sm text-gray-700 mb-2">{delivery.description}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
                               <MapPin className="h-4 w-4" />
-                              <span>De: {delivery.pickupAddress}</span>
+                              {delivery.deliveryAddress}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span>Para: {delivery.deliveryAddress}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <span>Cliente: {delivery.customerName}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4" />
-                              <span>Telefone: {delivery.customerPhone}</span>
-                            </div>
+                            {delivery.status === 'in_progress' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUpdateStatus(delivery.id, 'completed')}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Concluir
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 ml-4">
-                          {delivery.status === 'accepted' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(delivery.id, 'in_transit')}
-                              disabled={updateDeliveryStatusMutation.isPending}
-                            >
-                              Iniciar Entrega
-                            </Button>
-                          )}
-                          {delivery.status === 'in_transit' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(delivery.id, 'delivered')}
-                              disabled={updateDeliveryStatusMutation.isPending}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              Marcar como Entregue
-                            </Button>
-                          )}
-                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dashboard" className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total de Entregas</CardTitle>
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalDeliveries || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.completedDeliveries || 0} concluídas
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Entregas Hoje</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.todayDeliveries || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.pendingDeliveries || 0} em andamento
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Ganhos Hoje</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">R$ {(stats.todayEarnings || 0).toFixed(2)}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Meta: R$ 150,00
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avaliação</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{(stats.averageRating || 0).toFixed(1)}</div>
+                  <p className="text-xs text-muted-foreground">
+                    ⭐ de 5 estrelas
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ganhos da Semana</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {stats.weeklyEarnings && stats.weeklyEarnings.map((earning: number, index: number) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (6 - index));
+                    const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{dayName}</span>
+                        <span className="text-sm">R$ {earning.toFixed(2)}</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="financial" className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resumo Financeiro</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Total de Ganhos</span>
+                    <span className="text-lg font-bold">R$ {(stats.totalEarnings || 0).toFixed(2)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Ganhos Hoje</span>
+                    <span className="text-lg font-bold text-green-600">R$ {(stats.todayEarnings || 0).toFixed(2)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Média por Entrega</span>
+                    <span className="text-lg font-bold">
+                      R$ {stats.totalDeliveries > 0 ? (stats.totalEarnings / stats.totalDeliveries).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Metas e Objetivos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Meta Diária</span>
+                      <span className="text-sm">R$ {(stats.todayEarnings || 0).toFixed(2)} / R$ 150,00</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${Math.min((stats.todayEarnings || 0) / 150 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Meta Semanal</span>
+                      <span className="text-sm">R$ {((stats.weeklyEarnings || []).reduce((a: number, b: number) => a + b, 0)).toFixed(2)} / R$ 1.000,00</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full" 
+                        style={{ width: `${Math.min((stats.weeklyEarnings || []).reduce((a: number, b: number) => a + b, 0) / 1000 * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Dica:</strong> Mantenha-se online nos horários de pico (11h-14h e 18h-21h) para maximizar seus ganhos!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

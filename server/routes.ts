@@ -500,6 +500,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/deliverers/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role === 'deliverer') {
+        const stats = await storage.getDelivererStats(userInfo.id);
+        res.json(stats);
+      } else {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+    } catch (error) {
+      console.error("Error fetching deliverer stats:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer stats" });
+    }
+  });
+
   app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
     try {
       const userInfo = req.user;

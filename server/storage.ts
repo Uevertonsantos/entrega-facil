@@ -14,7 +14,7 @@ import {
   type DeliveryWithRelations,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
+import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -57,6 +57,18 @@ export interface IStorage {
     revenue: number;
     activeDeliverers: number;
     activeMerchants: number;
+  }>;
+  
+  // Deliverer statistics
+  getDelivererStats(delivererId: number): Promise<{
+    totalDeliveries: number;
+    completedDeliveries: number;
+    pendingDeliveries: number;
+    todayDeliveries: number;
+    totalEarnings: number;
+    todayEarnings: number;
+    averageRating: number;
+    weeklyEarnings: number[];
   }>;
 }
 
@@ -340,6 +352,100 @@ export class DatabaseStorage implements IStorage {
       revenue: revenue.sum,
       activeDeliverers: activeDeliverers.count,
       activeMerchants: activeMerchants.count,
+    };
+  }
+
+  async getDelivererStats(delivererId: number): Promise<{
+    totalDeliveries: number;
+    completedDeliveries: number;
+    pendingDeliveries: number;
+    todayDeliveries: number;
+    totalEarnings: number;
+    todayEarnings: number;
+    averageRating: number;
+    weeklyEarnings: number[];
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [totalDeliveries] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(deliveries)
+      .where(eq(deliveries.delivererId, delivererId));
+
+    const [completedDeliveries] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(deliveries)
+      .where(and(
+        eq(deliveries.delivererId, delivererId),
+        eq(deliveries.status, "completed")
+      ));
+
+    const [pendingDeliveries] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(deliveries)
+      .where(and(
+        eq(deliveries.delivererId, delivererId),
+        or(eq(deliveries.status, "pending"), eq(deliveries.status, "in_progress"))
+      ));
+
+    const [todayDeliveries] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(deliveries)
+      .where(and(
+        eq(deliveries.delivererId, delivererId),
+        gte(deliveries.createdAt, today)
+      ));
+
+    const [totalEarnings] = await db
+      .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+      .from(deliveries)
+      .where(and(
+        eq(deliveries.delivererId, delivererId),
+        eq(deliveries.status, "completed")
+      ));
+
+    const [todayEarnings] = await db
+      .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+      .from(deliveries)
+      .where(and(
+        eq(deliveries.delivererId, delivererId),
+        eq(deliveries.status, "completed"),
+        gte(deliveries.createdAt, today)
+      ));
+
+    // Calculate weekly earnings (last 7 days)
+    const weeklyEarnings = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      const [dayEarnings] = await db
+        .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+        .from(deliveries)
+        .where(and(
+          eq(deliveries.delivererId, delivererId),
+          eq(deliveries.status, "completed"),
+          gte(deliveries.createdAt, date),
+          lt(deliveries.createdAt, nextDay)
+        ));
+      
+      weeklyEarnings.push(dayEarnings.sum);
+    }
+
+    return {
+      totalDeliveries: totalDeliveries.count,
+      completedDeliveries: completedDeliveries.count,
+      pendingDeliveries: pendingDeliveries.count,
+      todayDeliveries: todayDeliveries.count,
+      totalEarnings: totalEarnings.sum,
+      todayEarnings: todayEarnings.sum,
+      averageRating: 4.8, // Mock rating for now
+      weeklyEarnings
     };
   }
 }
