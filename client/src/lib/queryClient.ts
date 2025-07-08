@@ -18,12 +18,12 @@ export async function apiRequest(
   const delivererToken = localStorage.getItem("delivererToken");
   const headers: any = data ? { "Content-Type": "application/json" } : {};
   
-  // Add appropriate token based on endpoint
-  if (adminToken && url.includes('/admin/')) {
+  // Add appropriate token based on endpoint and available tokens
+  if (adminToken) {
     headers.Authorization = `Bearer ${adminToken}`;
-  } else if (merchantToken && url.includes('/merchant/')) {
+  } else if (merchantToken) {
     headers.Authorization = `Bearer ${merchantToken}`;
-  } else if (delivererToken && url.includes('/deliverer/')) {
+  } else if (delivererToken) {
     headers.Authorization = `Bearer ${delivererToken}`;
   }
   
@@ -52,12 +52,12 @@ export const getQueryFn: <T>(options: {
     const delivererToken = localStorage.getItem("delivererToken");
     const headers: any = {};
     
-    // Add appropriate token based on endpoint or user type
-    if (adminToken && (url.includes('/admin/') || url.includes('/dashboard/') || url.includes('/deliveries/') || url.includes('/deliverers/') || url.includes('/merchants/'))) {
+    // Add appropriate token based on available tokens
+    if (adminToken) {
       headers.Authorization = `Bearer ${adminToken}`;
-    } else if (merchantToken && (url.includes('/merchant/') || url.includes('/deliveries/'))) {
+    } else if (merchantToken) {
       headers.Authorization = `Bearer ${merchantToken}`;
-    } else if (delivererToken && (url.includes('/deliverer/') || url.includes('/deliveries/'))) {
+    } else if (delivererToken) {
       headers.Authorization = `Bearer ${delivererToken}`;
     }
     
