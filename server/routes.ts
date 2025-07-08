@@ -568,16 +568,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Map frontend fields to database fields
       const deliveryData = {
-        merchantId: userInfo.id,
-        delivererId: null,
+        merchantId: req.body.merchantId || userInfo.id,
+        delivererId: req.body.delivererId || null,
         customerName: req.body.customerName,
         customerPhone: req.body.customerPhone,
-        pickupAddress: "A definir", // Default pickup address
+        customerCpf: req.body.customerCpf,
+        orderDescription: req.body.orderDescription,
+        pickupAddress: req.body.pickupAddress,
+        pickupCep: req.body.pickupCep,
         deliveryAddress: req.body.deliveryAddress,
+        deliveryCep: req.body.deliveryCep,
+        referencePoint: req.body.referencePoint,
         status: 'pending',
         priority: req.body.priority || 'medium',
         price: String(req.body.estimatedValue || "0.00"),
-        deliveryFee: "10.00", // Default delivery fee
+        deliveryFee: String(req.body.deliveryFee || "10.00"),
+        delivererPayment: req.body.delivererPayment ? String(req.body.delivererPayment) : null,
         notes: req.body.notes || null,
       };
       

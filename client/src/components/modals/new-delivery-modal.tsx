@@ -22,8 +22,13 @@ const deliveryFormSchema = z.object({
   delivererId: z.string().optional(),
   customerName: z.string().min(2, "Nome do cliente é obrigatório"),
   customerPhone: z.string().optional(),
+  customerCpf: z.string().optional(),
+  orderDescription: z.string().min(1, "Descrição do pedido é obrigatória"),
   pickupAddress: z.string().min(5, "Endereço de origem é obrigatório"),
+  pickupCep: z.string().optional(),
   deliveryAddress: z.string().min(5, "Endereço de entrega é obrigatório"),
+  deliveryCep: z.string().optional(),
+  referencePoint: z.string().optional(),
   deliveryFee: z.string().min(1, "Taxa de entrega é obrigatória"),
   delivererPayment: z.string().optional(),
   notes: z.string().optional(),
@@ -42,8 +47,8 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
   const [feeCalculation, setFeeCalculation] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const { data: merchants } = useQuery<Merchant[]>({
-    queryKey: ["/api/merchants"],
+  const { data: currentMerchant } = useQuery({
+    queryKey: ['/api/merchants/current'],
     retry: false,
     enabled: isOpen,
   });
@@ -61,8 +66,13 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       delivererId: "",
       customerName: "",
       customerPhone: "",
+      customerCpf: "",
+      orderDescription: "",
       pickupAddress: "",
+      pickupCep: "",
       deliveryAddress: "",
+      deliveryCep: "",
+      referencePoint: "",
       deliveryFee: "",
       delivererPayment: "",
       notes: "",
@@ -76,8 +86,13 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
         delivererId: data.delivererId && data.delivererId !== "none" ? parseInt(data.delivererId) : null,
         customerName: data.customerName,
         customerPhone: data.customerPhone || null,
+        customerCpf: data.customerCpf || null,
+        orderDescription: data.orderDescription,
         pickupAddress: data.pickupAddress,
+        pickupCep: data.pickupCep || null,
         deliveryAddress: data.deliveryAddress,
+        deliveryCep: data.deliveryCep || null,
+        referencePoint: data.referencePoint || null,
         status: "pending",
         deliveryFee: parseFloat(data.deliveryFee),
         delivererPayment: data.delivererPayment ? parseFloat(data.delivererPayment) : null,
@@ -162,13 +177,15 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
     calculateFee(pickupAddress, deliveryAddress);
   };
 
-  // Clean up state when modal is closed
+  // Clean up state when modal is closed and set merchant ID
   useEffect(() => {
     if (!isOpen) {
       setFeeCalculation(null);
       form.reset();
+    } else if (currentMerchant?.id) {
+      form.setValue("merchantId", currentMerchant.id.toString());
     }
-  }, [isOpen, form]);
+  }, [isOpen, form, currentMerchant]);
 
   const handleClose = () => {
     onClose();
@@ -192,18 +209,11 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                   <FormItem>
                     <FormLabel>Comerciante</FormLabel>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o comerciante" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {merchants?.map((merchant) => (
-                            <SelectItem key={merchant.id} value={merchant.id.toString()}>
-                              {merchant.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input 
+                        value={currentMerchant?.name || "Carregando..."}
+                        disabled
+                        className="bg-gray-50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,7 +247,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="customerName"
@@ -265,7 +275,35 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="customerCpf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF do Cliente</FormLabel>
+                    <FormControl>
+                      <Input placeholder="000.000.000-00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+
+            <FormField
+              control={form.control}
+              name="orderDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição do Pedido</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Descreva o pedido (produtos, quantidade, etc.)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -295,6 +333,50 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                       placeholder="Rua, número, complemento, bairro, cidade"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="pickupCep"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CEP de Origem</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00000-000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="deliveryCep"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CEP de Entrega</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00000-000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="referencePoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ponto de Referência</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ponto de referência para facilitar a entrega" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
