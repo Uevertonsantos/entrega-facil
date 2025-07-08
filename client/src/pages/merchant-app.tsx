@@ -19,6 +19,7 @@ import { MapPin, Clock, DollarSign, Package, Plus, Store, Phone, User, LogOut, S
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DeliveryWithRelations, Merchant } from "@shared/schema";
 import MerchantReports from "./merchant-reports";
+import NewDeliveryModal from "@/components/modals/new-delivery-modal";
 
 const deliveryFormSchema = z.object({
   customerName: z.string().min(2, "Nome do cliente deve ter pelo menos 2 caracteres"),
@@ -325,126 +326,21 @@ export default function MerchantApp() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nova Entrega
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Solicitar Nova Entrega</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="customerName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome do Cliente</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Nome completo do cliente" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="customerPhone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Telefone do Cliente</FormLabel>
-                              <FormControl>
-                                <Input placeholder="(11) 99999-9999" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="deliveryAddress"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Endereço de Entrega</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Endereço completo" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="estimatedValue"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Valor Estimado (R$)</FormLabel>
-                              <FormControl>
-                                <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="priority"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Prioridade</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione a prioridade" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="low">Baixa</SelectItem>
-                                  <SelectItem value="medium">Média</SelectItem>
-                                  <SelectItem value="high">Alta</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="notes"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Observações</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Observações adicionais (opcional)" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                            Cancelar
-                          </Button>
-                          <Button type="submit" disabled={createDeliveryMutation.isPending}>
-                            {createDeliveryMutation.isPending ? "Solicitando..." : "Solicitar Entrega"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Entrega
+                </Button>
               </CardContent>
             </Card>
+
+            {/* Modal de Nova Entrega */}
+            <NewDeliveryModal 
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+            />
 
             {/* My Deliveries */}
             <Card>
