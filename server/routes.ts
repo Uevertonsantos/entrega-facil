@@ -355,6 +355,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deliverer app route - must come before /api/deliverers/:id
+  app.get('/api/deliverers/current', isAuthenticated, async (req: any, res) => {
+    const userInfo = req.user;
+    
+    // For local JWT auth, we need to check if user is a deliverer
+    if (userInfo.role === 'deliverer') {
+      const deliverer = await storage.getDeliverer(userInfo.id);
+      if (!deliverer) {
+        return res.json({ isDeliverer: false, message: "Deliverer not found" });
+      }
+      res.json({ isDeliverer: true, ...deliverer });
+    } else {
+      return res.json({ isDeliverer: false, message: "User is not registered as a deliverer" });
+    }
+  });
+
   app.get('/api/deliverers/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -510,24 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Deliverer app routes
-  app.get('/api/deliverers/current', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.email) {
-        return res.json({ isDeliverer: false, message: "User not found" });
-      }
-      const deliverer = await storage.getDelivererByEmail(user.email);
-      if (!deliverer) {
-        return res.json({ isDeliverer: false, message: "User is not registered as a deliverer" });
-      }
-      res.json({ isDeliverer: true, ...deliverer });
-    } catch (error) {
-      console.error("Error fetching current deliverer:", error);
-      res.status(500).json({ message: "Failed to fetch current deliverer" });
-    }
-  });
+
 
   app.get('/api/deliveries/available', isAuthenticated, async (req, res) => {
     try {
@@ -541,17 +540,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/deliveries/my-deliveries', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.email) {
-        return res.status(404).json({ message: "User not found" });
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role === 'deliverer') {
+        const deliveries = await storage.getDeliveriesByDeliverer(userInfo.id);
+        res.json(deliveries);
+      } else {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
       }
-      const deliverer = await storage.getDelivererByEmail(user.email);
-      if (!deliverer) {
-        return res.status(404).json({ message: "Deliverer not found" });
-      }
-      const deliveries = await storage.getDeliveriesByDeliverer(deliverer.id);
-      res.json(deliveries);
     } catch (error) {
       console.error("Error fetching my deliveries:", error);
       res.status(500).json({ message: "Failed to fetch my deliveries" });
@@ -584,16 +581,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Merchant app routes
   app.get('/api/merchants/current', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.email) {
-        return res.json({ isMerchant: false, message: "User not found" });
-      }
-      const merchant = await storage.getMerchantByEmail(user.email);
-      if (!merchant) {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a merchant
+      if (userInfo.role === 'merchant') {
+        const merchant = await storage.getMerchant(userInfo.id);
+        if (!merchant) {
+          return res.json({ isMerchant: false, message: "Merchant not found" });
+        }
+        res.json({ isMerchant: true, ...merchant });
+      } else {
         return res.json({ isMerchant: false, message: "User is not registered as a merchant" });
       }
-      res.json({ isMerchant: true, ...merchant });
     } catch (error) {
       console.error("Error fetching current merchant:", error);
       res.status(500).json({ message: "Failed to fetch current merchant" });
@@ -602,17 +601,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.email) {
-        return res.status(404).json({ message: "User not found" });
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a merchant
+      if (userInfo.role === 'merchant') {
+        const deliveries = await storage.getDeliveriesByMerchant(userInfo.id);
+        res.json(deliveries);
+      } else {
+        return res.status(403).json({ message: "Only merchants can access this endpoint" });
       }
-      const merchant = await storage.getMerchantByEmail(user.email);
-      if (!merchant) {
-        return res.status(404).json({ message: "Merchant not found" });
-      }
-      const deliveries = await storage.getDeliveriesByMerchant(merchant.id);
-      res.json(deliveries);
     } catch (error) {
       console.error("Error fetching my delivery requests:", error);
       res.status(500).json({ message: "Failed to fetch my delivery requests" });
