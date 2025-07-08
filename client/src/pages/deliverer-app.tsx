@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar } from "lucide-react";
+import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar, Eye } from "lucide-react";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
+import DeliveryManagementModal from "@/components/modals/delivery-management-modal";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
@@ -91,20 +92,7 @@ export default function DelivererApp() {
     },
   });
 
-  const updateDeliveryStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      await apiRequest("PATCH", `/api/deliveries/${id}`, {
-        status
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/deliveries/my-deliveries'] });
-      toast({
-        title: "Status atualizado!",
-        description: "O status da entrega foi atualizado com sucesso.",
-      });
-    },
-  });
+
 
   const handleToggleOnline = (checked: boolean) => {
     setIsOnline(checked);
@@ -115,9 +103,7 @@ export default function DelivererApp() {
     acceptDeliveryMutation.mutate(deliveryId);
   };
 
-  const handleUpdateStatus = (deliveryId: number, status: string) => {
-    updateDeliveryStatusMutation.mutate({ id: deliveryId, status });
-  };
+
 
   // Create notification sound using Web Audio API
   const playNotificationSound = () => {
@@ -378,14 +364,15 @@ export default function DelivererApp() {
                             </div>
                             {delivery.status === 'in_progress' && (
                               <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleUpdateStatus(delivery.id, 'completed')}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Concluir
-                                </Button>
+                                <DeliveryManagementModal delivery={delivery}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Gerenciar
+                                  </Button>
+                                </DeliveryManagementModal>
                               </div>
                             )}
                           </div>

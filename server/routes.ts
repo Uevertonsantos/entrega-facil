@@ -641,23 +641,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/deliveries/:id/accept', isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user || !user.email) {
-        return res.status(404).json({ message: "User not found" });
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can accept deliveries" });
       }
-      const deliverer = await storage.getDelivererByEmail(user.email);
-      if (!deliverer) {
-        return res.status(404).json({ message: "Deliverer not found" });
-      }
-      const delivery = await storage.updateDelivery(id, { 
-        delivererId: deliverer.id, 
-        status: 'accepted' 
+      
+      const delivererId = Number(userInfo.id);
+      const delivery = await storage.updateDelivery(id, {
+        delivererId: delivererId,
+        status: "in_progress"
       });
       res.json(delivery);
     } catch (error) {
       console.error("Error accepting delivery:", error);
       res.status(500).json({ message: "Failed to accept delivery" });
+    }
+  });
+
+  app.post('/api/deliveries/:id/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userInfo = req.user;
+      const { reason } = req.body;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can cancel deliveries" });
+      }
+      
+      const delivery = await storage.updateDelivery(id, {
+        status: "cancelled",
+        notes: reason || "Cancelada pelo entregador"
+      });
+      res.json(delivery);
+    } catch (error) {
+      console.error("Error cancelling delivery:", error);
+      res.status(500).json({ message: "Failed to cancel delivery" });
+    }
+  });
+
+  app.post('/api/deliveries/:id/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userInfo = req.user;
+      const { notes } = req.body;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can complete deliveries" });
+      }
+      
+      const delivery = await storage.updateDelivery(id, {
+        status: "completed",
+        completedAt: new Date(),
+        notes: notes || null
+      });
+      res.json(delivery);
+    } catch (error) {
+      console.error("Error completing delivery:", error);
+      res.status(500).json({ message: "Failed to complete delivery" });
+    }
+  });
+
+  app.post('/api/deliveries/:id/notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userInfo = req.user;
+      const { notes } = req.body;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can add notes" });
+      }
+      
+      const delivery = await storage.updateDelivery(id, {
+        notes: notes
+      });
+      res.json(delivery);
+    } catch (error) {
+      console.error("Error adding notes:", error);
+      res.status(500).json({ message: "Failed to add notes" });
     }
   });
 
