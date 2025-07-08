@@ -126,7 +126,6 @@ export const insertDeliverySchema = createInsertSchema(deliveries).omit({
   createdAt: true,
   updatedAt: true,
 }).partial({
-  pickupAddress: true,
   price: true,
   deliveryFee: true,
   delivererId: true,

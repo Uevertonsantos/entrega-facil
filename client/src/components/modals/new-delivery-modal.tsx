@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -13,12 +15,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Merchant, Deliverer } from "@shared/schema";
+import { Calculator, Loader2, MapPin, Clock, DollarSign } from "lucide-react";
 
 const deliveryFormSchema = z.object({
   merchantId: z.string().min(1, "Comerciante é obrigatório"),
   delivererId: z.string().optional(),
   customerName: z.string().min(2, "Nome do cliente é obrigatório"),
   customerPhone: z.string().optional(),
+  pickupAddress: z.string().min(5, "Endereço de origem é obrigatório"),
   deliveryAddress: z.string().min(5, "Endereço de entrega é obrigatório"),
   deliveryFee: z.string().min(1, "Taxa de entrega é obrigatória"),
   delivererPayment: z.string().optional(),
@@ -35,6 +39,8 @@ interface NewDeliveryModalProps {
 export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [feeCalculation, setFeeCalculation] = useState<any>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const { data: merchants } = useQuery<Merchant[]>({
     queryKey: ["/api/merchants"],
@@ -55,6 +61,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       delivererId: "",
       customerName: "",
       customerPhone: "",
+      pickupAddress: "",
       deliveryAddress: "",
       deliveryFee: "",
       delivererPayment: "",
@@ -69,6 +76,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
         delivererId: data.delivererId ? parseInt(data.delivererId) : null,
         customerName: data.customerName,
         customerPhone: data.customerPhone || null,
+        pickupAddress: data.pickupAddress,
         deliveryAddress: data.deliveryAddress,
         status: "pending",
         deliveryFee: parseFloat(data.deliveryFee),
@@ -84,8 +92,9 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
         title: "Entrega criada",
         description: "A entrega foi criada com sucesso.",
       });
-      onClose();
       form.reset();
+      setFeeCalculation(null);
+      onClose();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -110,6 +119,56 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
   const handleSubmit = (data: DeliveryFormData) => {
     createDeliveryMutation.mutate(data);
   };
+
+  const calculateFee = async (pickupAddress: string, deliveryAddress: string) => {
+    if (!pickupAddress || !deliveryAddress) {
+      return;
+    }
+
+    setIsCalculating(true);
+    try {
+      const response = await apiRequest('POST', '/api/calculate-delivery-fee', {
+        pickupAddress,
+        deliveryAddress
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        setFeeCalculation(result);
+        // Update the delivery fee in the form
+        form.setValue('deliveryFee', result.finalFee.toString());
+      } else {
+        toast({
+          title: "Erro no cálculo",
+          description: result.error || "Não foi possível calcular a taxa",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro no cálculo",
+        description: "Não foi possível calcular a taxa de entrega",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const handleCalculateFee = () => {
+    const pickupAddress = form.getValues('pickupAddress');
+    const deliveryAddress = form.getValues('deliveryAddress');
+    calculateFee(pickupAddress, deliveryAddress);
+  };
+
+  // Clean up state when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setFeeCalculation(null);
+      form.reset();
+    }
+  }, [isOpen, form]);
 
   const handleClose = () => {
     onClose();
@@ -210,6 +269,23 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
 
             <FormField
               control={form.control}
+              name="pickupAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Endereço de Origem</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Endereço de coleta"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="deliveryAddress"
               render={({ field }) => (
                 <FormItem>
@@ -232,14 +308,30 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Taxa de Entrega</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        {...field} 
-                      />
-                    </FormControl>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCalculateFee}
+                        disabled={isCalculating}
+                        title="Calcular taxa automaticamente"
+                      >
+                        {isCalculating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Calculator className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -264,6 +356,51 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                 )}
               />
             </div>
+
+            {/* Resultado do Cálculo da Taxa */}
+            {feeCalculation && (
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-green-800">
+                    <Calculator className="h-4 w-4 inline mr-2" />
+                    Cálculo Automático da Taxa
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-green-600" />
+                      <span className="text-gray-600">Distância:</span>
+                      <span className="font-medium">{feeCalculation.distance} km</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-green-600" />
+                      <span className="text-gray-600">Tempo:</span>
+                      <span className="font-medium">{feeCalculation.estimatedTime} min</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="text-gray-600">Taxa Base:</span>
+                      <span className="font-medium">R$ {feeCalculation.baseFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {feeCalculation.zone}
+                      </Badge>
+                      <span className="text-gray-600">Final:</span>
+                      <span className="font-semibold text-green-700">R$ {feeCalculation.finalFee.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {feeCalculation.surgeMultiplier > 1 && (
+                    <div className="mt-3 p-2 bg-orange-50 rounded-md border border-orange-200">
+                      <p className="text-xs text-orange-700">
+                        <strong>Surge Pricing:</strong> {feeCalculation.surgeReason} (×{feeCalculation.surgeMultiplier})
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <FormField
               control={form.control}

@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
 import { z } from "zod";
+import { calculateDeliveryDistance, applySurgePricing, getDeliveryZone } from "./services/distanceService";
 
 // Admin credentials (in production, these should be in environment variables)
 const ADMIN_CREDENTIALS = {
@@ -739,6 +740,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error sending WhatsApp message:", error);
       res.status(500).json({ message: "Failed to send WhatsApp message" });
+    }
+  });
+
+  // Calculate delivery fee endpoint
+  app.post('/api/calculate-delivery-fee', async (req, res) => {
+    try {
+      const { pickupAddress, deliveryAddress } = req.body;
+      
+      if (!pickupAddress || !deliveryAddress) {
+        return res.status(400).json({ 
+          error: 'Endereços de coleta e entrega são obrigatórios' 
+        });
+      }
+      
+      const result = await calculateDeliveryDistance(pickupAddress, deliveryAddress);
+      
+      if (!result) {
+        return res.status(400).json({ 
+          error: 'Não foi possível calcular a distância entre os endereços' 
+        });
+      }
+      
+      // Apply surge pricing
+      const surgeResult = applySurgePricing(result.deliveryFee);
+      
+      // Get delivery zone
+      const zone = getDeliveryZone(result.distance);
+      
+      res.json({
+        distance: result.distance,
+        estimatedTime: result.estimatedTime,
+        baseFee: result.deliveryFee,
+        finalFee: surgeResult.fee,
+        surgeMultiplier: surgeResult.multiplier,
+        surgeReason: surgeResult.reason,
+        zone: zone.zone,
+        zoneDescription: zone.description
+      });
+      
+    } catch (error) {
+      console.error('Error calculating delivery fee:', error);
+      res.status(500).json({ 
+        error: 'Erro interno ao calcular taxa de entrega' 
+      });
     }
   });
 
