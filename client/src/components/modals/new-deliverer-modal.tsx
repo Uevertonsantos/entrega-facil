@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertDelivererSchema, type InsertDeliverer } from "@shared/schema";
 import { Plus } from "lucide-react";
+import { z } from "zod";
 
 type DelivererFormData = InsertDeliverer;
 
@@ -24,12 +25,15 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<DelivererFormData>({
-    resolver: zodResolver(insertDelivererSchema),
+  const form = useForm<DelivererFormData & { password: string }>({
+    resolver: zodResolver(insertDelivererSchema.extend({
+      password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    })),
     defaultValues: {
       name: "",
       phone: "",
       email: "",
+      password: "",
       vehicleType: "bicicleta",
       isOnline: false,
       isActive: true,
@@ -112,6 +116,20 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="password" placeholder="Senha de acesso" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

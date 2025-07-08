@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertMerchantSchema, type InsertMerchant } from "@shared/schema";
 import { Plus } from "lucide-react";
+import { z } from "zod";
 
 type MerchantFormData = InsertMerchant;
 
@@ -24,13 +25,16 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<MerchantFormData>({
-    resolver: zodResolver(insertMerchantSchema),
+  const form = useForm<MerchantFormData & { password: string }>({
+    resolver: zodResolver(insertMerchantSchema.extend({
+      password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    })),
     defaultValues: {
       name: "",
       businessName: "",
       phone: "",
       email: "",
+      password: "",
       address: "",
       businessType: "padaria",
       planType: "por_entrega",
@@ -129,6 +133,20 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="password" placeholder="Senha de acesso" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

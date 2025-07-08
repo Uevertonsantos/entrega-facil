@@ -40,11 +40,13 @@ export const users = pgTable("users", {
 export const merchants = pgTable("merchants", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
-  type: varchar("type").notNull(), // padaria, hortifruti, papelaria, etc.
+  businessName: varchar("business_name").notNull(),
   phone: varchar("phone").notNull(),
+  email: varchar("email").notNull().unique(),
+  password: varchar("password").notNull(),
   address: text("address").notNull(),
-  planType: varchar("plan_type").notNull(), // "monthly" or "per_delivery"
-  planValue: decimal("plan_value", { precision: 10, scale: 2 }).notNull(),
+  businessType: varchar("business_type").notNull(), // padaria, hortifruti, papelaria, etc.
+  planType: varchar("plan_type").notNull(), // "por_entrega" or "mensal"
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -55,6 +57,9 @@ export const deliverers = pgTable("deliverers", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
   phone: varchar("phone").notNull(),
+  email: varchar("email").notNull().unique(),
+  password: varchar("password").notNull(),
+  vehicleType: varchar("vehicle_type").notNull(), // bicicleta, moto, carro, a_pe
   isActive: boolean("is_active").default(true),
   isOnline: boolean("is_online").default(false),
   currentDeliveries: integer("current_deliveries").default(0),
