@@ -97,6 +97,8 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 08, 2025. Corrected logout functionality to properly clear tokens and redirect users
 - July 08, 2025. Improved error handling for duplicate email addresses in registration forms
 - July 08, 2025. Enhanced user feedback with meaningful error messages for form validation
+- July 08, 2025. Fixed endpoint routing conflicts - moved specific endpoints before generic ones (/current before /:id)
+- July 08, 2025. Resolved portal access issues for both deliverer and merchant applications
 
 ## User Preferences
 

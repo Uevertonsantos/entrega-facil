@@ -271,6 +271,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant app route - must come before /api/merchants/:id
+  app.get('/api/merchants/current', isAuthenticated, async (req: any, res) => {
+    const userInfo = req.user;
+    
+    // For local JWT auth, check if user is a merchant
+    if (userInfo.role === 'merchant') {
+      const merchant = await storage.getMerchant(userInfo.id);
+      if (!merchant) {
+        return res.json({ isMerchant: false, message: "Merchant not found" });
+      }
+      res.json({ isMerchant: true, ...merchant });
+    } else {
+      return res.json({ isMerchant: false, message: "User is not registered as a merchant" });
+    }
+  });
+
   app.get('/api/merchants/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -578,26 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Merchant app routes
-  app.get('/api/merchants/current', isAuthenticated, async (req: any, res) => {
-    try {
-      const userInfo = req.user;
-      
-      // For local JWT auth, check if user is a merchant
-      if (userInfo.role === 'merchant') {
-        const merchant = await storage.getMerchant(userInfo.id);
-        if (!merchant) {
-          return res.json({ isMerchant: false, message: "Merchant not found" });
-        }
-        res.json({ isMerchant: true, ...merchant });
-      } else {
-        return res.json({ isMerchant: false, message: "User is not registered as a merchant" });
-      }
-    } catch (error) {
-      console.error("Error fetching current merchant:", error);
-      res.status(500).json({ message: "Failed to fetch current merchant" });
-    }
-  });
+
 
   app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
     try {
