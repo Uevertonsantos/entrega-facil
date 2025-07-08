@@ -20,7 +20,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const isAdmin = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Admin token required" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const token = authHeader.substring(7);
@@ -32,7 +32,66 @@ const isAdmin = (req: any, res: any, next: any) => {
     req.admin = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid admin token" });
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+// Middleware to verify merchant token
+const isMerchant = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.role !== 'merchant') {
+      return res.status(403).json({ message: "Merchant access required" });
+    }
+    req.merchant = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+// Middleware to verify deliverer token
+const isDeliverer = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.role !== 'deliverer') {
+      return res.status(403).json({ message: "Deliverer access required" });
+    }
+    req.deliverer = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
+// Middleware to verify any authenticated user (admin, merchant, or deliverer)
+const isAuthenticated = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.substring(7);
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
 
@@ -161,12 +220,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth routes
+  // Auth routes - return current user info based on token
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // For local auth system, we return the user info from the token
+      const userInfo = req.user;
+      
+      // If it's a merchant, get full merchant data
+      if (userInfo.role === 'merchant') {
+        const merchant = await storage.getMerchant(userInfo.id);
+        res.json({ ...userInfo, merchant });
+      }
+      // If it's a deliverer, get full deliverer data  
+      else if (userInfo.role === 'deliverer') {
+        const deliverer = await storage.getDeliverer(userInfo.id);
+        res.json({ ...userInfo, deliverer });
+      }
+      // If it's admin, return admin info
+      else if (userInfo.role === 'admin') {
+        res.json({ ...userInfo, admin: true });
+      }
+      else {
+        res.json(userInfo);
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

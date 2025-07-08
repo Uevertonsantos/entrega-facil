@@ -74,7 +74,7 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    enabled: !isAdmin && !isMerchant && !isDeliverer, // Only query if not locally authenticated
+    enabled: !isAdmin && !isMerchant && !isDeliverer && !isCheckingAuth, // Only query if not locally authenticated
   });
 
   return {

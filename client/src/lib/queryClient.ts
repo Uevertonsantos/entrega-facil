@@ -44,7 +44,25 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const url = queryKey[0] as string;
+    
+    // Add tokens if available
+    const adminToken = localStorage.getItem("adminToken");
+    const merchantToken = localStorage.getItem("merchantToken");
+    const delivererToken = localStorage.getItem("delivererToken");
+    const headers: any = {};
+    
+    // Add appropriate token based on endpoint or user type
+    if (adminToken && (url.includes('/admin/') || url.includes('/dashboard/') || url.includes('/deliveries/') || url.includes('/deliverers/') || url.includes('/merchants/'))) {
+      headers.Authorization = `Bearer ${adminToken}`;
+    } else if (merchantToken && (url.includes('/merchant/') || url.includes('/deliveries/'))) {
+      headers.Authorization = `Bearer ${merchantToken}`;
+    } else if (delivererToken && (url.includes('/deliverer/') || url.includes('/deliveries/'))) {
+      headers.Authorization = `Bearer ${delivererToken}`;
+    }
+    
+    const res = await fetch(url, {
+      headers,
       credentials: "include",
     });
 
