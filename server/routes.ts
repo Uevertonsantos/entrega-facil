@@ -472,6 +472,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Specific routes MUST come before parameterized routes
+  app.get('/api/deliveries/available', isAuthenticated, async (req, res) => {
+    try {
+      const deliveries = await storage.getAvailableDeliveries();
+      res.json(deliveries);
+    } catch (error) {
+      console.error("Error fetching available deliveries:", error);
+      res.status(500).json({ message: "Failed to fetch available deliveries" });
+    }
+  });
+
+  app.get('/api/deliveries/my-deliveries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role === 'deliverer') {
+        const deliveries = await storage.getDeliveriesByDeliverer(userInfo.id);
+        res.json(deliveries);
+      } else {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+    } catch (error) {
+      console.error("Error fetching my deliveries:", error);
+      res.status(500).json({ message: "Failed to fetch my deliveries" });
+    }
+  });
+
+  app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a merchant
+      if (userInfo.role === 'merchant') {
+        const deliveries = await storage.getDeliveriesByMerchant(userInfo.id);
+        res.json(deliveries);
+      } else {
+        return res.status(403).json({ message: "Only merchants can access this endpoint" });
+      }
+    } catch (error) {
+      console.error("Error fetching my delivery requests:", error);
+      res.status(500).json({ message: "Failed to fetch my delivery requests" });
+    }
+  });
+
   app.get('/api/deliveries/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -569,32 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  app.get('/api/deliveries/available', isAuthenticated, async (req, res) => {
-    try {
-      const deliveries = await storage.getAvailableDeliveries();
-      res.json(deliveries);
-    } catch (error) {
-      console.error("Error fetching available deliveries:", error);
-      res.status(500).json({ message: "Failed to fetch available deliveries" });
-    }
-  });
 
-  app.get('/api/deliveries/my-deliveries', isAuthenticated, async (req: any, res) => {
-    try {
-      const userInfo = req.user;
-      
-      // For local JWT auth, check if user is a deliverer
-      if (userInfo.role === 'deliverer') {
-        const deliveries = await storage.getDeliveriesByDeliverer(userInfo.id);
-        res.json(deliveries);
-      } else {
-        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
-      }
-    } catch (error) {
-      console.error("Error fetching my deliveries:", error);
-      res.status(500).json({ message: "Failed to fetch my deliveries" });
-    }
-  });
 
   app.post('/api/deliveries/:id/accept', isAuthenticated, async (req: any, res) => {
     try {
@@ -616,25 +636,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error accepting delivery:", error);
       res.status(500).json({ message: "Failed to accept delivery" });
-    }
-  });
-
-
-
-  app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
-    try {
-      const userInfo = req.user;
-      
-      // For local JWT auth, check if user is a merchant
-      if (userInfo.role === 'merchant') {
-        const deliveries = await storage.getDeliveriesByMerchant(userInfo.id);
-        res.json(deliveries);
-      } else {
-        return res.status(403).json({ message: "Only merchants can access this endpoint" });
-      }
-    } catch (error) {
-      console.error("Error fetching my delivery requests:", error);
-      res.status(500).json({ message: "Failed to fetch my delivery requests" });
     }
   });
 
