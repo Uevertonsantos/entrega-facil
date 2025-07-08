@@ -310,7 +310,7 @@ export default function DelivererApp() {
                                 <p className="text-sm text-gray-600">{delivery.merchant.address}</p>
                               </div>
                               <Badge variant="secondary">
-                                R$ {delivery.price.toFixed(2)}
+                                R$ {(Number(delivery.price) || Number(delivery.estimatedValue) || 0).toFixed(2)}
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-700 mb-2">{delivery.description}</p>

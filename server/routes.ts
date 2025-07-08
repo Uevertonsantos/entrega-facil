@@ -228,12 +228,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If it's a merchant, get full merchant data
       if (userInfo.role === 'merchant') {
-        const merchant = await storage.getMerchant(userInfo.id);
+        const merchant = await storage.getMerchant(Number(userInfo.id));
         res.json({ ...userInfo, merchant });
       }
       // If it's a deliverer, get full deliverer data  
       else if (userInfo.role === 'deliverer') {
-        const deliverer = await storage.getDeliverer(userInfo.id);
+        const deliverer = await storage.getDeliverer(Number(userInfo.id));
         res.json({ ...userInfo, deliverer });
       }
       // If it's admin, return admin info
@@ -277,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // For local JWT auth, check if user is a merchant
     if (userInfo.role === 'merchant') {
-      const merchant = await storage.getMerchant(userInfo.id);
+      const merchant = await storage.getMerchant(Number(userInfo.id));
       if (!merchant) {
         return res.json({ isMerchant: false, message: "Merchant not found" });
       }
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // For local JWT auth, we need to check if user is a deliverer
     if (userInfo.role === 'deliverer') {
-      const deliverer = await storage.getDeliverer(userInfo.id);
+      const deliverer = await storage.getDeliverer(Number(userInfo.id));
       if (!deliverer) {
         return res.json({ isDeliverer: false, message: "Deliverer not found" });
       }
@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For local JWT auth, check if user is a deliverer
       if (userInfo.role === 'deliverer') {
-        const deliveries = await storage.getDeliveriesByDeliverer(userInfo.id);
+        const deliveries = await storage.getDeliveriesByDeliverer(Number(userInfo.id));
         res.json(deliveries);
       } else {
         return res.status(403).json({ message: "Only deliverers can access this endpoint" });
@@ -506,7 +506,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For local JWT auth, check if user is a deliverer
       if (userInfo.role === 'deliverer') {
-        const stats = await storage.getDelivererStats(userInfo.id);
+        // Convert string ID to number (JWT tokens store everything as strings)
+        const delivererId = Number(userInfo.id);
+        if (!delivererId || isNaN(delivererId)) {
+          return res.status(400).json({ message: "Invalid deliverer ID" });
+        }
+        const stats = await storage.getDelivererStats(delivererId);
         res.json(stats);
       } else {
         return res.status(403).json({ message: "Only deliverers can access this endpoint" });
@@ -523,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For local JWT auth, check if user is a merchant
       if (userInfo.role === 'merchant') {
-        const deliveries = await storage.getDeliveriesByMerchant(userInfo.id);
+        const deliveries = await storage.getDeliveriesByMerchant(Number(userInfo.id));
         res.json(deliveries);
       } else {
         return res.status(403).json({ message: "Only merchants can access this endpoint" });
