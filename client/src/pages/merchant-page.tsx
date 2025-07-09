@@ -42,7 +42,7 @@ interface Plan {
 }
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
@@ -94,7 +94,7 @@ export default function MerchantPage() {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
