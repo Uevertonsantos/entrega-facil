@@ -35,6 +35,8 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
       email: "",
       password: "",
       vehicleType: "bicicleta",
+      vehicleModel: "",
+      vehiclePlate: "",
       commissionPercentage: "20.00",
       isOnline: false,
       isActive: true,
@@ -186,6 +188,36 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
                         max="100"
                         placeholder="20.00" 
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="vehicleModel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Modelo do Veículo</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ex: Honda CG 160" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="vehiclePlate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Placa</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ex: ABC-1234" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

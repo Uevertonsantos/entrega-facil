@@ -65,6 +65,8 @@ export const deliverers = pgTable("deliverers", {
   email: varchar("email").notNull().unique(),
   password: varchar("password").notNull(),
   vehicleType: varchar("vehicle_type").notNull(), // bicicleta, moto, carro, a_pe
+  vehicleModel: varchar("vehicle_model"),
+  vehiclePlate: varchar("vehicle_plate"),
   commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("15.00"),
   isActive: boolean("is_active").default(true),
   isOnline: boolean("is_online").default(false),

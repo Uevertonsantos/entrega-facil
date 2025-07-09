@@ -27,15 +27,9 @@ import {
   Trash2
 } from "lucide-react";
 import type { Deliverer } from "@shared/schema";
+import NewDelivererModal from "@/components/modals/new-deliverer-modal";
 
-const delivererFormSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  phone: z.string().min(10, "Telefone deve ter pelo menos 10 caracteres"),
-  isActive: z.boolean(),
-  isOnline: z.boolean(),
-});
 
-type DelivererFormData = z.infer<typeof delivererFormSchema>;
 
 export default function Deliverers() {
   const { toast } = useToast();
@@ -49,50 +43,9 @@ export default function Deliverers() {
     retry: false,
   });
 
-  const form = useForm<DelivererFormData>({
-    resolver: zodResolver(delivererFormSchema),
-    defaultValues: {
-      name: "",
-      phone: "",
-      isActive: true,
-      isOnline: false,
-    },
-  });
 
-  const createDelivererMutation = useMutation({
-    mutationFn: async (data: DelivererFormData) => {
-      await apiRequest("/api/deliverers", "POST", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deliverers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deliverers/active"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Entregador criado",
-        description: "O entregador foi criado com sucesso.",
-      });
-      setIsNewDelivererOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Não autorizado",
-          description: "Você foi deslogado. Fazendo login novamente...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Erro",
-        description: "Erro ao criar entregador. Tente novamente.",
-        variant: "destructive",
-      });
-    },
-  });
+
+
 
   const updateDelivererMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<DelivererFormData> }) => {
@@ -162,23 +115,7 @@ export default function Deliverers() {
     },
   });
 
-  const handleSubmit = (data: DelivererFormData) => {
-    if (editingDeliverer) {
-      updateDelivererMutation.mutate({ id: editingDeliverer.id, data });
-    } else {
-      createDelivererMutation.mutate(data);
-    }
-  };
 
-  const handleEdit = (deliverer: Deliverer) => {
-    setEditingDeliverer(deliverer);
-    form.reset({
-      name: deliverer.name,
-      phone: deliverer.phone,
-      isActive: deliverer.isActive,
-      isOnline: deliverer.isOnline,
-    });
-  };
 
   const handleToggleOnline = (deliverer: Deliverer) => {
     updateDelivererMutation.mutate({
@@ -224,106 +161,13 @@ export default function Deliverers() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Entregadores</h1>
-        <Dialog open={isNewDelivererOpen} onOpenChange={setIsNewDelivererOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Entregador
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingDeliverer ? "Editar Entregador" : "Novo Entregador"}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: João Silva" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(11) 99999-9999" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex items-center justify-between">
-                  <FormField
-                    control={form.control}
-                    name="isActive"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormLabel>Ativo</FormLabel>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="isOnline"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormLabel>Online</FormLabel>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsNewDelivererOpen(false);
-                      setEditingDeliverer(null);
-                      form.reset();
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createDelivererMutation.isPending || updateDelivererMutation.isPending}
-                  >
-                    {editingDeliverer ? "Atualizar" : "Criar"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="bg-primary hover:bg-primary/90 text-white"
+          onClick={() => setIsNewDelivererOpen(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Entregador
+        </Button>
       </div>
 
       {/* Search */}
@@ -563,6 +407,11 @@ export default function Deliverers() {
           </div>
         )}
       </div>
+      
+      <NewDelivererModal
+        isOpen={isNewDelivererOpen}
+        onClose={() => setIsNewDelivererOpen(false)}
+      />
     </div>
   );
 }
