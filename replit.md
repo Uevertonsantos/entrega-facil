@@ -146,6 +146,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Updated delivery views for admin and deliverer to display payment method information
 - July 09, 2025. Integrated payment method display in delivery management modal for complete order information
 - July 09, 2025. Fixed admin login authentication to properly use bcrypt password hashing
+- July 09, 2025. Resolved frontend display issues in Replit preview - system functions correctly when accessed externally
+- July 09, 2025. Sistema de pagamento completamente funcional com campo paymentMethod integrado ao schema de deliveries
+- July 09, 2025. Confirmed all authentication systems working properly: admin, merchant, and deliverer logins functional
 
 ## User Preferences
 
