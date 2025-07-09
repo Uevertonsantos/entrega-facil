@@ -71,16 +71,20 @@ export default function MerchantPage() {
 
   const activePlans = plansData?.filter((setting: any) => {
     try {
-      return setting.key?.startsWith('plan_') && setting.value && 
-             JSON.parse(setting.value).isActive;
+      const key = setting.settingKey || setting.key;
+      const value = setting.settingValue || setting.value;
+      return key?.startsWith('plan_') && value && 
+             JSON.parse(value).isActive;
     } catch (error) {
       return false;
     }
   }).map((setting: any) => {
     try {
+      const key = setting.settingKey || setting.key;
+      const value = setting.settingValue || setting.value;
       return {
-        ...JSON.parse(setting.value),
-        id: setting.key.replace('plan_', ''),
+        ...JSON.parse(value),
+        id: key.replace('plan_', ''),
       };
     } catch (error) {
       return null;

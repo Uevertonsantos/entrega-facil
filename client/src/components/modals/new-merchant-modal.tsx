@@ -45,21 +45,32 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
 
   const activePlans = plansData?.filter((setting: any) => {
     try {
-      return setting.key?.startsWith('plan_') && setting.value && 
-             JSON.parse(setting.value).isActive;
+      const key = setting.settingKey || setting.key;
+      const value = setting.settingValue || setting.value;
+      console.log('Plan setting:', { key, value, setting });
+      return key?.startsWith('plan_') && value && 
+             JSON.parse(value).isActive;
     } catch (error) {
+      console.error('Error processing plan setting:', error, setting);
       return false;
     }
   }).map((setting: any) => {
     try {
-      return {
-        ...JSON.parse(setting.value),
-        id: setting.key.replace('plan_', ''),
+      const key = setting.settingKey || setting.key;
+      const value = setting.settingValue || setting.value;
+      const plan = {
+        ...JSON.parse(value),
+        id: key.replace('plan_', ''),
       };
+      console.log('Processed plan:', plan);
+      return plan;
     } catch (error) {
+      console.error('Error mapping plan:', error, setting);
       return null;
     }
   }).filter(Boolean) || [];
+
+  console.log('Active plans:', activePlans);
 
   const form = useForm<MerchantFormData & { password: string }>({
     resolver: zodResolver(insertMerchantSchema.extend({
