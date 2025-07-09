@@ -21,6 +21,8 @@ import AdminSettings from "@/pages/admin-settings";
 import EmailSettings from "@/pages/email-settings";
 import PlanManagement from "@/pages/plan-management";
 import ClientsOverview from "@/pages/clients-overview";
+import ClientsMonitoring from "@/pages/clients-monitoring";
+import ClientSetup from "@/pages/client-setup";
 import RealTimeMonitor from "@/pages/real-time-monitor";
 import PlatformCommission from "@/pages/platform-commission";
 import TestCredentials from "@/pages/test-credentials";
@@ -85,6 +87,8 @@ function Router() {
           <Route path="/email-settings" component={EmailSettings} />
           <Route path="/plans" component={PlanManagement} />
           <Route path="/clients" component={ClientsOverview} />
+          <Route path="/clients-monitoring" component={ClientsMonitoring} />
+          <Route path="/client-setup" component={ClientSetup} />
           <Route path="/monitor" component={RealTimeMonitor} />
           <Route path="/commissions" component={PlatformCommission} />
           <Route path="/test-credentials" component={TestCredentials} />

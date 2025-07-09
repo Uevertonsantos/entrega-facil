@@ -1577,6 +1577,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client setup endpoint for creating new client installations
+  app.post('/api/admin/setup-client', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can setup clients" });
+      }
+      
+      const { businessName, businessEmail, businessPhone, businessAddress, contactPerson, planType, installationType } = req.body;
+      
+      // Generate unique installation ID
+      const installationId = `client_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      
+      // Generate API key
+      const apiKey = `entrega_facil_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+      
+      // Create installation record
+      const installation = await storage.createClientInstallation({
+        installationId,
+        businessName,
+        businessEmail,
+        businessPhone,
+        businessAddress,
+      });
+      
+      // Generate access URL based on installation type
+      let accessUrl;
+      if (installationType === 'online') {
+        accessUrl = `${req.protocol}://${req.get('host')}/merchant-portal?installation=${installationId}`;
+      } else {
+        accessUrl = `http://localhost:3000/merchant-portal?installation=${installationId}`;
+      }
+      
+      // Log the setup
+      console.log(`New client setup: ${businessName} (${installationId})`);
+      
+      res.json({
+        success: true,
+        installationId,
+        apiKey,
+        accessUrl,
+        installation,
+        message: "Cliente configurado com sucesso"
+      });
+    } catch (error) {
+      console.error("Error setting up client:", error);
+      res.status(500).json({ message: "Failed to setup client" });
+    }
+  });
+
+  // Client sync routes for online database
+  app.post('/api/sync/installation', async (req, res) => {
+    try {
+      const { businessName, businessPhone, businessEmail, businessAddress, installationId } = req.body;
+      
+      const existing = await storage.getClientInstallation(installationId);
+      
+      if (existing) {
+        const updated = await storage.updateClientInstallation(installationId, {
+          businessName,
+          businessPhone,
+          businessEmail,
+          businessAddress,
+          lastSync: new Date(),
+        });
+        res.json({ success: true, installation: updated });
+      } else {
+        const created = await storage.createClientInstallation({
+          businessName,
+          businessPhone,
+          businessEmail,
+          businessAddress,
+          installationId,
+        });
+        res.json({ success: true, installation: created });
+      }
+    } catch (error) {
+      console.error('Error syncing installation:', error);
+      res.status(500).json({ error: 'Failed to sync installation' });
+    }
+  });
+
+  app.post('/api/sync/customer', async (req, res) => {
+    try {
+      const { installationId, name, phone, address } = req.body;
+      
+      const customer = await storage.createClientCustomer({
+        installationId,
+        name,
+        phone,
+        address,
+      });
+      
+      res.json({ success: true, customer });
+    } catch (error) {
+      console.error('Error syncing customer:', error);
+      res.status(500).json({ error: 'Failed to sync customer' });
+    }
+  });
+
+  app.post('/api/sync/delivery', async (req, res) => {
+    try {
+      const { 
+        installationId, 
+        customerId, 
+        customerName, 
+        customerPhone, 
+        deliveryAddress, 
+        pickupAddress, 
+        description, 
+        price, 
+        deliveryFee, 
+        paymentMethod, 
+        status 
+      } = req.body;
+      
+      const delivery = await storage.createClientDelivery({
+        installationId,
+        customerId,
+        customerName,
+        customerPhone,
+        deliveryAddress,
+        pickupAddress,
+        description,
+        price,
+        deliveryFee,
+        paymentMethod,
+        status,
+      });
+      
+      res.json({ success: true, delivery });
+    } catch (error) {
+      console.error('Error syncing delivery:', error);
+      res.status(500).json({ error: 'Failed to sync delivery' });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server for real-time sync

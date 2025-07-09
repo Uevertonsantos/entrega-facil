@@ -32,6 +32,8 @@ const navigation = [
   { name: "Comissões", href: "/commissions", icon: TrendingUp },
   { name: "Planos", href: "/plans", icon: Package },
   { name: "Clientes", href: "/clients", icon: Monitor },
+  { name: "Monitor Clientes", href: "/clients-monitoring", icon: Wifi },
+  { name: "Configurar Cliente", href: "/client-setup", icon: Settings },
   { name: "Monitor Tempo Real", href: "/monitor", icon: Wifi },
   { name: "App Entregador", href: "/deliverer-app", icon: Smartphone },
   { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
