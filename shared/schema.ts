@@ -222,3 +222,100 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 
 export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
 export type AdminSetting = typeof adminSettings.$inferSelect;
+
+// Client installations table for tracking remote installations
+export const clientInstallations = pgTable("client_installations", {
+  id: serial("id").primaryKey(),
+  businessName: varchar("business_name", { length: 255 }).notNull(),
+  businessPhone: varchar("business_phone", { length: 20 }),
+  businessEmail: varchar("business_email", { length: 255 }),
+  businessAddress: text("business_address"),
+  installationId: varchar("installation_id", { length: 100 }).unique().notNull(),
+  lastSync: timestamp("last_sync").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Client customers table for customers from remote installations
+export const clientCustomers = pgTable("client_customers", {
+  id: serial("id").primaryKey(),
+  installationId: varchar("installation_id", { length: 100 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Client deliveries table for deliveries from remote installations
+export const clientDeliveries = pgTable("client_deliveries", {
+  id: serial("id").primaryKey(),
+  installationId: varchar("installation_id", { length: 100 }).notNull(),
+  customerId: integer("customer_id"),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  customerPhone: varchar("customer_phone", { length: 20 }),
+  deliveryAddress: text("delivery_address").notNull(),
+  pickupAddress: text("pickup_address").notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("7.00"),
+  paymentMethod: varchar("payment_method", { length: 50 }).default("dinheiro"),
+  status: varchar("status", { length: 50 }).default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for client tables
+export const clientInstallationsRelations = relations(clientInstallations, ({ many }) => ({
+  customers: many(clientCustomers),
+  deliveries: many(clientDeliveries),
+}));
+
+export const clientCustomersRelations = relations(clientCustomers, ({ one, many }) => ({
+  installation: one(clientInstallations, {
+    fields: [clientCustomers.installationId],
+    references: [clientInstallations.installationId],
+  }),
+  deliveries: many(clientDeliveries),
+}));
+
+export const clientDeliveriesRelations = relations(clientDeliveries, ({ one }) => ({
+  installation: one(clientInstallations, {
+    fields: [clientDeliveries.installationId],
+    references: [clientInstallations.installationId],
+  }),
+  customer: one(clientCustomers, {
+    fields: [clientDeliveries.customerId],
+    references: [clientCustomers.id],
+  }),
+}));
+
+// Insert schemas for client tables
+export const insertClientInstallationSchema = createInsertSchema(clientInstallations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertClientCustomerSchema = createInsertSchema(clientCustomers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertClientDeliverySchema = createInsertSchema(clientDeliveries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for client tables
+export type InsertClientInstallation = z.infer<typeof insertClientInstallationSchema>;
+export type ClientInstallation = typeof clientInstallations.$inferSelect;
+
+export type InsertClientCustomer = z.infer<typeof insertClientCustomerSchema>;
+export type ClientCustomer = typeof clientCustomers.$inferSelect;
+
+export type InsertClientDelivery = z.infer<typeof insertClientDeliverySchema>;
+export type ClientDelivery = typeof clientDeliveries.$inferSelect;

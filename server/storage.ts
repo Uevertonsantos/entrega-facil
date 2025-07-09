@@ -5,6 +5,9 @@ import {
   deliveries,
   adminSettings,
   adminUsers,
+  clientInstallations,
+  clientCustomers,
+  clientDeliveries,
   type User,
   type UpsertUser,
   type InsertMerchant,
@@ -18,6 +21,12 @@ import {
   type AdminSetting,
   type InsertAdminUser,
   type AdminUser,
+  type InsertClientInstallation,
+  type ClientInstallation,
+  type InsertClientCustomer,
+  type ClientCustomer,
+  type InsertClientDelivery,
+  type ClientDelivery,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
@@ -94,6 +103,20 @@ export interface IStorage {
   getAdminSetting(key: string): Promise<AdminSetting | undefined>;
   updateAdminSetting(key: string, value: string): Promise<AdminSetting>;
   createAdminSetting(setting: InsertAdminSetting): Promise<AdminSetting>;
+  
+  // Client installations operations
+  getClientInstallations(): Promise<ClientInstallation[]>;
+  getClientInstallation(installationId: string): Promise<ClientInstallation | undefined>;
+  createClientInstallation(installation: InsertClientInstallation): Promise<ClientInstallation>;
+  updateClientInstallation(installationId: string, installation: Partial<InsertClientInstallation>): Promise<ClientInstallation>;
+  
+  // Client customers operations
+  getClientCustomers(installationId?: string): Promise<ClientCustomer[]>;
+  createClientCustomer(customer: InsertClientCustomer): Promise<ClientCustomer>;
+  
+  // Client deliveries operations
+  getClientDeliveries(installationId?: string): Promise<ClientDelivery[]>;
+  createClientDelivery(delivery: InsertClientDelivery): Promise<ClientDelivery>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -578,6 +601,64 @@ export class DatabaseStorage implements IStorage {
       .values(setting)
       .returning();
     return newSetting;
+  }
+
+  // Client installations operations
+  async getClientInstallations(): Promise<ClientInstallation[]> {
+    return await db.select().from(clientInstallations).orderBy(desc(clientInstallations.createdAt));
+  }
+
+  async getClientInstallation(installationId: string): Promise<ClientInstallation | undefined> {
+    const [installation] = await db.select().from(clientInstallations).where(eq(clientInstallations.installationId, installationId));
+    return installation;
+  }
+
+  async createClientInstallation(installation: InsertClientInstallation): Promise<ClientInstallation> {
+    const [newInstallation] = await db.insert(clientInstallations).values({
+      ...installation,
+      lastSync: new Date(),
+    }).returning();
+    return newInstallation;
+  }
+
+  async updateClientInstallation(installationId: string, installation: Partial<InsertClientInstallation>): Promise<ClientInstallation> {
+    const [updatedInstallation] = await db.update(clientInstallations)
+      .set({ ...installation, lastSync: new Date() })
+      .where(eq(clientInstallations.installationId, installationId))
+      .returning();
+    return updatedInstallation;
+  }
+
+  // Client customers operations
+  async getClientCustomers(installationId?: string): Promise<ClientCustomer[]> {
+    const query = db.select().from(clientCustomers).orderBy(desc(clientCustomers.createdAt));
+    
+    if (installationId) {
+      return await query.where(eq(clientCustomers.installationId, installationId));
+    }
+    
+    return await query;
+  }
+
+  async createClientCustomer(customer: InsertClientCustomer): Promise<ClientCustomer> {
+    const [newCustomer] = await db.insert(clientCustomers).values(customer).returning();
+    return newCustomer;
+  }
+
+  // Client deliveries operations
+  async getClientDeliveries(installationId?: string): Promise<ClientDelivery[]> {
+    const query = db.select().from(clientDeliveries).orderBy(desc(clientDeliveries.createdAt));
+    
+    if (installationId) {
+      return await query.where(eq(clientDeliveries.installationId, installationId));
+    }
+    
+    return await query;
+  }
+
+  async createClientDelivery(delivery: InsertClientDelivery): Promise<ClientDelivery> {
+    const [newDelivery] = await db.insert(clientDeliveries).values(delivery).returning();
+    return newDelivery;
   }
 }
 
