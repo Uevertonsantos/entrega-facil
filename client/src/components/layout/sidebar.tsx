@@ -45,8 +45,8 @@ export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const sidebarContent = (
-    <nav className="mt-5 px-2 mobile-scroll-smooth">
-      <div className="space-y-1">
+    <nav className="mt-5 px-2 mobile-scroll-smooth h-full overflow-y-auto">
+      <div className="space-y-1 pb-4">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
@@ -89,8 +89,10 @@ export default function Sidebar() {
       </Button>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:bg-white md:shadow-sm md:border-r md:block pwa-safe-area">
-        {sidebarContent}
+      <aside className="hidden md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:bg-white md:shadow-sm md:border-r md:block pwa-safe-area md:overflow-hidden">
+        <div className="h-full overflow-y-auto admin-sidebar-scroll">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -100,13 +102,15 @@ export default function Sidebar() {
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg pwa-safe-area mobile-nav-height">
+          <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg pwa-safe-area mobile-nav-height overflow-hidden">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold text-purple-600">
                 Entrega Fácil
               </h2>
             </div>
-            {sidebarContent}
+            <div className="h-[calc(100%-theme(spacing.16))] overflow-y-auto admin-sidebar-scroll">
+              {sidebarContent}
+            </div>
           </aside>
         </div>
       )}

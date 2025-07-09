@@ -99,6 +99,31 @@
     border-radius: 4px;
   }
   
+  /* Custom scrollbar for admin sidebar */
+  .admin-sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .admin-sidebar-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  
+  .admin-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.4);
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+  
+  .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.6);
+  }
+  
+  .admin-sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.4) hsl(var(--muted));
+  }
+  
   /* PWA and Mobile styles */
   .pwa-safe-area {
     padding-top: env(safe-area-inset-top);
