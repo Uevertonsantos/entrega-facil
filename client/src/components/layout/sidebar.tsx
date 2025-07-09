@@ -29,6 +29,7 @@ const navigation = [
   { name: "Entregadores", href: "/deliverers", icon: Users },
   { name: "Relatórios", href: "/reports", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: CreditCard },
+  { name: "Pagamentos", href: "/merchant-payments", icon: CreditCard },
   { name: "Comissões", href: "/commissions", icon: TrendingUp },
   { name: "Planos", href: "/plans", icon: Package },
   { name: "Clientes", href: "/clients", icon: Monitor },

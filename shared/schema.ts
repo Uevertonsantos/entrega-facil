@@ -52,6 +52,8 @@ export const merchants = pgTable("merchants", {
   type: varchar("type").notNull(),
   planType: varchar("plan_type").notNull(),
   planValue: numeric("plan_value").notNull(),
+  currentBalance: numeric("current_balance").default("0.00"), // Saldo atual do comerciante (negativo = deve)
+  totalOwed: numeric("total_owed").default("0.00"), // Total devido à plataforma
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -95,6 +97,9 @@ export const deliveries = pgTable("deliveries", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   delivererPayment: decimal("deliverer_payment", { precision: 10, scale: 2 }),
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }), // Taxa da plataforma (você recebe)
+  merchantOwes: decimal("merchant_owes", { precision: 10, scale: 2 }), // Valor que comerciante deve pagar
+  delivererEarns: decimal("deliverer_earns", { precision: 10, scale: 2 }), // Valor que entregador recebe
   commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }),
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
   notes: text("notes"),

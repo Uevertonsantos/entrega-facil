@@ -42,23 +42,24 @@ export default function Financial() {
     retry: false,
   });
 
-  // Calcular métricas financeiras
+  // Calcular métricas financeiras (NOVO FLUXO)
   const completedDeliveries = deliveries?.filter(d => d.status === "completed") || [];
-  const totalRevenue = completedDeliveries.reduce((sum, d) => sum + parseFloat(d.deliveryFee.toString()), 0);
-  const totalDelivererPayments = completedDeliveries.reduce((sum, d) => sum + (parseFloat(d.delivererPayment?.toString() || "0")), 0);
-  const netProfit = totalRevenue - totalDelivererPayments;
+  const totalMerchantOwes = completedDeliveries.reduce((sum, d) => sum + parseFloat(d.deliveryFee.toString()), 0); // O que comerciantes devem pagar
+  const totalDelivererPayments = completedDeliveries.reduce((sum, d) => sum + (parseFloat(d.delivererPayment?.toString() || "0")), 0); // O que entregadores recebem
+  const totalPlatformFees = completedDeliveries.reduce((sum, d) => sum + (parseFloat(d.commissionAmount?.toString() || "0")), 0); // Taxa da plataforma
+  const netProfit = totalPlatformFees; // Lucro da plataforma
 
-  // Calcular receita por comerciante
+  // Calcular valores devidos por comerciante
   const revenueByMerchant = merchants?.map(merchant => {
     const merchantDeliveries = completedDeliveries.filter(d => d.merchantId === merchant.id);
-    const revenue = merchantDeliveries.reduce((sum, d) => sum + parseFloat(d.deliveryFee.toString()), 0);
+    const totalOwed = merchantDeliveries.reduce((sum, d) => sum + parseFloat(d.deliveryFee.toString()), 0);
     const deliveryCount = merchantDeliveries.length;
     
     return {
       merchant,
-      revenue,
+      revenue: totalOwed,
       deliveryCount,
-      avgOrderValue: deliveryCount > 0 ? revenue / deliveryCount : 0
+      avgOrderValue: deliveryCount > 0 ? totalOwed / deliveryCount : 0
     };
   }).sort((a, b) => b.revenue - a.revenue) || [];
 
@@ -135,13 +136,13 @@ export default function Financial() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
               <DollarSign className="h-4 w-4 mr-1" />
-              Receita Total
+              Comerciantes Devem
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-green-600">
-                R$ {totalRevenue.toFixed(2)}
+                R$ {totalMerchantOwes.toFixed(2)}
               </span>
               <Badge className="bg-green-100 text-green-800">
                 <TrendingUp className="h-3 w-3 mr-1" />
@@ -201,7 +202,7 @@ export default function Financial() {
           <CardContent>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-gray-900">
-                R$ {completedDeliveries.length > 0 ? (totalRevenue / completedDeliveries.length).toFixed(2) : "0.00"}
+                R$ {completedDeliveries.length > 0 ? (totalMerchantOwes / completedDeliveries.length).toFixed(2) : "0.00"}
               </span>
               <Badge className="bg-blue-100 text-blue-800">
                 <TrendingUp className="h-3 w-3 mr-1" />

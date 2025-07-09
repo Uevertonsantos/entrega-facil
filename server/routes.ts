@@ -869,6 +869,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Record merchant payment endpoint
+  app.post('/api/merchants/record-payment', isAuthenticated, async (req, res) => {
+    try {
+      const { merchantId, amount } = req.body;
+      
+      if (!merchantId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Merchant ID and valid amount are required" });
+      }
+      
+      const merchant = await storage.getMerchant(merchantId);
+      if (!merchant) {
+        return res.status(404).json({ message: "Merchant not found" });
+      }
+      
+      // Update merchant balance (add payment)
+      const currentBalance = parseFloat(merchant.currentBalance?.toString() || "0");
+      const newBalance = currentBalance + amount;
+      
+      await storage.updateMerchant(merchantId, {
+        currentBalance: newBalance.toString(),
+        updatedAt: new Date()
+      });
+      
+      res.json({ 
+        message: "Payment recorded successfully",
+        newBalance: newBalance.toFixed(2)
+      });
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      res.status(500).json({ message: "Failed to record payment" });
+    }
+  });
+
   // Deliverer routes
   app.get('/api/deliverers', isAuthenticated, async (req, res) => {
     try {
@@ -1306,11 +1339,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only deliverers can complete deliveries" });
       }
       
+      // Get delivery info before updating
+      const existingDelivery = await storage.getDelivery(id);
+      if (!existingDelivery) {
+        return res.status(404).json({ message: "Delivery not found" });
+      }
+      
       const delivery = await storage.updateDelivery(id, {
         status: "completed",
         completedAt: new Date(),
         notes: notes || null
       });
+      
+      // Atualizar saldo devedor do comerciante
+      if (existingDelivery.status !== 'completed') {
+        const merchant = await storage.getMerchant(existingDelivery.merchantId);
+        if (merchant) {
+          const currentBalance = parseFloat(merchant.currentBalance?.toString() || "0");
+          const totalOwed = parseFloat(merchant.totalOwed?.toString() || "0");
+          const deliveryFee = parseFloat(existingDelivery.deliveryFee?.toString() || "0");
+          
+          await storage.updateMerchant(existingDelivery.merchantId, {
+            currentBalance: (currentBalance - deliveryFee).toString(),
+            totalOwed: (totalOwed + deliveryFee).toString(),
+            updatedAt: new Date()
+          });
+        }
+      }
       
       // Send real-time notification
       const broadcastToClients = (app as any).broadcastToClients;
