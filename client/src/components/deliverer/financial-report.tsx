@@ -318,7 +318,7 @@ export default function DelivererFinancialReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os comerciantes</SelectItem>
-                  {merchants.map((merchant: any) => (
+                  {Array.isArray(merchants) && merchants.map((merchant: any) => (
                     <SelectItem key={merchant.id} value={merchant.id.toString()}>
                       {merchant.name}
                     </SelectItem>

@@ -201,6 +201,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added new API endpoints: /api/cities, /api/neighborhoods/city/:cityName, /api/neighborhoods/search/:cityName
 - July 09, 2025. Removed routing test pages and APIs screen from admin interface as requested by user
 - July 09, 2025. Fixed neighborhood configuration page authentication and removed test interfaces
+- July 09, 2025. Implementado dashboard financeiro completo para entregadores com novos endpoints
+- July 09, 2025. Criado componente DelivererFinancialReport com filtros avançados (data, status, comerciante)
+- July 09, 2025. Adicionada funcionalidade de exportação para Excel e PDF nos relatórios do entregador
+- July 09, 2025. Padronizada terminologia "Taxa da Plataforma" em todas as seções do aplicativo
+- July 09, 2025. Integrado sistema de relatórios financeiros na aba "Financeiro" do app do entregador
 
 ## User Preferences
 
