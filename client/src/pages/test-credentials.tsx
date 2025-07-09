@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Copy, Eye, EyeOff, RefreshCw, Shield, Edit } from "lucide-react";
 
 interface DelivererCredentials {
   id: number;
@@ -20,20 +24,38 @@ interface DelivererCredentials {
   isActive: boolean;
 }
 
+const adminCredentialsSchema = z.object({
+  username: z.string().min(1, "Nome de usuário é obrigatório").min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
+  email: z.string().email("Email deve ter formato válido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+});
+
+type AdminCredentialsForm = z.infer<typeof adminCredentialsSchema>;
+
 export default function TestCredentials() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [selectedDeliverer, setSelectedDeliverer] = useState<number | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState(false);
   const { toast } = useToast();
+
+  const adminForm = useForm<AdminCredentialsForm>({
+    resolver: zodResolver(adminCredentialsSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+    },
+  });
 
   const { data: deliverers, isLoading, refetch } = useQuery<DelivererCredentials[]>({
     queryKey: ["/api/deliverers"],
   });
 
   const { data: adminCredentials, refetch: refetchAdminCredentials } = useQuery({
-    queryKey: ["/api/test-credentials"],
+    queryKey: ["/api/data/admin-credentials"],
     queryFn: async () => {
-      const response = await apiRequest('/api/test-credentials', 'GET');
+      const response = await apiRequest('/api/data/admin-credentials', 'GET');
       const result = await response.json();
       return result.credentials;
     },
@@ -66,25 +88,34 @@ export default function TestCredentials() {
     }
   };
 
-  const updateAdminCredentials = async (username: string, email: string, password: string) => {
+  const updateAdminCredentials = async (data: AdminCredentialsForm) => {
     try {
-      await apiRequest('/api/admin-update-credentials', 'PUT', { username, email, password });
-      toast({
-        title: "Credenciais atualizadas!",
-        description: "As credenciais administrativas foram atualizadas com sucesso",
-      });
+      const response = await apiRequest('/api/admin-update-credentials', 'PUT', data);
+      const result = await response.json();
       
-      // Limpar campos
-      (document.getElementById('newUsername') as HTMLInputElement).value = '';
-      (document.getElementById('newEmail') as HTMLInputElement).value = '';
-      (document.getElementById('newPassword') as HTMLInputElement).value = '';
-      
-      // Recarregar credenciais administrativas
-      refetchAdminCredentials();
-    } catch (error) {
+      if (result.success) {
+        toast({
+          title: "Credenciais atualizadas!",
+          description: "As credenciais administrativas foram atualizadas com sucesso",
+        });
+        
+        // Limpar formulário e sair do modo de edição
+        adminForm.reset();
+        setEditingAdmin(false);
+        
+        // Recarregar credenciais administrativas
+        refetchAdminCredentials();
+      } else {
+        toast({
+          title: "Erro",
+          description: result.message || "Falha ao atualizar as credenciais administrativas",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Falha ao atualizar as credenciais administrativas",
+        description: error.message || "Falha ao atualizar as credenciais administrativas",
         variant: "destructive",
       });
     }
@@ -207,7 +238,7 @@ export default function TestCredentials() {
               const password = (document.getElementById('newPassword') as HTMLInputElement)?.value;
               
               if (username && email && password) {
-                updateAdminCredentials(username, email, password);
+                updateAdminCredentials({ username, email, password });
               } else {
                 toast({
                   title: "Erro",

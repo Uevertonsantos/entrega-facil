@@ -103,16 +103,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Simple test endpoint
-  app.get('/api/test-credentials', (req, res) => {
-    res.json({
-      success: true,
-      credentials: {
-        username: 'admin',
-        email: 'admin@deliveryexpress.com',
-        password: 'admin123'
+  // Get current admin credentials endpoint
+  app.get('/api/data/admin-credentials', async (req, res) => {
+    try {
+      const adminUser = await storage.getAdminUser(1);
+      if (!adminUser) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Usuário administrativo não encontrado" 
+        });
       }
-    });
+      
+      res.json({ 
+        success: true, 
+        credentials: {
+          username: adminUser.username,
+          email: adminUser.email,
+          // Não retornar senha por segurança
+          hasPassword: !!adminUser.password
+        }
+      });
+    } catch (error) {
+      console.error("Error getting admin credentials:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
   });
 
   // Admin login endpoint (with username support)
