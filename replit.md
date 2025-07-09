@@ -155,6 +155,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added registration endpoints in server with duplicate email validation and proper error handling
 - July 09, 2025. Enhanced landing page with registration buttons for both user types
 - July 09, 2025. Fixed navigation buttons in registration forms to properly redirect to homepage
+- July 09, 2025. Created comprehensive automatic installer system for PC deployment
+- July 09, 2025. Built multiple installation options: automatic (.bat), standard Windows (.bat), and PowerShell (.ps1)
+- July 09, 2025. Implemented master installer with menu system and complete documentation
+- July 09, 2025. Added Node.js automatic installation, system configuration, and Windows service integration
+- July 09, 2025. Created complete installer package with ZIP distribution and user-friendly documentation
 
 ## User Preferences
 
