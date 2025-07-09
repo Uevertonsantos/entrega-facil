@@ -7,12 +7,24 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertMerchantSchema, type InsertMerchant } from "@shared/schema";
 import { Plus, Search } from "lucide-react";
 import { z } from "zod";
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  period: string;
+  deliveryLimit: number | null;
+  features: string[];
+  description: string;
+  isActive: boolean;
+  color: string;
+}
 
 type MerchantFormData = InsertMerchant;
 
@@ -24,6 +36,20 @@ interface NewMerchantModalProps {
 export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch active plans
+  const { data: plansData, isLoading: isLoadingPlans } = useQuery({
+    queryKey: ["/api/admin/settings"],
+    retry: false,
+  });
+
+  const activePlans = plansData?.filter((setting: any) => 
+    setting.key.startsWith('plan_') && setting.value && 
+    JSON.parse(setting.value).isActive
+  ).map((setting: any) => ({
+    ...JSON.parse(setting.value),
+    id: setting.key.replace('plan_', ''),
+  })) || [];
 
   const form = useForm<MerchantFormData & { password: string }>({
     resolver: zodResolver(insertMerchantSchema.extend({
@@ -77,11 +103,14 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
   });
 
   const handleSubmit = (data: MerchantFormData) => {
+    // Find selected plan details
+    const selectedPlan = activePlans.find(plan => plan.id === data.planType);
+    
     const formData = {
       ...data,
       password: data.password || "123456", // default password
       type: "comerciante",
-      planValue: data.planType === "mensal" ? 149 : 0,
+      planValue: selectedPlan ? selectedPlan.price : (data.planType === "mensal" ? 149 : 0),
     };
     createMerchant.mutate(formData);
   };
@@ -309,8 +338,29 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="por_entrega">Por Entrega (R$ 7-12)</SelectItem>
-                        <SelectItem value="mensal">Mensal (R$ 149)</SelectItem>
+                        {isLoadingPlans ? (
+                          <SelectItem value="loading" disabled>Carregando planos...</SelectItem>
+                        ) : activePlans.length > 0 ? (
+                          activePlans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.name} (R$ {plan.price}
+                              {plan.period === 'per_delivery' ? ' por entrega' : 
+                               plan.period === 'weekly' ? ' por semana' :
+                               plan.period === 'monthly' ? ' por mês' :
+                               plan.period === 'quarterly' ? ' por trimestre' :
+                               plan.period === 'annually' ? ' por ano' : ''}
+                              {plan.deliveryLimit && plan.deliveryLimit > 0 
+                                ? ` - ${plan.deliveryLimit} entregas` 
+                                : ' - Ilimitado'}
+                              )
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="por_entrega">Por Entrega (R$ 7-12)</SelectItem>
+                            <SelectItem value="mensal">Mensal (R$ 149)</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

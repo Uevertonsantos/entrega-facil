@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Store, 
   Truck, 
@@ -28,6 +29,18 @@ import {
   Route
 } from "lucide-react";
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  period: string;
+  deliveryLimit: number | null;
+  features: string[];
+  description: string;
+  isActive: boolean;
+  color: string;
+}
+
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
@@ -40,6 +53,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   cnpj: z.string().min(14, "CNPJ deve ter 14 dígitos"),
   address: z.string().min(10, "Endereço deve ter pelo menos 10 caracteres"),
+  planType: z.string().min(1, "Plano é obrigatório"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -48,6 +62,20 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function MerchantPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Fetch active plans
+  const { data: plansData, isLoading: isLoadingPlans } = useQuery({
+    queryKey: ["/api/admin/settings"],
+    retry: false,
+  });
+
+  const activePlans = plansData?.filter((setting: any) => 
+    setting.key.startsWith('plan_') && setting.value && 
+    JSON.parse(setting.value).isActive
+  ).map((setting: any) => ({
+    ...JSON.parse(setting.value),
+    id: setting.key.replace('plan_', ''),
+  })) || [];
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -66,6 +94,7 @@ export default function MerchantPage() {
       password: "",
       cnpj: "",
       address: "",
+      planType: "",
     },
   });
 
@@ -112,7 +141,21 @@ export default function MerchantPage() {
 
   const onRegisterSubmit = (data: RegisterFormData) => {
     setErrorMessage("");
-    registerMutation.mutate(data);
+    
+    // Find selected plan details
+    const selectedPlan = activePlans.find(plan => plan.id === data.planType);
+    
+    const formData = {
+      ...data,
+      businessName: data.name,
+      cnpjCpf: data.cnpj,
+      businessType: "comercio",
+      planValue: selectedPlan ? selectedPlan.price : 0,
+      type: "comerciante",
+      isActive: true,
+    };
+    
+    registerMutation.mutate(formData);
   };
 
   const handleGoBack = () => {
@@ -391,6 +434,49 @@ export default function MerchantPage() {
                                 <FormControl>
                                   <Input placeholder="Rua das Flores, 123" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={registerForm.control}
+                            name="planType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Plano</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o plano" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {isLoadingPlans ? (
+                                      <SelectItem value="loading" disabled>Carregando planos...</SelectItem>
+                                    ) : activePlans.length > 0 ? (
+                                      activePlans.map((plan) => (
+                                        <SelectItem key={plan.id} value={plan.id}>
+                                          {plan.name} (R$ {plan.price}
+                                          {plan.period === 'per_delivery' ? ' por entrega' : 
+                                           plan.period === 'weekly' ? ' por semana' :
+                                           plan.period === 'monthly' ? ' por mês' :
+                                           plan.period === 'quarterly' ? ' por trimestre' :
+                                           plan.period === 'annually' ? ' por ano' : ''}
+                                          {plan.deliveryLimit && plan.deliveryLimit > 0 
+                                            ? ` - ${plan.deliveryLimit} entregas` 
+                                            : ' - Ilimitado'}
+                                          )
+                                        </SelectItem>
+                                      ))
+                                    ) : (
+                                      <>
+                                        <SelectItem value="por_entrega">Por Entrega (R$ 7-12)</SelectItem>
+                                        <SelectItem value="mensal">Mensal (R$ 149)</SelectItem>
+                                      </>
+                                    )}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
