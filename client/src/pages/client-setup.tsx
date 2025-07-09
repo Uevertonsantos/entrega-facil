@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,25 @@ import {
   Copy,
   ExternalLink,
   Package,
-  Smartphone
+  Smartphone,
+  CheckCircle,
+  Truck,
+  Infinity
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  period: string;
+  deliveryLimit: number | null;
+  features: string[];
+  description: string;
+  isActive: boolean;
+  color: string;
+}
 
 interface ClientSetupData {
   businessName: string;
@@ -28,7 +43,7 @@ interface ClientSetupData {
   businessPhone: string;
   businessAddress: string;
   contactPerson: string;
-  planType: 'basic' | 'premium';
+  planType: string;
   installationType: 'online' | 'local';
 }
 
@@ -40,8 +55,17 @@ export default function ClientSetup() {
     businessPhone: '',
     businessAddress: '',
     contactPerson: '',
-    planType: 'basic',
+    planType: '',
     installationType: 'online'
+  });
+
+  // Query to fetch active plans
+  const { data: plans = [], isLoading: plansLoading } = useQuery({
+    queryKey: ['/api/admin/plans'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/admin/plans', 'GET');
+      return (response as Plan[]).filter(plan => plan.isActive);
+    },
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<{
     installationId: string;
@@ -187,26 +211,87 @@ export default function ClientSetup() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                   <Label>Tipo de Plano</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      type="button"
-                      variant={setupData.planType === 'basic' ? 'default' : 'outline'}
-                      onClick={() => handleInputChange('planType', 'basic')}
-                    >
-                      Básico (R$ 149/mês)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={setupData.planType === 'premium' ? 'default' : 'outline'}
-                      onClick={() => handleInputChange('planType', 'premium')}
-                    >
-                      Premium (R$ 249/mês)
-                    </Button>
-                  </div>
+                  {plansLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      {plans.map((plan) => (
+                        <Card 
+                          key={plan.id} 
+                          className={`cursor-pointer transition-all ${
+                            setupData.planType === plan.id 
+                              ? 'border-blue-500 bg-blue-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => handleInputChange('planType', plan.id)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: plan.color }}
+                                />
+                                <h3 className="font-semibold text-lg">{plan.name}</h3>
+                              </div>
+                              {setupData.planType === plan.id && (
+                                <Check className="w-5 h-5 text-blue-600" />
+                              )}
+                            </div>
+                            
+                            <div className="text-center mb-3">
+                              <div className="text-xl font-bold text-blue-600">
+                                {plan.period === 'per_delivery' 
+                                  ? `R$ ${plan.price.toFixed(2)} por entrega`
+                                  : `R$ ${plan.price.toFixed(2)}/mês`
+                                }
+                              </div>
+                              <Badge variant="secondary" className="mt-1">
+                                {plan.period === 'monthly' ? 'Mensal' : 
+                                 plan.period === 'per_delivery' ? 'Por Entrega' : 
+                                 plan.period}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center justify-center gap-2 p-2 bg-gray-50 rounded-lg mb-3">
+                              <Truck className="h-4 w-4 text-gray-600" />
+                              <span className="text-sm font-medium">
+                                {plan.deliveryLimit ? (
+                                  `${plan.deliveryLimit} entregas`
+                                ) : (
+                                  <span className="flex items-center gap-1">
+                                    <Infinity className="h-3 w-3" />
+                                    Ilimitado
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1">
+                              {plan.features.slice(0, 3).map((feature, index) => (
+                                <div key={index} className="flex items-center gap-2 text-xs">
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                  {feature}
+                                </div>
+                              ))}
+                              {plan.features.length > 3 && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  +{plan.features.length - 3} outros recursos
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
+                
                 <div>
                   <Label>Tipo de Instalação</Label>
                   <div className="flex gap-2 mt-2">
@@ -230,7 +315,11 @@ export default function ClientSetup() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={setupMutation.isPending}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={setupMutation.isPending || !setupData.planType}
+              >
                 {setupMutation.isPending ? 'Configurando...' : 'Criar Instalação'}
               </Button>
             </form>
