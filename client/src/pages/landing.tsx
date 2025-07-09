@@ -3,6 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Truck, Users, Route, DollarSign, Store, User, Shield } from "lucide-react";
 
 export default function Landing() {
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
   const handleMerchantLogin = () => {
     window.location.href = "/merchant-login";
   };
@@ -16,125 +20,141 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
       <div className="max-w-6xl mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <Truck className="h-16 w-16 text-blue-600 mr-4" />
+            <Truck className="h-16 w-16 text-primary mr-4" />
             <h1 className="text-5xl font-bold text-gray-900">Entrega Fácil</h1>
           </div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Plataforma completa para gerenciar sua rede local de entregas. Conecte 
-            comerciantes e entregadores de forma eficiente e rentável.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Plataforma completa para gerenciar sua rede local de entregas. 
+            Conecte comerciantes e entregadores de forma eficiente e rentável.
           </p>
         </div>
 
         {/* Features */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          <div className="text-center">
-            <div className="bg-blue-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-              <Users className="h-12 w-12 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Gestão Completa</h3>
-            <p className="text-gray-600">
-              Gerencie comerciantes e entregadores em uma única plataforma
-            </p>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <Users className="h-12 w-12 text-primary mx-auto mb-4" />
+              <CardTitle>Gestão Completa</CardTitle>
+              <CardDescription>
+                Gerencie comerciantes e entregadores em uma única plataforma
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
-          <div className="text-center">
-            <div className="bg-green-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-              <Route className="h-12 w-12 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Rotas Inteligentes</h3>
-            <p className="text-gray-600">
-              Otimização automática de rotas para máxima eficiência
-            </p>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <Route className="h-12 w-12 text-secondary mx-auto mb-4" />
+              <CardTitle>Rotas Inteligentes</CardTitle>
+              <CardDescription>
+                Otimização automática de rotas para máxima eficiência
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
-          <div className="text-center">
-            <div className="bg-yellow-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="h-12 w-12 text-yellow-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Cobrança Flexível</h3>
-            <p className="text-gray-600">
-              Planos mensais ou cobrança por entrega, você escolhe
-            </p>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <DollarSign className="h-12 w-12 text-accent mx-auto mb-4" />
+              <CardTitle>Cobrança Flexível</CardTitle>
+              <CardDescription>
+                Planos mensais ou cobrança por entrega, você escolhe
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
-          <div className="text-center">
-            <div className="bg-blue-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-              <Truck className="h-12 w-12 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Tempo Real</h3>
-            <p className="text-gray-600">
-              Acompanhe todas as entregas em tempo real
-            </p>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <Truck className="h-12 w-12 text-primary mx-auto mb-4" />
+              <CardTitle>Tempo Real</CardTitle>
+              <CardDescription>
+                Acompanhe todas as entregas em tempo real
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
         {/* User Type Selection */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-center mb-8">Escolha seu Acesso</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {/* Merchant Card */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow">
-              <div className="bg-blue-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Store className="h-10 w-10 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Sou Comerciante</h3>
-              <p className="text-gray-600 mb-6">
-                Solicite entregas para seus clientes de forma rápida e eficiente
-              </p>
-              <Button 
-                onClick={handleMerchantLogin}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Acessar como Comerciante
-              </Button>
-            </div>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Store className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Sou Comerciante</CardTitle>
+                <CardDescription>
+                  Solicite entregas para seus clientes de forma rápida e eficiente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleMerchantLogin}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Acessar como Comerciante
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Deliverer Card */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow">
-              <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <User className="h-10 w-10 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Sou Entregador</h3>
-              <p className="text-gray-600 mb-6">
-                Receba notificações de entregas e ganhe dinheiro na sua região
-              </p>
-              <Button 
-                onClick={handleDelivererLogin}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                Acessar como Entregador
-              </Button>
-            </div>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <User className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Sou Entregador</CardTitle>
+                <CardDescription>
+                  Receba notificações de entregas e ganhe dinheiro na sua região
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleDelivererLogin}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Acessar como Entregador
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Admin Card */}
-            <div className="text-center bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow">
-              <div className="bg-purple-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-10 w-10 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Administrador</h3>
-              <p className="text-gray-600 mb-6">
-                Gerencie a rede de entregas, usuários e relatórios do sistema
-              </p>
-              <Button 
-                onClick={handleAdminLogin}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                Acessar Painel Admin
-              </Button>
-            </div>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Shield className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+                <CardTitle className="text-xl">Administrador</CardTitle>
+                <CardDescription>
+                  Gerencie a rede de entregas, usuários e relatórios do sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={handleAdminLogin}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  Acessar Painel Admin
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-16 pt-8 border-t border-gray-200">
-          <p className="text-gray-600">
-            Desenvolvido para conectar comércios locais e entregadores de forma eficiente
-          </p>
+        {/* CTA */}
+        <div className="text-center">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-2xl">Comece Agora</CardTitle>
+              <CardDescription>
+                Transforme sua região em uma rede de entregas eficiente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Escolha uma das opções acima para acessar o sistema
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

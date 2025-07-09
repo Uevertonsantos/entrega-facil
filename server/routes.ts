@@ -147,9 +147,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check password using bcrypt
-      const isPasswordValid = await bcrypt.compare(password, adminUser.password);
-      if (isPasswordValid) {
+      // Check password (using direct comparison for now)
+      if (adminUser.password === password) {
         const token = jwt.sign(
           { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' },
           JWT_SECRET,
