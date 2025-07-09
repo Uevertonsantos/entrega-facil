@@ -11,16 +11,8 @@ export default function Landing() {
     window.location.href = "/merchant-login";
   };
 
-  const handleMerchantRegister = () => {
-    window.location.href = "/merchant-register";
-  };
-
   const handleDelivererLogin = () => {
     window.location.href = "/deliverer-login";
-  };
-
-  const handleDelivererRegister = () => {
-    window.location.href = "/deliverer-register";
   };
 
   const handleAdminLogin = () => {
@@ -98,19 +90,12 @@ export default function Landing() {
                   Solicite entregas para seus clientes de forma rápida e eficiente
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent>
                 <Button 
                   onClick={handleMerchantLogin}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Acessar como Comerciante
-                </Button>
-                <Button 
-                  onClick={handleMerchantRegister}
-                  variant="outline"
-                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                >
-                  Cadastrar-se como Comerciante
                 </Button>
               </CardContent>
             </Card>
@@ -124,19 +109,12 @@ export default function Landing() {
                   Receba notificações de entregas e ganhe dinheiro na sua região
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent>
                 <Button 
                   onClick={handleDelivererLogin}
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                 >
                   Acessar como Entregador
-                </Button>
-                <Button 
-                  onClick={handleDelivererRegister}
-                  variant="outline"
-                  className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                >
-                  Cadastrar-se como Entregador
                 </Button>
               </CardContent>
             </Card>
