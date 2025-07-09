@@ -176,6 +176,8 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Fixed merchant registration endpoint routing - corrected from protected /api/merchants to public /api/merchant/register
 - July 09, 2025. Resolved TypeScript errors and plan loading issues in merchant registration forms
 - July 09, 2025. Successfully integrated active plan selection in both admin modal and merchant registration page
+- July 09, 2025. Cleaned up installer directory - removed outdated installers and kept only essential documentation
+- July 09, 2025. Simplified installer structure focusing on online access and basic local installation guide
 
 ## User Preferences
 
