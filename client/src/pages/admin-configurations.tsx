@@ -20,7 +20,7 @@ export default function AdminConfigurations() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="neighborhoods" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Cidades e Bairros
@@ -32,10 +32,6 @@ export default function AdminConfigurations() {
           <TabsTrigger value="credentials" className="flex items-center gap-2">
             <Key className="h-4 w-4" />
             Credenciais
-          </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2">
-            <Cog className="h-4 w-4" />
-            Sistema
           </TabsTrigger>
         </TabsList>
 
@@ -81,19 +77,7 @@ export default function AdminConfigurations() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="system" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Cog className="h-5 w-5" />
-                Configurações do Sistema
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AdminSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
     </div>
   );

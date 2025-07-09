@@ -103,15 +103,18 @@ class NeighborhoodService {
    */
   async createCity(cityName: string, stateName: string) {
     try {
-      // Verifica se já existe a cidade
+      // Verifica se já existe a cidade no estado
       const existingCity = await db
         .select()
         .from(neighborhoods)
-        .where(eq(neighborhoods.city, cityName))
+        .where(and(
+          eq(neighborhoods.city, cityName),
+          eq(neighborhoods.state, stateName)
+        ))
         .limit(1);
       
       if (existingCity.length > 0) {
-        throw new Error(`Cidade "${cityName}" já existe no sistema`);
+        throw new Error(`Cidade "${cityName}" já existe no estado ${stateName}`);
       }
       
       // Cria um bairro padrão "Centro" para a nova cidade
@@ -123,6 +126,8 @@ class NeighborhoodService {
           state: stateName,
           averageDistance: '2.0',
           baseFare: '5.00',
+          deliveryFee: '8.00',
+          platformFee: '2.00',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -173,6 +178,8 @@ class NeighborhoodService {
     state: string;
     averageDistance: number;
     baseFare: number;
+    deliveryFee?: number;
+    platformFee?: number;
   }) {
     try {
       const [newNeighborhood] = await db
@@ -183,6 +190,8 @@ class NeighborhoodService {
           state: neighborhoodData.state,
           averageDistance: neighborhoodData.averageDistance.toString(),
           baseFare: neighborhoodData.baseFare.toString(),
+          deliveryFee: neighborhoodData.deliveryFee?.toString() || '8.00',
+          platformFee: neighborhoodData.platformFee?.toString() || '2.00',
           isActive: true
         })
         .returning();

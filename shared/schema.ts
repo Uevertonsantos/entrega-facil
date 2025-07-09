@@ -68,6 +68,8 @@ export const neighborhoods = pgTable("neighborhoods", {
   state: varchar("state").notNull().default(""),
   averageDistance: decimal("average_distance", { precision: 5, scale: 2 }).notNull(), // distância média em km
   baseFare: decimal("base_fare", { precision: 10, scale: 2 }).notNull().default("5.00"), // tarifa base
+  deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull().default("8.00"), // valor da entrega
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull().default("2.00"), // taxa da plataforma
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

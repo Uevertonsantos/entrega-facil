@@ -2551,9 +2551,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new neighborhood
   app.post('/api/neighborhoods', isAuthenticated, async (req, res) => {
     try {
-      const { name, city, state, averageDistance, baseFare } = req.body;
+      const { name, city, state, averageDistance, baseFare, deliveryFee, platformFee } = req.body;
       
-      if (!name || !city || !state || !averageDistance || !baseFare) {
+      if (!name || !city || !state || !averageDistance || !baseFare || !deliveryFee || !platformFee) {
         return res.status(400).json({ message: "All fields are required" });
       }
       
@@ -2562,7 +2562,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         city,
         state,
         averageDistance,
-        baseFare
+        baseFare,
+        deliveryFee,
+        platformFee
       });
       
       res.json(newNeighborhood);

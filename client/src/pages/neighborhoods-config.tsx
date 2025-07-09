@@ -22,6 +22,8 @@ export default function NeighborhoodsConfig() {
     state: '',
     averageDistance: '',
     baseFare: '',
+    deliveryFee: '',
+    platformFee: '',
     cep: ''
   });
 
@@ -31,8 +33,11 @@ export default function NeighborhoodsConfig() {
     state: ''
   });
 
-  const checkCityExists = (cityName: string) => {
-    return cities.some(city => city.city.toLowerCase() === cityName.toLowerCase());
+  const checkCityExists = (cityName: string, stateName: string) => {
+    return cities.some(city => 
+      city.city.toLowerCase() === cityName.toLowerCase() && 
+      city.state.toLowerCase() === stateName.toLowerCase()
+    );
   };
 
   const checkNeighborhoodExists = (neighborhoodName: string, cityName: string) => {
@@ -117,7 +122,7 @@ export default function NeighborhoodsConfig() {
   const handleNeighborhoodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!neighborhoodFormData.name || !neighborhoodFormData.city || !neighborhoodFormData.state || !neighborhoodFormData.averageDistance || !neighborhoodFormData.baseFare) {
+    if (!neighborhoodFormData.name || !neighborhoodFormData.city || !neighborhoodFormData.state || !neighborhoodFormData.averageDistance || !neighborhoodFormData.baseFare || !neighborhoodFormData.deliveryFee || !neighborhoodFormData.platformFee) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos",
@@ -132,7 +137,9 @@ export default function NeighborhoodsConfig() {
         city: neighborhoodFormData.city,
         state: neighborhoodFormData.state,
         averageDistance: parseFloat(neighborhoodFormData.averageDistance),
-        baseFare: parseFloat(neighborhoodFormData.baseFare)
+        baseFare: parseFloat(neighborhoodFormData.baseFare),
+        deliveryFee: parseFloat(neighborhoodFormData.deliveryFee),
+        platformFee: parseFloat(neighborhoodFormData.platformFee)
       });
 
       if (!response.ok) {
@@ -146,7 +153,7 @@ export default function NeighborhoodsConfig() {
       });
 
       setIsAddNeighborhoodDialogOpen(false);
-      setNeighborhoodFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '', cep: '' });
+      setNeighborhoodFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '', deliveryFee: '', platformFee: '', cep: '' });
       loadCities();
       if (selectedCity) {
         loadNeighborhoods(selectedCity);
@@ -227,10 +234,10 @@ export default function NeighborhoodsConfig() {
                     onChange={(e) => setCityFormData({...cityFormData, city: e.target.value})}
                     placeholder="Ex: Salvador"
                     required
-                    className={checkCityExists(cityFormData.city) ? 'border-red-500' : ''}
+                    className={checkCityExists(cityFormData.city, cityFormData.state) ? 'border-red-500' : ''}
                   />
-                  {checkCityExists(cityFormData.city) && (
-                    <p className="text-sm text-red-600 mt-1">Esta cidade já existe no sistema</p>
+                  {checkCityExists(cityFormData.city, cityFormData.state) && (
+                    <p className="text-sm text-red-600 mt-1">Esta cidade já existe no estado {cityFormData.state}</p>
                   )}
                 </div>
                 <div>
@@ -260,7 +267,7 @@ export default function NeighborhoodsConfig() {
                   <Button type="button" variant="outline" onClick={() => setIsAddCityDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={checkCityExists(cityFormData.city)}>
+                  <Button type="submit" disabled={checkCityExists(cityFormData.city, cityFormData.state)}>
                     Adicionar Cidade
                   </Button>
                 </div>
@@ -365,6 +372,32 @@ export default function NeighborhoodsConfig() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="deliveryFee">Valor da Entrega (R$)</Label>
+                  <Input
+                    id="deliveryFee"
+                    type="number"
+                    step="0.01"
+                    value={neighborhoodFormData.deliveryFee}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, deliveryFee: e.target.value})}
+                    placeholder="Ex: 12.00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="platformFee">Taxa da Plataforma (R$)</Label>
+                  <Input
+                    id="platformFee"
+                    type="number"
+                    step="0.01"
+                    value={neighborhoodFormData.platformFee}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, platformFee: e.target.value})}
+                    placeholder="Ex: 2.50"
+                    required
+                  />
+                </div>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsAddNeighborhoodDialogOpen(false)}>
                   Cancelar
@@ -442,6 +475,12 @@ export default function NeighborhoodsConfig() {
                         </p>
                         <p className="text-sm text-gray-500">
                           Tarifa base: R$ {parseFloat(neighborhood.baseFare).toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Valor da entrega: R$ {parseFloat(neighborhood.deliveryFee || '8.00').toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Taxa da plataforma: R$ {parseFloat(neighborhood.platformFee || '2.00').toFixed(2)}
                         </p>
                       </div>
                       <div className="flex gap-1">
