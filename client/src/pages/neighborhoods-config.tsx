@@ -37,7 +37,10 @@ export default function NeighborhoodsConfig() {
 
   const loadCities = async () => {
     try {
-      const data = await apiRequest('/api/cities', 'GET');
+      const token = localStorage.getItem('token');
+      const data = await apiRequest('/api/cities', 'GET', undefined, {
+        'Authorization': `Bearer ${token}`
+      });
       setCities(data);
     } catch (error) {
       console.error('Error loading cities:', error);
@@ -46,7 +49,10 @@ export default function NeighborhoodsConfig() {
 
   const loadNeighborhoods = async (cityName: string) => {
     try {
-      const data = await apiRequest(`/api/neighborhoods/city/${cityName}`, 'GET');
+      const token = localStorage.getItem('token');
+      const data = await apiRequest(`/api/neighborhoods/city/${cityName}`, 'GET', undefined, {
+        'Authorization': `Bearer ${token}`
+      });
       setNeighborhoods(data);
     } catch (error) {
       console.error('Error loading neighborhoods:', error);
@@ -66,12 +72,15 @@ export default function NeighborhoodsConfig() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       await apiRequest('/api/neighborhoods', 'POST', {
         name: formData.name,
         city: formData.city,
         state: formData.state,
         averageDistance: parseFloat(formData.averageDistance),
         baseFare: parseFloat(formData.baseFare)
+      }, {
+        'Authorization': `Bearer ${token}`
       });
 
       toast({

@@ -199,6 +199,8 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added sample data for multiple cities: Salvador/BA, Conde/PB, São Paulo/SP, Rio de Janeiro/RJ
 - July 09, 2025. Updated routing test page to work with new city-based neighborhood selection system
 - July 09, 2025. Added new API endpoints: /api/cities, /api/neighborhoods/city/:cityName, /api/neighborhoods/search/:cityName
+- July 09, 2025. Removed routing test pages and APIs screen from admin interface as requested by user
+- July 09, 2025. Fixed neighborhood configuration page authentication and removed test interfaces
 
 ## User Preferences
 

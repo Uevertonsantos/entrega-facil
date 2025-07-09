@@ -38,7 +38,6 @@ const navigation = [
   { name: "App Entregador", href: "/deliverer-app", icon: Smartphone },
   { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
   { name: "Credenciais", href: "/test-credentials", icon: Key },
-  { name: "Teste de Routing", href: "/routing-test", icon: Route },
   { name: "Bairros", href: "/neighborhoods-config", icon: MapPin },
   { name: "Configurações", href: "/settings", icon: Settings },
   { name: "Config. Sistema", href: "/admin-settings", icon: Settings },
