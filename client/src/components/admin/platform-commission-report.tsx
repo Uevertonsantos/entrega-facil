@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign, TrendingUp, Calendar, MapPin } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, MapPin, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface CommissionDelivery {
+interface PlatformCommissionDelivery {
   id: number;
+  delivererName: string;
   customerName: string;
   deliveryAddress: string;
   deliveryFee: number;
@@ -19,24 +20,20 @@ interface CommissionDelivery {
   createdAt: string;
 }
 
-interface CommissionTotals {
+interface PlatformCommissionTotals {
   totalDeliveryFee: number;
   totalCommission: number;
-  totalPayment: number;
+  totalDelivererPayment: number;
 }
 
-interface CommissionReport {
-  deliveries: CommissionDelivery[];
-  totals: CommissionTotals;
-  delivererInfo: {
-    id: number;
-    name: string;
-  };
+interface PlatformCommissionReport {
+  deliveries: PlatformCommissionDelivery[];
+  totals: PlatformCommissionTotals;
 }
 
-export default function CommissionReport() {
-  const { data: report, isLoading } = useQuery<CommissionReport>({
-    queryKey: ['/api/deliverers/commission-report'],
+export default function PlatformCommissionReport() {
+  const { data: report, isLoading } = useQuery<PlatformCommissionReport>({
+    queryKey: ['/api/admin/platform-commission-report'],
   });
 
   if (isLoading) {
@@ -75,7 +72,7 @@ export default function CommissionReport() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Relatório de Comissões</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Relatório de Comissões da Plataforma</h2>
         <Badge variant="secondary" className="text-sm">
           {report.deliveries.length} entregas concluídas
         </Badge>
@@ -85,45 +82,45 @@ export default function CommissionReport() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total em Taxas</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(report.totals.totalDeliveryFee)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Valor total das taxas de entrega
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comissão da Plataforma</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(report.totals.totalCommission)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Taxa cobrada pela plataforma
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Seu Pagamento</CardTitle>
+            <CardTitle className="text-sm font-medium">Total em Entregas</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(report.totals.totalPayment)}
+              {formatCurrency(report.totals.totalDeliveryFee)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Valor total que você recebeu
+              Valor total movimentado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sua Comissão</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(report.totals.totalCommission)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Valor total de comissões recebidas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pagamento aos Entregadores</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {formatCurrency(report.totals.totalDelivererPayment)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Valor total pago aos entregadores
             </p>
           </CardContent>
         </Card>
@@ -139,12 +136,13 @@ export default function CommissionReport() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Entregador</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Endereço</TableHead>
-                  <TableHead>Taxa</TableHead>
+                  <TableHead>Valor Total</TableHead>
                   <TableHead>Comissão (%)</TableHead>
-                  <TableHead>Desconto</TableHead>
-                  <TableHead>Pagamento</TableHead>
+                  <TableHead>Sua Comissão</TableHead>
+                  <TableHead>Pagamento Entregador</TableHead>
                   <TableHead>Data</TableHead>
                 </TableRow>
               </TableHeader>
@@ -152,6 +150,9 @@ export default function CommissionReport() {
                 {report.deliveries.map((delivery) => (
                   <TableRow key={delivery.id}>
                     <TableCell className="font-medium">
+                      {delivery.delivererName}
+                    </TableCell>
+                    <TableCell>
                       {delivery.customerName}
                     </TableCell>
                     <TableCell>
@@ -163,7 +164,7 @@ export default function CommissionReport() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-green-600">
+                      <span className="font-medium text-blue-600">
                         {formatCurrency(delivery.deliveryFee)}
                       </span>
                     </TableCell>
@@ -173,12 +174,12 @@ export default function CommissionReport() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-red-600">
-                        -{formatCurrency(delivery.commissionAmount)}
+                      <span className="font-medium text-green-600">
+                        {formatCurrency(delivery.commissionAmount)}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-blue-600">
+                      <span className="text-orange-600">
                         {formatCurrency(delivery.delivererPayment)}
                       </span>
                     </TableCell>
@@ -199,18 +200,18 @@ export default function CommissionReport() {
       </Card>
 
       {/* Information Note */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
             <div>
-              <h4 className="font-medium text-blue-900 mb-1">
-                Como funciona a comissão?
+              <h4 className="font-medium text-green-900 mb-1">
+                Modelo de Comissão da Plataforma
               </h4>
-              <p className="text-sm text-blue-700">
-                A plataforma cobra uma comissão sobre cada entrega realizada. 
-                O percentual é definido no seu cadastro e é descontado do valor total da entrega. 
-                O valor restante é o que você recebe como pagamento por cada entrega.
+              <p className="text-sm text-green-700">
+                A plataforma cobra uma comissão sobre cada entrega realizada pelos entregadores. 
+                O percentual é definido no cadastro de cada entregador e é automaticamente descontado 
+                do valor total da entrega. O restante é pago diretamente ao entregador.
               </p>
             </div>
           </div>

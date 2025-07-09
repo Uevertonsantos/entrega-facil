@@ -35,7 +35,7 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
       email: "",
       password: "",
       vehicleType: "bicicleta",
-      commissionPercentage: "15.00",
+      commissionPercentage: "20.00",
       isOnline: false,
       isActive: true,
     },
@@ -184,7 +184,7 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
                         step="0.01" 
                         min="0" 
                         max="100"
-                        placeholder="15.00" 
+                        placeholder="20.00" 
                       />
                     </FormControl>
                     <FormMessage />

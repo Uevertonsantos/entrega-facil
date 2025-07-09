@@ -12,7 +12,8 @@ import {
   ShoppingBag,
   Package,
   Monitor,
-  Wifi
+  Wifi,
+  TrendingUp
 } from "lucide-react";
 
 const navigation = [
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Entregadores", href: "/deliverers", icon: Users },
   { name: "Relatórios", href: "/reports", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: CreditCard },
+  { name: "Comissões", href: "/commissions", icon: TrendingUp },
   { name: "Planos", href: "/plans", icon: Package },
   { name: "Clientes", href: "/clients", icon: Monitor },
   { name: "Monitor Tempo Real", href: "/monitor", icon: Wifi },

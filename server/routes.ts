@@ -777,9 +777,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Delivery not found" });
       }
       
-      // Calculate commission
+      // Calculate commission (platform commission from delivery fee)
       const deliveryFee = parseFloat(currentDelivery.deliveryFee);
-      const commissionPercentage = parseFloat(deliverer.commissionPercentage || "15.00");
+      const commissionPercentage = parseFloat(deliverer.commissionPercentage || "20.00");
       const commissionAmount = (deliveryFee * commissionPercentage) / 100;
       const delivererPayment = deliveryFee - commissionAmount;
       
@@ -1061,6 +1061,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error receiving delivery data:", error);
       res.status(500).json({ message: "Failed to process delivery data" });
+    }
+  });
+
+  // Platform commission report (admin only)
+  app.get('/api/admin/platform-commission-report', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const deliveries = await storage.getDeliveries();
+      const completedDeliveries = deliveries.filter(d => d.status === 'completed' && d.deliverer);
+      
+      const commissionReport = completedDeliveries.map(delivery => ({
+        id: delivery.id,
+        delivererName: delivery.deliverer?.name || "N/A",
+        customerName: delivery.customerName,
+        deliveryAddress: delivery.deliveryAddress,
+        deliveryFee: parseFloat(delivery.deliveryFee),
+        commissionPercentage: parseFloat(delivery.commissionPercentage || "20.00"),
+        commissionAmount: parseFloat(delivery.commissionAmount || "0.00"),
+        delivererPayment: parseFloat(delivery.delivererPayment || "0.00"),
+        completedAt: delivery.completedAt,
+        createdAt: delivery.createdAt
+      }));
+      
+      const totals = commissionReport.reduce((acc, delivery) => ({
+        totalDeliveryFee: acc.totalDeliveryFee + delivery.deliveryFee,
+        totalCommission: acc.totalCommission + delivery.commissionAmount,
+        totalDelivererPayment: acc.totalDelivererPayment + delivery.delivererPayment
+      }), {
+        totalDeliveryFee: 0,
+        totalCommission: 0,
+        totalDelivererPayment: 0
+      });
+      
+      res.json({
+        deliveries: commissionReport,
+        totals
+      });
+    } catch (error) {
+      console.error("Error fetching platform commission report:", error);
+      res.status(500).json({ message: "Failed to fetch platform commission report" });
     }
   });
 
