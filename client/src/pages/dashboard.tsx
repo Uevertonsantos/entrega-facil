@@ -96,12 +96,12 @@ export default function Dashboard() {
 
   if (statsLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="space-y-6 mobile-container">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
@@ -111,15 +111,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mobile-container">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <div className="flex flex-col sm:flex-row gap-2 mobile-full-width">
           <Button
             onClick={() => setIsNewMerchantOpen(true)}
             variant="outline"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 touch-button"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Comerciante
@@ -127,14 +127,14 @@ export default function Dashboard() {
           <Button
             onClick={() => setIsNewDelivererOpen(true)}
             variant="outline"
-            className="border-green-500 text-green-500 hover:bg-green-50"
+            className="border-green-500 text-green-500 hover:bg-green-50 touch-button"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Entregador
           </Button>
           <Button
             onClick={() => setIsNewDeliveryOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="bg-primary hover:bg-primary/90 text-white touch-button"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nova Entrega
@@ -143,7 +143,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
           title="Entregas Hoje"
           value={stats?.todayDeliveries || 0}
@@ -171,7 +171,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mobile-grid">
         {/* Recent Deliveries */}
         <Card>
           <CardHeader>
