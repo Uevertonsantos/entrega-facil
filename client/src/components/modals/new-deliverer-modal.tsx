@@ -35,6 +35,7 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
       email: "",
       password: "",
       vehicleType: "bicicleta",
+      commissionPercentage: "15.00",
       isOnline: false,
       isActive: true,
     },
@@ -145,29 +146,52 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="vehicleType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Veículo</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="vehicleType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Veículo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o veículo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="bicicleta">Bicicleta</SelectItem>
+                        <SelectItem value="moto">Moto</SelectItem>
+                        <SelectItem value="carro">Carro</SelectItem>
+                        <SelectItem value="a_pe">A pé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="commissionPercentage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comissão (%)</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o veículo" />
-                      </SelectTrigger>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        max="100"
+                        placeholder="15.00" 
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="bicicleta">Bicicleta</SelectItem>
-                      <SelectItem value="moto">Moto</SelectItem>
-                      <SelectItem value="carro">Carro</SelectItem>
-                      <SelectItem value="a_pe">A pé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>

@@ -566,6 +566,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Commission report for deliverers
+  app.get('/api/deliverers/commission-report', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+      
+      const delivererId = Number(userInfo.id);
+      if (!delivererId || isNaN(delivererId)) {
+        return res.status(400).json({ message: "Invalid deliverer ID" });
+      }
+      
+      const deliveries = await storage.getDeliveriesByDeliverer(delivererId);
+      const completedDeliveries = deliveries.filter(d => d.status === 'completed');
+      
+      const commissionReport = completedDeliveries.map(delivery => ({
+        id: delivery.id,
+        customerName: delivery.customerName,
+        deliveryAddress: delivery.deliveryAddress,
+        deliveryFee: parseFloat(delivery.deliveryFee),
+        commissionPercentage: parseFloat(delivery.commissionPercentage || "15.00"),
+        commissionAmount: parseFloat(delivery.commissionAmount || "0.00"),
+        delivererPayment: parseFloat(delivery.delivererPayment || "0.00"),
+        completedAt: delivery.completedAt,
+        createdAt: delivery.createdAt
+      }));
+      
+      const totals = commissionReport.reduce((acc, delivery) => ({
+        totalDeliveryFee: acc.totalDeliveryFee + delivery.deliveryFee,
+        totalCommission: acc.totalCommission + delivery.commissionAmount,
+        totalPayment: acc.totalPayment + delivery.delivererPayment
+      }), {
+        totalDeliveryFee: 0,
+        totalCommission: 0,
+        totalPayment: 0
+      });
+      
+      res.json({
+        deliveries: commissionReport,
+        totals,
+        delivererInfo: {
+          id: delivererId,
+          name: completedDeliveries[0]?.deliverer?.name || "N/A"
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching commission report:", error);
+      res.status(500).json({ message: "Failed to fetch commission report" });
+    }
+  });
+
   app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
     try {
       const userInfo = req.user;
@@ -710,9 +764,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const delivererId = Number(userInfo.id);
+      
+      // Get deliverer info to calculate commission
+      const deliverer = await storage.getDeliverer(delivererId);
+      if (!deliverer) {
+        return res.status(404).json({ message: "Deliverer not found" });
+      }
+      
+      // Get delivery info to calculate commission
+      const currentDelivery = await storage.getDelivery(id);
+      if (!currentDelivery) {
+        return res.status(404).json({ message: "Delivery not found" });
+      }
+      
+      // Calculate commission
+      const deliveryFee = parseFloat(currentDelivery.deliveryFee);
+      const commissionPercentage = parseFloat(deliverer.commissionPercentage || "15.00");
+      const commissionAmount = (deliveryFee * commissionPercentage) / 100;
+      const delivererPayment = deliveryFee - commissionAmount;
+      
       const delivery = await storage.updateDelivery(id, {
         delivererId: delivererId,
-        status: "in_progress"
+        status: "in_progress",
+        commissionPercentage: deliverer.commissionPercentage,
+        commissionAmount: commissionAmount.toFixed(2),
+        delivererPayment: delivererPayment.toFixed(2)
       });
       
       // Send real-time notification

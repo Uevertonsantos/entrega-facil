@@ -65,6 +65,7 @@ export const deliverers = pgTable("deliverers", {
   email: varchar("email").notNull().unique(),
   password: varchar("password").notNull(),
   vehicleType: varchar("vehicle_type").notNull(), // bicicleta, moto, carro, a_pe
+  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("15.00"),
   isActive: boolean("is_active").default(true),
   isOnline: boolean("is_online").default(false),
   currentDeliveries: integer("current_deliveries").default(0),
@@ -91,6 +92,8 @@ export const deliveries = pgTable("deliveries", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).notNull(),
   delivererPayment: decimal("deliverer_payment", { precision: 10, scale: 2 }),
+  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
   notes: text("notes"),
   scheduledTime: timestamp("scheduled_time"),
   completedAt: timestamp("completed_at"),

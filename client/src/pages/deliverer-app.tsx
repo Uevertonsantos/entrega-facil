@@ -8,9 +8,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar, Eye } from "lucide-react";
+import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar, Eye, FileText } from "lucide-react";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 import DeliveryManagementModal from "@/components/modals/delivery-management-modal";
+import CommissionReport from "@/components/deliverer/commission-report";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
@@ -264,10 +265,11 @@ export default function DelivererApp() {
 
         {/* Tabs */}
         <Tabs defaultValue="deliveries" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="deliveries">Entregas</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
+            <TabsTrigger value="commission">Comissões</TabsTrigger>
           </TabsList>
           
           <TabsContent value="deliveries" className="space-y-4">
@@ -546,6 +548,10 @@ export default function DelivererApp() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="commission" className="space-y-4">
+            <CommissionReport />
           </TabsContent>
         </Tabs>
       </div>
