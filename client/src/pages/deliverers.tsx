@@ -23,7 +23,8 @@ import {
   Phone,
   Route,
   DollarSign,
-  Clock
+  Clock,
+  Trash2
 } from "lucide-react";
 import type { Deliverer } from "@shared/schema";
 
@@ -128,6 +129,39 @@ export default function Deliverers() {
     },
   });
 
+  const deleteDelivererMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest(`/api/deliverers/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/deliverers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/deliverers/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Entregador excluído",
+        description: "O entregador foi excluído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Não autorizado",
+          description: "Você foi deslogado. Fazendo login novamente...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir entregador. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (data: DelivererFormData) => {
     if (editingDeliverer) {
       updateDelivererMutation.mutate({ id: editingDeliverer.id, data });
@@ -151,6 +185,12 @@ export default function Deliverers() {
       id: deliverer.id,
       data: { isOnline: !deliverer.isOnline }
     });
+  };
+
+  const handleDelete = (deliverer: Deliverer) => {
+    if (window.confirm(`Tem certeza que deseja excluir o entregador "${deliverer.name}"?`)) {
+      deleteDelivererMutation.mutate(deliverer.id);
+    }
   };
 
   const handleWhatsAppMessage = (phone: string, delivererName: string) => {
@@ -491,6 +531,16 @@ export default function Deliverers() {
                   >
                     <Route className="h-3 w-3 mr-1" />
                     Rota
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(deliverer)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    disabled={deleteDelivererMutation.isPending}
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </div>

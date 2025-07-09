@@ -103,6 +103,10 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 08, 2025. Implemented CNPJ validation service with automatic form filling for business information
 - July 08, 2025. Fixed critical schema errors - added missing type and planValue fields to merchant database table
 - July 08, 2025. Resolved unhandledrejection errors in CNPJ lookup functionality with improved error handling
+- July 09, 2025. Corrected critical API request parameter order issue in all frontend files (apiRequest now uses url, method, data)
+- July 09, 2025. Fixed merchant and deliverer login authentication to use password field instead of phone field
+- July 09, 2025. Added delete functionality for merchants and deliverers with confirmation dialogs and error handling
+- July 09, 2025. Enhanced UI with delete buttons (trash icon) for both merchants and deliverers management pages
 
 ## User Preferences
 

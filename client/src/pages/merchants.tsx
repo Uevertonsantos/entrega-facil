@@ -23,7 +23,8 @@ import {
   Search,
   Phone,
   MapPin,
-  DollarSign
+  DollarSign,
+  Trash2
 } from "lucide-react";
 import type { Merchant } from "@shared/schema";
 
@@ -135,6 +136,38 @@ export default function Merchants() {
     },
   });
 
+  const deleteMerchantMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest(`/api/merchants/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Comerciante excluído",
+        description: "O comerciante foi excluído com sucesso.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Não autorizado",
+          description: "Você foi deslogado. Fazendo login novamente...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir comerciante. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (data: MerchantFormData) => {
     if (editingMerchant) {
       updateMerchantMutation.mutate({ id: editingMerchant.id, data });
@@ -156,6 +189,12 @@ export default function Merchants() {
       planType: merchant.planType as "por_entrega" | "mensal",
       password: "", // Password should be reset for editing
     });
+  };
+
+  const handleDelete = (merchant: Merchant) => {
+    if (window.confirm(`Tem certeza que deseja excluir o comerciante "${merchant.name}"?`)) {
+      deleteMerchantMutation.mutate(merchant.id);
+    }
   };
 
   const handleWhatsAppMessage = (phone: string, merchantName: string) => {
@@ -789,6 +828,16 @@ export default function Merchants() {
                           onClick={() => handleWhatsAppMessage(merchant.phone, merchant.name)}
                         >
                           <MessageSquare className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(merchant)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={deleteMerchantMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>

@@ -149,8 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For simplicity, using email as password check (in production, use bcrypt)
-      if (merchant.email === email && merchant.phone === password) {
+      // For simplicity, using password field (in production, use bcrypt)
+      if (merchant.email === email && merchant.password === password) {
         const token = jwt.sign(
           { id: merchant.id, email: merchant.email, role: 'merchant' },
           JWT_SECRET,
@@ -220,8 +220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For simplicity, using phone as password check (in production, use bcrypt)
-      if (deliverer.email === email && deliverer.phone === password) {
+      // For simplicity, using password field (in production, use bcrypt)
+      if (deliverer.email === email && deliverer.password === password) {
         const token = jwt.sign(
           { id: deliverer.id, email: deliverer.email, role: 'deliverer' },
           JWT_SECRET,
