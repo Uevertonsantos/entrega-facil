@@ -14,7 +14,10 @@ import Financial from "@/pages/financial";
 import DelivererApp from "@/pages/deliverer-app";
 import MerchantApp from "@/pages/merchant-app";
 import AdminLogin from "@/pages/admin-login";
+import AdminForgotPassword from "@/pages/admin-forgot-password";
+import AdminResetPassword from "@/pages/admin-reset-password";
 import AdminSettings from "@/pages/admin-settings";
+import EmailSettings from "@/pages/email-settings";
 import PlanManagement from "@/pages/plan-management";
 import ClientsOverview from "@/pages/clients-overview";
 import RealTimeMonitor from "@/pages/real-time-monitor";
@@ -32,6 +35,9 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/forgot-password" component={AdminForgotPassword} />
+        <Route path="/admin/reset-password" component={AdminResetPassword} />
         <Route path="/admin-login" component={AdminLogin} />
         <Route path="/merchant-login" component={MerchantLogin} />
         <Route path="/deliverer-login" component={DelivererLogin} />
@@ -61,6 +67,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/financial" component={Financial} />
           <Route path="/settings" component={AdminSettings} />
+          <Route path="/email-settings" component={EmailSettings} />
           <Route path="/plans" component={PlanManagement} />
           <Route path="/clients" component={ClientsOverview} />
           <Route path="/monitor" component={RealTimeMonitor} />
@@ -76,6 +83,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/forgot-password" component={AdminForgotPassword} />
+      <Route path="/admin/reset-password" component={AdminResetPassword} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/deliverer-login" component={DelivererLogin} />

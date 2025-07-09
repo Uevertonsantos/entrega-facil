@@ -125,6 +125,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added new fields "Vehicle Model" and "Vehicle Plate" to deliverer registration and management
 - July 09, 2025. Updated all interfaces to use "Taxa da Plataforma" instead of "Comissão" for consistency
 - July 09, 2025. Enhanced new deliverer modal with complete form including vehicle information
+- July 09, 2025. Implemented admin login with username instead of email for enhanced security
+- July 09, 2025. Created comprehensive email recovery system with Gmail SMTP integration
+- July 09, 2025. Built forgot password and reset password functionality with secure token system
+- July 09, 2025. Added email configuration panel for Gmail SMTP setup with test functionality
+- July 09, 2025. Enhanced admin user management with dedicated admin_users table and proper authentication
 
 ## User Preferences
 

@@ -4,6 +4,7 @@ import {
   deliverers,
   deliveries,
   adminSettings,
+  adminUsers,
   type User,
   type UpsertUser,
   type InsertMerchant,
@@ -15,6 +16,8 @@ import {
   type DeliveryWithRelations,
   type InsertAdminSetting,
   type AdminSetting,
+  type InsertAdminUser,
+  type AdminUser,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
@@ -73,6 +76,18 @@ export interface IStorage {
     averageRating: number;
     weeklyEarnings: number[];
   }>;
+  
+  // Admin user operations
+  getAdminUsers(): Promise<AdminUser[]>;
+  getAdminUser(id: number): Promise<AdminUser | undefined>;
+  getAdminUserByUsername(username: string): Promise<AdminUser | undefined>;
+  getAdminUserByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
+  updateAdminUser(id: number, adminUser: Partial<InsertAdminUser>): Promise<AdminUser>;
+  deleteAdminUser(id: number): Promise<void>;
+  setPasswordResetToken(id: number, token: string, expiry: Date): Promise<void>;
+  getAdminUserByResetToken(token: string): Promise<AdminUser | undefined>;
+  clearResetToken(id: number): Promise<void>;
   
   // Admin settings operations
   getAdminSettings(): Promise<AdminSetting[]>;
@@ -456,6 +471,83 @@ export class DatabaseStorage implements IStorage {
       averageRating: 4.8, // Mock rating for now
       weeklyEarnings
     };
+  }
+  
+  // Admin user operations
+  async getAdminUsers(): Promise<AdminUser[]> {
+    return await db.select().from(adminUsers).orderBy(adminUsers.createdAt);
+  }
+  
+  async getAdminUser(id: number): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return user;
+  }
+  
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return user;
+  }
+  
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    return user;
+  }
+  
+  async createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser> {
+    const [newUser] = await db
+      .insert(adminUsers)
+      .values(adminUser)
+      .returning();
+    return newUser;
+  }
+  
+  async updateAdminUser(id: number, adminUser: Partial<InsertAdminUser>): Promise<AdminUser> {
+    const [updatedUser] = await db
+      .update(adminUsers)
+      .set({ 
+        ...adminUser, 
+        updatedAt: new Date() 
+      })
+      .where(eq(adminUsers.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async deleteAdminUser(id: number): Promise<void> {
+    await db.delete(adminUsers).where(eq(adminUsers.id, id));
+  }
+  
+  async setPasswordResetToken(id: number, token: string, expiry: Date): Promise<void> {
+    await db
+      .update(adminUsers)
+      .set({ 
+        resetToken: token,
+        resetTokenExpiry: expiry,
+        updatedAt: new Date()
+      })
+      .where(eq(adminUsers.id, id));
+  }
+  
+  async getAdminUserByResetToken(token: string): Promise<AdminUser | undefined> {
+    const [user] = await db
+      .select()
+      .from(adminUsers)
+      .where(and(
+        eq(adminUsers.resetToken, token),
+        sql`${adminUsers.resetTokenExpiry} > NOW()`
+      ));
+    return user;
+  }
+  
+  async clearResetToken(id: number): Promise<void> {
+    await db
+      .update(adminUsers)
+      .set({ 
+        resetToken: null,
+        resetTokenExpiry: null,
+        updatedAt: new Date()
+      })
+      .where(eq(adminUsers.id, id));
   }
   
   // Admin settings operations

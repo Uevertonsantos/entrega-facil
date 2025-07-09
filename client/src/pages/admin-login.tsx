@@ -11,8 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const adminLoginSchema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  password: z.string().min(1, "Senha é obrigatória"),
 });
 
 type AdminLoginData = z.infer<typeof adminLoginSchema>;
@@ -24,7 +24,7 @@ export default function AdminLogin() {
   const form = useForm<AdminLoginData>({
     resolver: zodResolver(adminLoginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -84,14 +84,14 @@ export default function AdminLogin() {
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Nome de Usuário</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="Digite seu e-mail"
+                        type="text"
+                        placeholder="Digite seu nome de usuário"
                         {...field}
                         disabled={isLoading}
                       />
@@ -142,6 +142,16 @@ export default function AdminLogin() {
                   disabled={isLoading}
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-purple-600 hover:text-purple-700"
+                  onClick={() => window.location.href = "/admin/forgot-password"}
+                  disabled={isLoading}
+                >
+                  Esqueci minha senha
                 </Button>
                 
                 <Button

@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated as replitIsAuthenticated } from "./replitAuth";
 import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
+import { emailService } from "./services/emailService";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
@@ -102,15 +103,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Admin login endpoint
+  // Admin login endpoint (with username support)
   app.post('/api/admin/login', async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
       
-      // Check credentials
-      if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+      // Get admin user by username
+      const adminUser = await storage.getAdminUserByUsername(username);
+      
+      if (!adminUser) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Credenciais inválidas" 
+        });
+      }
+      
+      // Check password (using direct comparison for now)
+      if (adminUser.password === password) {
         const token = jwt.sign(
-          { email, role: 'admin' },
+          { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' },
           JWT_SECRET,
           { expiresIn: '24h' }
         );
@@ -118,19 +129,201 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           success: true, 
           token,
-          message: "Login successful" 
+          admin: adminUser,
+          message: "Login realizado com sucesso" 
         });
       } else {
         res.status(401).json({ 
           success: false, 
-          message: "Invalid credentials" 
+          message: "Credenciais inválidas" 
         });
       }
     } catch (error) {
       console.error("Error in admin login:", error);
       res.status(500).json({ 
         success: false, 
-        message: "Internal server error" 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Password reset request endpoint
+  app.post('/api/admin/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email é obrigatório" 
+        });
+      }
+      
+      // Get admin user by email
+      const adminUser = await storage.getAdminUserByEmail(email);
+      
+      if (!adminUser) {
+        // Don't reveal if email exists or not for security
+        return res.json({ 
+          success: true, 
+          message: "Se o email existir, você receberá as instruções para redefinir a senha" 
+        });
+      }
+      
+      // Generate reset token
+      const resetToken = emailService.generateResetToken();
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+      
+      // Save reset token to database
+      await storage.setPasswordResetToken(adminUser.id, resetToken, resetTokenExpiry);
+      
+      // Send email
+      const emailSent = await emailService.sendPasswordResetEmail(email, resetToken, adminUser.name);
+      
+      if (emailSent) {
+        res.json({ 
+          success: true, 
+          message: "Instruções enviadas para o email" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Erro ao enviar email. Verifique a configuração do serviço de email." 
+        });
+      }
+    } catch (error) {
+      console.error("Error in forgot password:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Password reset endpoint
+  app.post('/api/admin/reset-password', async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Token e nova senha são obrigatórios" 
+        });
+      }
+      
+      // Get admin user by reset token
+      const adminUser = await storage.getAdminUserByResetToken(token);
+      
+      if (!adminUser) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Token inválido ou expirado" 
+        });
+      }
+      
+      // Update password and clear reset token
+      await storage.updateAdminUser(adminUser.id, { password: newPassword });
+      await storage.clearResetToken(adminUser.id);
+      
+      res.json({ 
+        success: true, 
+        message: "Senha redefinida com sucesso" 
+      });
+    } catch (error) {
+      console.error("Error in reset password:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Email configuration endpoints
+  app.get('/api/admin/email-status', isAdmin, async (req, res) => {
+    try {
+      res.json({
+        configured: emailService.isConfigured(),
+        message: emailService.isConfigured() ? "Email configurado" : "Email não configurado"
+      });
+    } catch (error) {
+      console.error("Error checking email status:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  app.post('/api/admin/email-settings', isAdmin, async (req, res) => {
+    try {
+      const { gmailUser, gmailAppPassword } = req.body;
+      
+      if (!gmailUser || !gmailAppPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email e senha de app são obrigatórios" 
+        });
+      }
+      
+      // Save to environment variables (in production, use secure storage)
+      process.env.GMAIL_USER = gmailUser;
+      process.env.GMAIL_APP_PASSWORD = gmailAppPassword;
+      
+      // Reinitialize email service
+      emailService.setupTransporter();
+      
+      res.json({ 
+        success: true, 
+        message: "Configurações de email salvas com sucesso" 
+      });
+    } catch (error) {
+      console.error("Error saving email settings:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  app.post('/api/admin/test-email', isAdmin, async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email é obrigatório" 
+        });
+      }
+      
+      const emailSent = await emailService.sendEmail({
+        to: email,
+        subject: "Teste de Email - Delivery Express",
+        html: `
+          <h2>Teste de Email</h2>
+          <p>Este é um email de teste do sistema Delivery Express.</p>
+          <p>Se você recebeu este email, a configuração está funcionando corretamente!</p>
+          <p>Data/Hora: ${new Date().toLocaleString('pt-BR')}</p>
+        `,
+      });
+      
+      if (emailSent) {
+        res.json({ 
+          success: true, 
+          message: "Email de teste enviado com sucesso" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Erro ao enviar email de teste. Verifique as configurações." 
+        });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
       });
     }
   });

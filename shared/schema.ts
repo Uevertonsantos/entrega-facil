@@ -103,6 +103,21 @@ export const deliveries = pgTable("deliveries", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Admin users table
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username").notNull().unique(),
+  email: varchar("email").notNull().unique(),
+  password: varchar("password").notNull(),
+  name: varchar("name").notNull(),
+  role: varchar("role").notNull().default("admin"),
+  resetToken: varchar("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Admin settings table
 export const adminSettings = pgTable("admin_settings", {
   id: serial("id").primaryKey(),
@@ -168,6 +183,14 @@ export const insertDeliverySchema = createInsertSchema(deliveries).omit({
   completedAt: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  resetToken: true,
+  resetTokenExpiry: true,
+});
+
 export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
   id: true,
   createdAt: true,
@@ -192,6 +215,9 @@ export type DeliveryWithRelations = Delivery & {
   deliverer: Deliverer | null;
   estimatedValue?: number; // Alias for price for frontend compatibility
 };
+
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
 
 export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
 export type AdminSetting = typeof adminSettings.$inferSelect;
