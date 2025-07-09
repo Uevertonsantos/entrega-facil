@@ -75,22 +75,57 @@ export default function ClientSetup() {
   });
 
   // Query to fetch active plans
-  const { data: plans = [], isLoading: plansLoading } = useQuery({
+  const { data: plans = [], isLoading: plansLoading, error: plansError } = useQuery({
     queryKey: ['/api/plans/active'],
     queryFn: async () => {
-      const response = await apiRequest('/api/plans/active', 'GET');
-      return response as Plan[];
+      try {
+        const response = await apiRequest('/api/plans/active', 'GET');
+        const data = await response.json();
+        console.log('Plans response:', data);
+        return data as Plan[];
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+        throw error;
+      }
     },
   });
 
   // Query to fetch existing merchants
-  const { data: merchants = [], isLoading: merchantsLoading } = useQuery({
+  const { data: merchants = [], isLoading: merchantsLoading, error: merchantsError } = useQuery({
     queryKey: ['/api/merchants/list'],
     queryFn: async () => {
-      const response = await apiRequest('/api/merchants/list', 'GET');
-      return response as Merchant[];
+      try {
+        const response = await apiRequest('/api/merchants/list', 'GET');
+        const data = await response.json();
+        console.log('Merchants response:', data);
+        return data as Merchant[];
+      } catch (error) {
+        console.error('Error fetching merchants:', error);
+        throw error;
+      }
     },
   });
+
+  // Log errors and data for debugging
+  console.log('Plans data:', plans);
+  console.log('Plans loading:', plansLoading);
+  console.log('Plans error:', plansError);
+  console.log('Merchants data:', merchants);
+  console.log('Merchants loading:', merchantsLoading);
+  console.log('Merchants error:', merchantsError);
+
+  // Show loading while fetching data
+  if (plansLoading || merchantsLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Configurar Novo Cliente</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
   const [generatedCredentials, setGeneratedCredentials] = useState<{
     installationId: string;
     apiKey: string;
@@ -174,6 +209,27 @@ export default function ClientSetup() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Show error states
+  if (plansError || merchantsError) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Configurar Novo Cliente</h1>
+          <p className="text-gray-600 mt-2">Crie uma instalação personalizada para seu cliente</p>
+        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800">Erro ao carregar dados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {plansError && <p className="text-red-700 mb-2">Erro ao carregar planos: {plansError.message}</p>}
+            {merchantsError && <p className="text-red-700">Erro ao carregar comerciantes: {merchantsError.message}</p>}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
