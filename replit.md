@@ -145,6 +145,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Enhanced delivery creation form with payment method selection dropdown
 - July 09, 2025. Updated all delivery views (admin, deliverer, modals) to display payment method information
 - July 09, 2025. Added clear-auth page to help users reset authentication state and return to landing page
+- July 09, 2025. Enhanced cache management system for better Chrome compatibility with external domains
+- July 09, 2025. Implemented aggressive cache clearing and service worker updates for consistent page loading
+- July 09, 2025. Added version-based cache invalidation to ensure users see the latest application version
 
 ## User Preferences
 

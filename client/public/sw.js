@@ -1,4 +1,4 @@
-const CACHE_NAME = 'entrega-facil-v3';
+const CACHE_NAME = 'entrega-facil-v4';
 const urlsToCache = [
   '/',
   '/src/main.tsx',
@@ -14,15 +14,26 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event
+// Fetch event - force network first for HTML and main resources
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
+  if (event.request.url.includes('.html') || 
+      event.request.url.includes('/src/') ||
+      event.request.url.endsWith('/')) {
+    // Force network first for critical resources
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request);
       })
-  );
+    );
+  } else {
+    // Use cache first for other resources
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => {
+          return response || fetch(event.request);
+        })
+    );
+  }
 });
 
 // Activate event
