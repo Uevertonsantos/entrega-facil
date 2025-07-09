@@ -1,183 +1,125 @@
-# Entrega Fácil - Instalador do Sistema
+# ENTREGA FÁCIL - INSTALADOR V2.0
 
-## Descrição
+## NOVIDADES DA VERSÃO 2.0
 
-Este é o instalador oficial do sistema Entrega Fácil para clientes. O instalador configura uma versão local do sistema no computador do cliente, mantendo os dados localmente mas sincronizando com o painel administrativo central.
+✅ **Detecção automática de porta livre**
+✅ **Correção automática de erros**
+✅ **Sistema de backup robusto**
+✅ **Logging avançado**
+✅ **Retry automático em falhas**
+✅ **Interface web melhorada**
+✅ **Recuperação automática de falhas**
+✅ **Painel de controle avançado**
 
-## Características
+## OPÇÕES DE INSTALAÇÃO
 
-- **Instalação Local**: Sistema roda completamente no computador do cliente
-- **Banco de Dados SQLite**: Dados armazenados localmente para máxima velocidade
-- **Sincronização Automática**: Dados são enviados para o painel admin a cada 15 minutos
-- **Auto-inicialização**: Sistema inicia automaticamente com o Windows
-- **Interface Web**: Acesso via navegador em `http://localhost:3000`
+### 1. Instalação Automática (Recomendada)
+```
+install-completo-v2.bat
+```
+- Instalação completamente automática
+- Detecta porta livre automaticamente
+- Instala Node.js se necessário
+- Cria backup automático
+- Configura inicialização automática
 
-## Requisitos do Sistema
+### 2. Instalação PowerShell (Avançada)
+```
+install-powershell-v2.ps1
+```
+- Instalação via PowerShell
+- Mais opções de personalização
+- Melhor tratamento de erros
+- Suporte a parâmetros
 
-- Windows 10 ou superior
-- Node.js 18 ou superior
-- 500MB de espaço livre em disco
-- Conexão com internet para sincronização
+### 3. Utilitários de Suporte
+- `configurar-porta.bat` - Alterar porta do sistema
+- `resolver-porta.bat` - Resolver conflitos de porta
+- `fix-config.bat` - Corrigir arquivos de configuração
 
-## Como Usar
+## REQUISITOS DO SISTEMA
 
-### 1. Preparação do Instalador
+- Windows 10/11 (64-bit)
+- 4GB RAM mínimo
+- 1GB espaço livre
+- Conexão com internet (para instalação)
 
-```bash
-# Instalar dependências
-npm install
+## INSTALAÇÃO RÁPIDA
 
-# Construir executável para Windows
-npm run build-win
+1. **Descompacte** o arquivo ZIP
+2. **Execute** `install-completo-v2.bat` como Administrador
+3. **Aguarde** a instalação automática
+4. **Acesse** o sistema no navegador
 
-# Construir para Linux
-npm run build-linux
+## PORTAS SUPORTADAS
 
-# Construir para macOS
-npm run build-mac
+O sistema detecta automaticamente uma porta livre:
+- 3000 (padrão)
+- 3001, 3002
+- 8080, 8081
+- 8000, 5000, 5001
+- 9000, 9001
+
+## SOLUÇÃO DE PROBLEMAS
+
+### Erro "EADDRINUSE"
+```
+resolver-porta.bat
 ```
 
-### 2. Execução do Instalador
-
-```bash
-# Executar diretamente (desenvolvimento)
-npm start
-
-# Ou usar o executável gerado
-./dist/installer.exe
+### Arquivo config.json inválido
+```
+fix-config.bat
 ```
 
-### 3. Processo de Instalação
-
-O instalador irá:
-
-1. **Verificar Requisitos**: Confirmar que Node.js está instalado
-2. **Coletar Informações**: Solicitar dados do negócio e configurações
-3. **Criar Diretórios**: Estrutura de pastas em `~/EntregaFacil`
-4. **Configurar Banco**: Criar banco SQLite local
-5. **Instalar Aplicação**: Baixar e configurar sistema
-6. **Configurar Sincronização**: Serviço automático de envio de dados
-7. **Iniciar Sistema**: Aplicação rodando em `http://localhost:3000`
-
-## Configuração de Sincronização
-
-### Fluxo de Dados
-
+### Mudar porta do sistema
 ```
-Cliente Local (SQLite) → Sincronização → Painel Admin (PostgreSQL)
+configurar-porta.bat
 ```
 
-### Tabelas Sincronizadas
+## RECURSOS AVANÇADOS V2.0
 
-- **merchants**: Dados dos comerciantes
-- **deliverers**: Dados dos entregadores  
-- **deliveries**: Informações das entregas
+### Sistema de Backup
+- Backup automático diário
+- Backup manual via painel
+- Pasta: `backups\`
 
-### Campos de Controle
+### Logging Completo
+- Logs de acesso: `logs\access.log`
+- Logs de erro: `logs\error.log`
+- Logs de info: `logs\info.log`
 
-Cada tabela possui campos para controle de sincronização:
+### Sincronização
+- Sincronização automática a cada 5 minutos
+- Envio para painel administrativo
+- Configurável via `config.json`
 
-- `synced_at`: Data/hora da última sincronização
-- `sync_status`: Status (`pending`, `synced`, `error`)
+### Painel de Controle
+Execute: `Entrega Fácil - Controle v2.bat`
+- Iniciar/Parar sistema
+- Ver logs
+- Criar backup
+- Configurações
 
-## Estrutura de Arquivos
+## SUPORTE
 
-```
-~/EntregaFacil/
-├── app/                    # Aplicação principal
-│   ├── server.js          # Servidor Express
-│   ├── package.json       # Dependências
-│   ├── .env              # Variáveis de ambiente
-│   └── public/           # Arquivos estáticos
-├── config.json           # Configurações do cliente
-├── database.sqlite       # Banco de dados local
-├── sync-service.js       # Serviço de sincronização
-├── logs/                 # Logs do sistema
-└── backup/               # Backups automáticos
-```
-
-## API de Sincronização
-
-### Endpoints do Painel Admin
-
-- `POST /api/clients/{clientId}/merchants` - Receber comerciantes
-- `POST /api/clients/{clientId}/deliverers` - Receber entregadores
-- `POST /api/clients/{clientId}/deliveries` - Receber entregas
-
-### Autenticação
-
-- Header: `Authorization: Bearer {adminKey}`
-- Chave fornecida durante instalação
-
-## Configurações Personalizáveis
-
-### Frequência de Sincronização
-
-Padrão: 15 minutos
-Editável em: `sync-service.js`
-
-```javascript
-// Alterar cron pattern
-cron.schedule('*/15 * * * *', syncFunction);
-```
-
-### Porta Local
-
-Padrão: 3000
-Editável em: `.env`
-
-```env
-PORT=3000
-```
-
-## Solução de Problemas
-
-### Sistema não inicia
-
-1. Verificar se Node.js está instalado
-2. Conferir se porta 3000 está livre
-3. Verificar logs em `~/EntregaFacil/logs/`
-
-### Sincronização falhando
-
-1. Verificar conexão com internet
-2. Confirmar chave de licença válida
-3. Verificar status em `sync_log` do banco
-
-### Banco corrompido
-
-1. Parar aplicação
-2. Restaurar backup de `~/EntregaFacil/backup/`
-3. Reiniciar sistema
-
-## Comandos Úteis
-
-```bash
-# Verificar status do sistema
-curl http://localhost:3000/api/status
-
-# Forçar sincronização
-curl -X POST http://localhost:3000/api/sync
-
-# Backup manual
-curl -X POST http://localhost:3000/api/backup
-```
-
-## Desinstalação
-
-Para remover completamente o sistema:
-
-1. Parar aplicação
-2. Remover pasta `~/EntregaFacil`
-3. Remover entrada do startup do Windows
-4. Remover atalho da área de trabalho
-
-## Suporte
-
+Para suporte técnico, entre em contato:
 - Email: suporte@entregafacil.com
-- Telefone: (11) 9999-9999
 - Documentação: https://docs.entregafacil.com
 
-## Licença
+## CHANGELOG V2.0
 
-Este software é licenciado apenas para uso com chave válida fornecida pela Entrega Fácil.
+- ✅ Detecção automática de porta livre
+- ✅ Correção automática de erros EADDRINUSE
+- ✅ Sistema de backup robusto
+- ✅ Logging avançado
+- ✅ Retry automático em falhas
+- ✅ Interface web melhorada
+- ✅ Painel de controle avançado
+- ✅ Utilitários de manutenção
+- ✅ Suporte a PowerShell
+- ✅ Documentação completa
+
+---
+**Entrega Fácil v2.0** - Sistema de Gerenciamento de Entregas
+Desenvolvido para pequenos comércios e cidades do interior
