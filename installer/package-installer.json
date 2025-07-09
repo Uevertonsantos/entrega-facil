@@ -1,0 +1,46 @@
+{
+  "name": "entrega-facil-installer",
+  "version": "1.0.0",
+  "description": "Instalador GUI para o Sistema Entrega Fácil",
+  "main": "installer-gui.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "pack": "electron-builder --dir"
+  },
+  "author": "Entrega Fácil",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  },
+  "build": {
+    "appId": "com.entregafacil.installer",
+    "productName": "Entrega Fácil - Instalador",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "installer-gui.js",
+      "installer-ui.html",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    }
+  }
+}

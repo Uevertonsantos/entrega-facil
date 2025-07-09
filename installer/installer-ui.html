@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instalador Entrega Fácil</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .installer-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      max-width: 600px;
+      width: 90%;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      color: #333;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header .icon {
+      font-size: 3em;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .step {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .step.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .form-group {
+      margin: 20px 0;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e1e1;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin: 10px 5px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #333;
+      border: 2px solid #e1e1e1;
+    }
+    
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e1e1e1;
+      border-radius: 3px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+    }
+    
+    .status {
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .status-info {
+      background: #cce5ff;
+      color: #004085;
+      border: 1px solid #b8daff;
+    }
+    
+    .requirements {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .requirement-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    .requirement-icon {
+      margin-right: 15px;
+      font-size: 1.5em;
+    }
+    
+    .requirement-icon.success {
+      color: #28a745;
+    }
+    
+    .requirement-icon.error {
+      color: #dc3545;
+    }
+    
+    .requirement-icon.warning {
+      color: #ffc107;
+    }
+    
+    .actions {
+      text-align: center;
+      margin-top: 30px;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    @media (max-width: 600px) {
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="installer-container">
+    <div class="header">
+      <div class="icon">🚚</div>
+      <h1>Entrega Fácil</h1>
+      <p>Instalador do Sistema de Entregas Local</p>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+    
+    <!-- Passo 1: Verificação de Requisitos -->
+    <div class="step active" id="step1">
+      <h2>Verificação de Requisitos</h2>
+      <p>Verificando se seu sistema atende aos requisitos mínimos...</p>
+      
+      <div class="requirements" id="requirements">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Verificando requisitos...</p>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button class="btn btn-primary" id="nextStep1" disabled>Continuar</button>
+      </div>
+    </div>
+    
+    <!-- Passo 2: Configuração do Negócio -->
+    <div class="step" id="step2">
+      <h2>Configuração do Negócio</h2>
+      <p>Informe os dados do seu estabelecimento:</p>
+      
+      <div class="config-grid">
+        <div class="form-group">
+          <label>Nome do Estabelecimento:</label>
+          <input type="text" id="businessName" class="form-control" placeholder="Ex: Padaria do João" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Telefone:</label>
+          <input type="tel" id="businessPhone" class="form-control" placeholder="(11) 99999-9999" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Endereço Completo:</label>
+        <input type="text" id="businessAddress" class="form-control" placeholder="Rua, número, bairro, cidade" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Email (opcional):</label>
+        <input type="email" id="businessEmail" class="form-control" placeholder="contato@estabelecimento.com">
+      </div>
+      
+      <div class="form-group">
+        <label>Pasta de Instalação:</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="installPath" class="form-control" readonly>
+          <button class="btn btn-secondary" id="selectPath">Alterar</button>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Porta do Sistema:</label>
+        <select id="selectedPort" class="form-control">
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+      
+      <div class="actions">
+        <button class="btn btn-secondary" id="backStep2">Voltar</button>
+        <button class="btn btn-primary" id="nextStep2">Instalar</button>
+      </div>
+    </div>
+    
+    <!-- Passo 3: Instalação -->
+    <div class="step" id="step3">
+      <h2>Instalação em Andamento</h2>
+      <p>Instalando o sistema, aguarde...</p>
+      
+      <div class="loading">
+        <div class="spinner"></div>
+        <p id="installStatus">Preparando instalação...</p>
+      </div>
+      
+      <div class="status" id="installResult" style="display: none;"></div>
+      
+      <div class="actions">
+        <button class="btn btn-primary" id="testInstall" style="display: none;">Testar Sistema</button>
+        <button class="btn btn-primary" id="openSystem" style="display: none;">Abrir Sistema</button>
+        <button class="btn btn-secondary" id="finish" style="display: none;">Finalizar</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    let currentStep = 1;
+    let installData = {};
+    
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkRequirements();
+    });
+    
+    // Verificar requisitos
+    async function checkRequirements() {
+      try {
+        const requirements = await ipcRenderer.invoke('check-requirements');
+        displayRequirements(requirements);
+        installData = requirements;
+        
+        document.getElementById('nextStep1').disabled = !requirements.nodeInstalled;
+        updateProgress(25);
+      } catch (error) {
+        console.error('Erro ao verificar requisitos:', error);
+      }
+    }
+    
+    function displayRequirements(req) {
+      const container = document.getElementById('requirements');
+      
+      let html = '';
+      
+      // Node.js
+      if (req.nodeInstalled) {
+        html += `
+          <div class="requirement-item">
+            <div class="requirement-icon success">✅</div>
+            <div>
+              <strong>Node.js</strong><br>
+              <small>Versão: ${req.nodeVersion}</small>
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="requirement-item">
+            <div class="requirement-icon error">❌</div>
+            <div>
+              <strong>Node.js - NÃO INSTALADO</strong><br>
+              <small>Baixe em: <a href="#" onclick="require('electron').shell.openExternal('https://nodejs.org')">nodejs.org</a></small>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Porta disponível
+      if (req.availablePorts.length > 0) {
+        html += `
+          <div class="requirement-item">
+            <div class="requirement-icon success">✅</div>
+            <div>
+              <strong>Porta Disponível</strong><br>
+              <small>Porta ${req.availablePorts[0]} está livre</small>
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="requirement-item">
+            <div class="requirement-icon warning">⚠️</div>
+            <div>
+              <strong>Portas Ocupadas</strong><br>
+              <small>Algumas portas podem estar em uso</small>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Pasta de instalação
+      html += `
+        <div class="requirement-item">
+          <div class="requirement-icon success">✅</div>
+          <div>
+            <strong>Pasta de Instalação</strong><br>
+            <small>${req.installPath}</small>
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+    
+    // Navegação entre passos
+    document.getElementById('nextStep1').addEventListener('click', () => {
+      if (installData.nodeInstalled) {
+        goToStep(2);
+        setupStep2();
+      }
+    });
+    
+    document.getElementById('backStep2').addEventListener('click', () => {
+      goToStep(1);
+    });
+    
+    document.getElementById('nextStep2').addEventListener('click', () => {
+      if (validateStep2()) {
+        goToStep(3);
+        startInstallation();
+      }
+    });
+    
+    function goToStep(step) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(`step${step}`).classList.add('active');
+      currentStep = step;
+      updateProgress(step * 25);
+    }
+    
+    function updateProgress(percent) {
+      document.getElementById('progressFill').style.width = percent + '%';
+    }
+    
+    function setupStep2() {
+      document.getElementById('installPath').value = installData.installPath;
+      
+      // Configurar portas disponíveis
+      const portSelect = document.getElementById('selectedPort');
+      portSelect.innerHTML = '';
+      
+      if (installData.availablePorts.length > 0) {
+        installData.availablePorts.forEach(port => {
+          const option = document.createElement('option');
+          option.value = port;
+          option.textContent = `Porta ${port}`;
+          portSelect.appendChild(option);
+        });
+        portSelect.value = installData.availablePorts[0];
+      } else {
+        // Adicionar portas padrão se nenhuma foi detectada
+        [3000, 3001, 3002, 8080, 8000].forEach(port => {
+          const option = document.createElement('option');
+          option.value = port;
+          option.textContent = `Porta ${port}`;
+          portSelect.appendChild(option);
+        });
+        portSelect.value = 3000;
+      }
+    }
+    
+    function validateStep2() {
+      const required = ['businessName', 'businessPhone', 'businessAddress'];
+      let valid = true;
+      
+      required.forEach(field => {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+          input.style.borderColor = '#dc3545';
+          valid = false;
+        } else {
+          input.style.borderColor = '#e1e1e1';
+        }
+      });
+      
+      if (!valid) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+      
+      return valid;
+    }
+    
+    // Selecionar pasta de instalação
+    document.getElementById('selectPath').addEventListener('click', async () => {
+      const path = await ipcRenderer.invoke('select-install-path');
+      if (path) {
+        document.getElementById('installPath').value = path;
+        installData.installPath = path;
+      }
+    });
+    
+    // Iniciar instalação
+    async function startInstallation() {
+      const config = {
+        businessName: document.getElementById('businessName').value,
+        businessAddress: document.getElementById('businessAddress').value,
+        businessPhone: document.getElementById('businessPhone').value,
+        businessEmail: document.getElementById('businessEmail').value,
+        selectedPort: parseInt(document.getElementById('selectedPort').value)
+      };
+      
+      updateInstallStatus('Criando diretórios...');
+      
+      try {
+        const result = await ipcRenderer.invoke('start-installation', config);
+        
+        if (result.success) {
+          updateInstallStatus('Instalação concluída com sucesso!');
+          showInstallResult(true, `Sistema instalado em: ${result.path}\\nPorta: ${result.port}`);
+          
+          document.getElementById('testInstall').style.display = 'inline-block';
+          document.getElementById('openSystem').style.display = 'inline-block';
+          document.getElementById('finish').style.display = 'inline-block';
+          
+          updateProgress(100);
+        } else {
+          updateInstallStatus('Erro na instalação');
+          showInstallResult(false, result.error);
+        }
+      } catch (error) {
+        updateInstallStatus('Erro na instalação');
+        showInstallResult(false, error.message);
+      }
+    }
+    
+    function updateInstallStatus(message) {
+      document.getElementById('installStatus').textContent = message;
+    }
+    
+    function showInstallResult(success, message) {
+      const resultDiv = document.getElementById('installResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = `status ${success ? 'status-success' : 'status-error'}`;
+      resultDiv.textContent = message;
+      
+      if (success) {
+        document.querySelector('.loading').style.display = 'none';
+      }
+    }
+    
+    // Testar instalação
+    document.getElementById('testInstall').addEventListener('click', async () => {
+      updateInstallStatus('Testando sistema...');
+      
+      try {
+        const result = await ipcRenderer.invoke('test-installation');
+        
+        if (result.success) {
+          showInstallResult(true, 'Sistema testado com sucesso! Pronto para uso.');
+        } else {
+          showInstallResult(false, `Erro no teste: ${result.output}`);
+        }
+      } catch (error) {
+        showInstallResult(false, `Erro no teste: ${error.message}`);
+      }
+    });
+    
+    // Abrir sistema
+    document.getElementById('openSystem').addEventListener('click', async () => {
+      await ipcRenderer.invoke('open-system');
+    });
+    
+    // Finalizar
+    document.getElementById('finish').addEventListener('click', () => {
+      window.close();
+    });
+  </script>
+</body>
+</html>
