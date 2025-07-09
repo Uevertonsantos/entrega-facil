@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
 import { z } from "zod";
 import { calculateDeliveryDistance, applySurgePricing, getDeliveryZone } from "./services/distanceService";
+import { routingService } from "./services/routingService";
 
 // Admin credentials (in production, these should be in environment variables)
 const ADMIN_CREDENTIALS = {
@@ -2374,6 +2375,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Store broadcast function globally for use in other routes
   (app as any).broadcastToClients = broadcastToClients;
   (app as any).sendToClient = sendToClient;
+
+  // Routing and tracking endpoints
+  
+  // Calculate route and delivery price
+  app.post('/api/routing/calculate-delivery', async (req, res) => {
+    try {
+      const { pickupLocation, deliveryLocation, baseFare, farePerKm } = req.body;
+      
+      if (!pickupLocation || !deliveryLocation) {
+        return res.status(400).json({ message: "Pickup and delivery locations are required" });
+      }
+      
+      const routeData = await routingService.calculateRoute(pickupLocation, deliveryLocation);
+      
+      if (!routeData) {
+        return res.status(400).json({ message: "Unable to calculate route" });
+      }
+      
+      const pricing = routingService.calculateDeliveryPrice(
+        routeData.distance,
+        baseFare || 5.00,
+        farePerKm || 2.50
+      );
+      
+      const eta = routingService.calculateETA(routeData.distance);
+      
+      res.json({
+        route: routeData,
+        pricing,
+        eta: eta,
+        summary: {
+          distanceKm: pricing.distanceKm,
+          durationMinutes: Math.round(routeData.duration / 60),
+          totalFare: pricing.totalFare,
+          etaMinutes: eta
+        }
+      });
+    } catch (error) {
+      console.error("Error calculating delivery:", error);
+      res.status(500).json({ message: "Failed to calculate delivery" });
+    }
+  });
+
+  // Find nearest deliverer
+  app.post('/api/routing/find-nearest-deliverer', async (req, res) => {
+    try {
+      const { pickupLocation, delivererLocations } = req.body;
+      
+      if (!pickupLocation || !Array.isArray(delivererLocations)) {
+        return res.status(400).json({ message: "Pickup location and deliverer locations are required" });
+      }
+      
+      const nearestDeliverer = await routingService.findNearestDeliverer(
+        pickupLocation,
+        delivererLocations
+      );
+      
+      if (!nearestDeliverer) {
+        return res.status(404).json({ message: "No deliverer found" });
+      }
+      
+      res.json(nearestDeliverer);
+    } catch (error) {
+      console.error("Error finding nearest deliverer:", error);
+      res.status(500).json({ message: "Failed to find nearest deliverer" });
+    }
+  });
+
+  // Get delivery tracking information
+  app.get('/api/routing/delivery-tracking/:deliveryId', async (req, res) => {
+    try {
+      const deliveryId = parseInt(req.params.deliveryId);
+      
+      if (isNaN(deliveryId)) {
+        return res.status(400).json({ message: "Invalid delivery ID" });
+      }
+      
+      const delivery = await storage.getDelivery(deliveryId);
+      
+      if (!delivery) {
+        return res.status(404).json({ message: "Delivery not found" });
+      }
+      
+      // Se a entrega tem coordenadas, calcular rota
+      if (delivery.pickupCoordinates && delivery.deliveryCoordinates) {
+        const pickupLocation = {
+          latitude: parseFloat(delivery.pickupCoordinates.split(',')[0]),
+          longitude: parseFloat(delivery.pickupCoordinates.split(',')[1])
+        };
+        
+        const deliveryLocation = {
+          latitude: parseFloat(delivery.deliveryCoordinates.split(',')[0]),
+          longitude: parseFloat(delivery.deliveryCoordinates.split(',')[1])
+        };
+        
+        const routeData = await routingService.calculateRoute(pickupLocation, deliveryLocation);
+        
+        if (routeData) {
+          const pricing = routingService.calculateDeliveryPrice(routeData.distance);
+          const eta = routingService.calculateETA(routeData.distance);
+          
+          res.json({
+            delivery,
+            tracking: {
+              route: routeData,
+              pricing,
+              eta,
+              status: delivery.status,
+              progress: delivery.status === 'completed' ? 100 : delivery.status === 'in_transit' ? 50 : 0
+            }
+          });
+        } else {
+          res.json({
+            delivery,
+            tracking: {
+              message: "Route data not available",
+              status: delivery.status
+            }
+          });
+        }
+      } else {
+        res.json({
+          delivery,
+          tracking: {
+            message: "Coordinates not available for this delivery",
+            status: delivery.status
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error getting delivery tracking:", error);
+      res.status(500).json({ message: "Failed to get delivery tracking" });
+    }
+  });
+
+  // Reverse geocoding - convert coordinates to address
+  app.post('/api/routing/reverse-geocode', async (req, res) => {
+    try {
+      const { latitude, longitude } = req.body;
+      
+      if (!latitude || !longitude) {
+        return res.status(400).json({ message: "Latitude and longitude are required" });
+      }
+      
+      const address = await routingService.reverseGeocode({ latitude, longitude });
+      
+      if (!address) {
+        return res.status(404).json({ message: "Address not found" });
+      }
+      
+      res.json({ address });
+    } catch (error) {
+      console.error("Error in reverse geocoding:", error);
+      res.status(500).json({ message: "Failed to reverse geocode" });
+    }
+  });
   
   return httpServer;
 }

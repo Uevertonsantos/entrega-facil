@@ -35,6 +35,7 @@ import DelivererPayments from "@/pages/deliverer-payments";
 import DelivererLogin from "@/pages/deliverer-login";
 import DelivererRegister from "@/pages/deliverer-register";
 import ClearAuth from "@/pages/clear-auth";
+import RoutingTest from "@/pages/routing-test";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
@@ -100,6 +101,7 @@ function Router() {
           <Route path="/monitor" component={RealTimeMonitor} />
           <Route path="/commissions" component={PlatformCommission} />
           <Route path="/test-credentials" component={TestCredentials} />
+          <Route path="/routing-test" component={RoutingTest} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
