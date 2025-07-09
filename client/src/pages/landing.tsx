@@ -26,7 +26,7 @@ export default function Landing() {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <Truck className="h-16 w-16 text-primary mr-4" />
-            <h1 className="text-5xl font-bold text-gray-900">Entrega Express</h1>
+            <h1 className="text-5xl font-bold text-gray-900">Entrega Fácil</h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Plataforma completa para gerenciar sua rede local de entregas. 

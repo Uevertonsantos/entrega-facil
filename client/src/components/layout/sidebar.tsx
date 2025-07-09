@@ -103,7 +103,7 @@ export default function Sidebar() {
           <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg pwa-safe-area mobile-nav-height">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold text-purple-600">
-                Delivery Express
+                Entrega Fácil
               </h2>
             </div>
             {sidebarContent}

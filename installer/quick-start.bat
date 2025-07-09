@@ -1,7 +1,7 @@
 @echo off
 echo.
 echo ================================
-echo   DELIVERY EXPRESS - INSTALADOR
+echo   ENTREGA FACIL - INSTALADOR
 echo ================================
 echo.
 

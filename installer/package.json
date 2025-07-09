@@ -1,7 +1,7 @@
 {
-  "name": "delivery-express-installer",
+  "name": "entrega-facil-installer",
   "version": "1.0.0",
-  "description": "Instalador do sistema Delivery Express para clientes",
+  "description": "Instalador do sistema Entrega Fácil para clientes",
   "main": "installer.js",
   "scripts": {
     "start": "node installer.js",
@@ -26,7 +26,7 @@
     "pkg": "^5.8.1"
   },
   "bin": {
-    "delivery-express-installer": "./installer.js"
+    "entrega-facil-installer": "./installer.js"
   },
   "pkg": {
     "scripts": [
@@ -38,7 +38,7 @@
       "templates/**/*"
     ]
   },
-  "keywords": ["delivery", "express", "installer", "sistema", "entregas"],
-  "author": "Delivery Express",
+  "keywords": ["entrega", "facil", "installer", "sistema", "entregas"],
+  "author": "Entrega Fácil",
   "license": "MIT"
 }

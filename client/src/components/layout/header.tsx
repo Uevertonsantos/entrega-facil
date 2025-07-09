@@ -26,8 +26,8 @@ export default function Header({ onNewDelivery }: HeaderProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Truck className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-bold text-gray-900 hidden sm:block">Entrega Express</h1>
-              <h1 className="text-lg font-bold text-gray-900 sm:hidden">Express</h1>
+              <h1 className="text-xl font-bold text-gray-900 hidden sm:block">Entrega Fácil</h1>
+              <h1 className="text-lg font-bold text-gray-900 sm:hidden">Fácil</h1>
             </div>
           </div>
           

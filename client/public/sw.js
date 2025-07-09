@@ -1,4 +1,4 @@
-const CACHE_NAME = 'delivery-express-v1';
+const CACHE_NAME = 'entrega-facil-v1';
 const urlsToCache = [
   '/',
   '/src/main.tsx',

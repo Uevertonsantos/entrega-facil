@@ -5,14 +5,14 @@ const { spawn } = require('child_process');
 
 // Configuração básica
 const config = {
-  name: "Delivery Express",
+  name: "Entrega Fácil",
   version: "1.0.0",
   port: 3000,
-  installDir: path.join(os.homedir(), 'DeliveryExpress')
+  installDir: path.join(os.homedir(), 'EntregaFacil')
 };
 
 async function install() {
-  console.log('🚚 Instalando Delivery Express...');
+  console.log('🚚 Instalando Entrega Fácil...');
   console.log('================================');
   
   // Criar diretório de instalação
@@ -33,7 +33,7 @@ async function install() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Express - Instalação Concluída</title>
+    <title>Entrega Fácil - Instalação Concluída</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -85,13 +85,13 @@ async function install() {
 </head>
 <body>
     <div class="header">
-        <h1>🚚 Delivery Express</h1>
+        <h1>🚚 Entrega Fácil</h1>
         <p>Sistema de Gerenciamento de Entregas</p>
     </div>
     
     <div class="card">
         <h2 class="success">✅ Instalação Concluída!</h2>
-        <p>O sistema Delivery Express foi instalado com sucesso em seu computador.</p>
+        <p>O sistema Entrega Fácil foi instalado com sucesso em seu computador.</p>
         
         <div class="info">
             <strong>Informações da Instalação:</strong><br>
@@ -117,9 +117,9 @@ async function install() {
     <div class="card">
         <h3>Suporte</h3>
         <p>Precisa de ajuda? Entre em contato:</p>
-        <p>📧 Email: suporte@deliveryexpress.com<br>
+        <p>📧 Email: suporte@entregafacil.com<br>
         📞 Telefone: (11) 9999-9999<br>
-        🌐 Site: https://deliveryexpress.com</p>
+        🌐 Site: https://entregafacil.com</p>
     </div>
 </body>
 </html>

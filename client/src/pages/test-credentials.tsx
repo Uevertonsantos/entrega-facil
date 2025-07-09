@@ -169,11 +169,11 @@ export default function TestCredentials() {
             <div>
               <Label>Email</Label>
               <div className="flex items-center gap-2 mt-1">
-                <Input value={adminCredentials?.email || "admin@deliveryexpress.com"} readOnly />
+                <Input value={adminCredentials?.email || "admin@entregafacil.com"} readOnly />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => copyToClipboard(adminCredentials?.email || "admin@deliveryexpress.com")}
+                  onClick={() => copyToClipboard(adminCredentials?.email || "admin@entregafacil.com")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>

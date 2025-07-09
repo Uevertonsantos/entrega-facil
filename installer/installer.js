@@ -11,18 +11,18 @@ const os = require('os');
 const sqlite3 = require('sqlite3').verbose();
 const cron = require('node-cron');
 
-class DeliveryExpressInstaller {
+class EntregaFacilInstaller {
   constructor() {
-    this.installDir = path.join(os.homedir(), 'DeliveryExpress');
+    this.installDir = path.join(os.homedir(), 'EntregaFacil');
     this.configFile = path.join(this.installDir, 'config.json');
     this.dbFile = path.join(this.installDir, 'database.sqlite');
-    this.adminApiUrl = 'https://admin.deliveryexpress.com/api'; // URL do seu painel admin
+    this.adminApiUrl = 'https://admin.entregafacil.com/api'; // URL do seu painel admin
     this.localPort = 3000;
     this.config = {};
   }
 
   async run() {
-    console.log(chalk.blue.bold('🚚 Delivery Express - Instalador do Sistema'));
+    console.log(chalk.blue.bold('🚚 Entrega Fácil - Instalador do Sistema'));
     console.log(chalk.gray('Versão 1.0.0\n'));
 
     try {
@@ -645,7 +645,7 @@ node server.js
 start /min "${this.installDir}\\start-service.bat"
 `;
       
-      const startupPath = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'DeliveryExpress.bat');
+      const startupPath = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'EntregaFacil.bat');
       await fs.writeFile(startupPath, startupScript);
       
       spinner.succeed('Serviço do Windows configurado');
@@ -813,16 +813,16 @@ app.post('/api/deliveries', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(\`Delivery Express rodando em http://localhost:\${PORT}\`);
+  console.log(\`Entrega Fácil rodando em http://localhost:\${PORT}\`);
 });
 `;
   }
 
   getPackageJson() {
     return JSON.stringify({
-      name: "delivery-express-client",
+      name: "entrega-facil-client",
       version: "1.0.0",
-      description: "Sistema local Delivery Express",
+      description: "Sistema local Entrega Fácil",
       main: "server.js",
       scripts: {
         start: "node server.js"
@@ -845,13 +845,13 @@ app.listen(PORT, () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery Express - ${this.config.businessName}</title>
+    <title>Entrega Fácil - ${this.config.businessName}</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>🚚 Delivery Express</h1>
+            <h1>🚚 Entrega Fácil</h1>
             <p>${this.config.businessName}</p>
         </header>
         
@@ -1201,8 +1201,8 @@ h2 {
 
 // Executar instalador
 if (require.main === module) {
-  const installer = new DeliveryExpressInstaller();
+  const installer = new EntregaFacilInstaller();
   installer.run().catch(console.error);
 }
 
-module.exports = DeliveryExpressInstaller;
+module.exports = EntregaFacilInstaller;

@@ -1,6 +1,6 @@
 {
-  "name": "Delivery Express",
-  "short_name": "DeliveryExpress",
+  "name": "Entrega Fácil",
+  "short_name": "EntregaFácil",
   "description": "Sistema de gerenciamento de entregas para pequenos comércios",
   "start_url": "/",
   "display": "standalone",

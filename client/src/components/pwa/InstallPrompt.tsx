@@ -83,7 +83,7 @@ export function InstallPrompt() {
           </Button>
         </div>
         <CardDescription className="text-sm">
-          Instale o Delivery Express no seu dispositivo para acesso rápido
+          Instale o Entrega Fácil no seu dispositivo para acesso rápido
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">

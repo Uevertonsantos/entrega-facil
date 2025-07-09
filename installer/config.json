@@ -1,17 +1,17 @@
 {
-  "name": "Delivery Express",
+  "name": "Entrega Fácil",
   "version": "1.0.0",
   "description": "Sistema de gerenciamento de entregas locais",
-  "author": "Delivery Express",
-  "website": "https://deliveryexpress.com",
+  "author": "Entrega Fácil",
+  "website": "https://entregafacil.com",
   "support": {
-    "email": "suporte@deliveryexpress.com",
+    "email": "suporte@entregafacil.com",
     "phone": "(11) 9999-9999",
-    "website": "https://suporte.deliveryexpress.com"
+    "website": "https://suporte.entregafacil.com"
   },
   "installation": {
     "defaultPort": 3000,
-    "defaultInstallDir": "DeliveryExpress",
+    "defaultInstallDir": "EntregaFacil",
     "requiresAdminKey": true,
     "autoStartDefault": true,
     "syncDefault": true
@@ -28,7 +28,7 @@
     "backupIntervalHours": 24
   },
   "adminApi": {
-    "baseUrl": "https://admin.deliveryexpress.com/api",
+    "baseUrl": "https://admin.entregafacil.com/api",
     "endpoints": {
       "merchants": "/clients/{clientId}/merchants",
       "deliverers": "/clients/{clientId}/deliverers",
