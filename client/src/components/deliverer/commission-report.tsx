@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DollarSign, TrendingUp, Calendar, MapPin } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+// import { formatDistanceToNow } from "date-fns";
+// import { ptBR } from "date-fns/locale";
 
 interface CommissionDelivery {
   id: number;
@@ -35,9 +35,21 @@ interface CommissionReport {
 }
 
 export default function CommissionReport() {
-  const { data: report, isLoading } = useQuery<CommissionReport>({
+  const { data: report, isLoading, error } = useQuery<CommissionReport>({
     queryKey: ['/api/deliverers/commission-report'],
   });
+
+  if (error) {
+    console.error("Commission report error:", error);
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">Erro ao carregar relatório de comissões</p>
+        <p className="text-gray-600 text-sm mt-2">
+          {error instanceof Error ? error.message : "Erro desconhecido"}
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -66,9 +78,12 @@ export default function CommissionReport() {
   };
 
   const formatDate = (dateString: string) => {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: ptBR
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 

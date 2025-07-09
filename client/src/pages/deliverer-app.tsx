@@ -18,6 +18,8 @@ export default function DelivererApp() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [previousDeliveryCount, setPreviousDeliveryCount] = useState(0);
   const queryClient = useQueryClient();
+
+  console.log("DelivererApp rendering...");
   
   const handleLogout = () => {
     // Clear all tokens from localStorage
@@ -39,10 +41,12 @@ export default function DelivererApp() {
     window.location.href = "/";
   };
 
-  const { data: delivererResponse, isLoading: delivererLoading } = useQuery({
+  const { data: delivererResponse, isLoading: delivererLoading, error: delivererError } = useQuery({
     queryKey: ['/api/deliverers/current'],
     retry: false,
   });
+
+  console.log("Deliverer query result:", { delivererResponse, delivererLoading, delivererError });
 
   const deliverer = delivererResponse?.isDeliverer ? delivererResponse : null;
 
