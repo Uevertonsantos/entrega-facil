@@ -100,6 +100,109 @@ const isAuthenticated = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Public endpoints (no authentication required)
+  
+  // Public endpoint for getting merchants (for client setup)
+  app.get('/api/merchants/list', async (req, res) => {
+    try {
+      const merchants = await storage.getMerchants();
+      // Return only basic info for selection
+      const merchantsForSelection = merchants.map(merchant => ({
+        id: merchant.id,
+        name: merchant.name,
+        email: merchant.email,
+        phone: merchant.phone,
+        address: merchant.address,
+        cep: merchant.cep,
+        cnpj: merchant.cnpj,
+        type: merchant.type,
+        planValue: merchant.planValue,
+        platformFee: merchant.platformFee
+      }));
+      res.json(merchantsForSelection);
+    } catch (error) {
+      console.error("Error fetching merchants for selection:", error);
+      res.status(500).json({ message: "Failed to fetch merchants" });
+    }
+  });
+
+  // Public endpoint for getting active plans (used in client setup)
+  app.get('/api/plans/active', async (req, res) => {
+    try {
+      const plans = await storage.getAdminSettings();
+      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_') && setting.settingType === 'plan');
+      
+      if (planSettings.length === 0) {
+        // Create default plans if none exist
+        const defaultPlans = [
+          {
+            id: 'basic',
+            name: 'Plano Básico',
+            price: 99.00,
+            period: 'monthly',
+            deliveryLimit: 50,
+            features: ['Até 50 entregas por mês', 'Suporte por email', 'Painel básico'],
+            description: 'Ideal para pequenos negócios que estão começando',
+            isActive: true,
+            priority: 1,
+            color: '#3b82f6'
+          },
+          {
+            id: 'standard',
+            name: 'Plano Padrão',
+            price: 149.00,
+            period: 'monthly',
+            deliveryLimit: 150,
+            features: ['Até 150 entregas por mês', 'Suporte prioritário', 'Relatórios avançados', 'Integração com WhatsApp'],
+            description: 'Perfeito para negócios em crescimento',
+            isActive: true,
+            priority: 2,
+            color: '#10b981'
+          },
+          {
+            id: 'premium',
+            name: 'Plano Premium',
+            price: 299.00,
+            period: 'monthly',
+            deliveryLimit: null,
+            features: ['Entregas ilimitadas', 'Suporte 24/7', 'API personalizada', 'Múltiplos usuários', 'Relatórios em tempo real'],
+            description: 'Para negócios que precisam de máxima flexibilidade',
+            isActive: true,
+            priority: 3,
+            color: '#f59e0b'
+          }
+        ];
+        
+        // Create default plans
+        for (const plan of defaultPlans) {
+          await storage.createAdminSetting({
+            settingKey: `plan_${plan.id}`,
+            settingValue: JSON.stringify(plan),
+            settingType: 'plan',
+            description: `Configuração do ${plan.name}`
+          });
+        }
+        
+        // Return only active plans
+        res.json(defaultPlans.filter(plan => plan.isActive));
+      } else {
+        const parsedPlans = planSettings.map(setting => {
+          try {
+            return JSON.parse(setting.settingValue);
+          } catch (e) {
+            console.error("Error parsing plan setting:", setting.settingKey, e);
+            return null;
+          }
+        }).filter(plan => plan !== null && plan.isActive);
+        
+        res.json(parsedPlans);
+      }
+    } catch (error) {
+      console.error("Error fetching active plans:", error);
+      res.status(500).json({ message: "Failed to fetch active plans" });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 
@@ -1658,83 +1761,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching plans:", error);
       res.status(500).json({ message: "Failed to fetch plans" });
-    }
-  });
-
-  // Public endpoint for getting active plans (used in client setup)
-  app.get('/api/plans/active', async (req, res) => {
-    try {
-      const plans = await storage.getAdminSettings();
-      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_') && setting.settingType === 'plan');
-      
-      if (planSettings.length === 0) {
-        // Create default plans if none exist
-        const defaultPlans = [
-          {
-            id: 'basic',
-            name: 'Plano Básico',
-            price: 99.00,
-            period: 'monthly',
-            deliveryLimit: 50,
-            features: ['Até 50 entregas por mês', 'Suporte por email', 'Painel básico'],
-            description: 'Ideal para pequenos negócios que estão começando',
-            isActive: true,
-            priority: 1,
-            color: '#3b82f6'
-          },
-          {
-            id: 'standard',
-            name: 'Plano Padrão',
-            price: 149.00,
-            period: 'monthly',
-            deliveryLimit: 150,
-            features: ['Até 150 entregas por mês', 'Suporte prioritário', 'Relatórios avançados', 'Integração com WhatsApp'],
-            description: 'Perfeito para negócios em crescimento',
-            isActive: true,
-            priority: 2,
-            color: '#10b981'
-          },
-          {
-            id: 'premium',
-            name: 'Plano Premium',
-            price: 299.00,
-            period: 'monthly',
-            deliveryLimit: null,
-            features: ['Entregas ilimitadas', 'Suporte 24/7', 'API personalizada', 'Múltiplos usuários', 'Relatórios em tempo real'],
-            description: 'Para negócios que precisam de máxima flexibilidade',
-            isActive: true,
-            priority: 3,
-            color: '#f59e0b'
-          }
-        ];
-        
-        // Create default plans
-        for (const plan of defaultPlans) {
-          await storage.createAdminSetting({
-            settingKey: `plan_${plan.id}`,
-            settingValue: JSON.stringify(plan),
-            settingType: 'plan',
-            description: `Configuração do ${plan.name}`
-          });
-        }
-        
-        // Return only active plans
-        res.json(defaultPlans.filter(plan => plan.isActive));
-      } else {
-        const parsedPlans = planSettings.map(setting => {
-          try {
-            return JSON.parse(setting.settingValue);
-          } catch (e) {
-            console.error("Error parsing plan setting:", setting.settingKey, e);
-            return null;
-          }
-        }).filter(plan => plan !== null && plan.isActive);
-        
-        res.json(parsedPlans);
-      }
-    } catch (error) {
-      console.error("Error fetching active plans:", error);
-      res.status(500).json({ message: "Failed to fetch active plans" });
     }
   });
 

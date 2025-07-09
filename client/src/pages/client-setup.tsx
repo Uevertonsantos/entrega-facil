@@ -37,6 +37,19 @@ interface Plan {
   color: string;
 }
 
+interface Merchant {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  cep: string;
+  cnpj: string;
+  type: string;
+  planValue: number;
+  platformFee: number;
+}
+
 interface ClientSetupData {
   businessName: string;
   businessEmail: string;
@@ -45,6 +58,7 @@ interface ClientSetupData {
   contactPerson: string;
   planType: string;
   installationType: 'online' | 'local';
+  selectedMerchantId?: number;
 }
 
 export default function ClientSetup() {
@@ -56,7 +70,8 @@ export default function ClientSetup() {
     businessAddress: '',
     contactPerson: '',
     planType: '',
-    installationType: 'online'
+    installationType: 'online',
+    selectedMerchantId: undefined
   });
 
   // Query to fetch active plans
@@ -65,6 +80,15 @@ export default function ClientSetup() {
     queryFn: async () => {
       const response = await apiRequest('/api/plans/active', 'GET');
       return response as Plan[];
+    },
+  });
+
+  // Query to fetch existing merchants
+  const { data: merchants = [], isLoading: merchantsLoading } = useQuery({
+    queryKey: ['/api/merchants/list'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/merchants/list', 'GET');
+      return response as Merchant[];
     },
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<{
@@ -99,6 +123,21 @@ export default function ClientSetup() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleMerchantSelect = (merchantId: number) => {
+    const selectedMerchant = merchants.find(m => m.id === merchantId);
+    if (selectedMerchant) {
+      setSetupData(prev => ({
+        ...prev,
+        selectedMerchantId: merchantId,
+        businessName: selectedMerchant.name,
+        businessEmail: selectedMerchant.email,
+        businessPhone: selectedMerchant.phone,
+        businessAddress: selectedMerchant.address,
+        contactPerson: selectedMerchant.name // Assuming contact person is the same as business name
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -153,6 +192,71 @@ export default function ClientSetup() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Merchant Selection Section */}
+              <div className="space-y-4">
+                <div>
+                  <Label>Comerciante Existente (Opcional)</Label>
+                  <p className="text-sm text-gray-600 mb-2">Selecione um comerciante já cadastrado para preencher os dados automaticamente</p>
+                  {merchantsLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                      {merchants.map((merchant) => (
+                        <Card 
+                          key={merchant.id} 
+                          className={`cursor-pointer transition-all p-2 ${
+                            setupData.selectedMerchantId === merchant.id 
+                              ? 'border-blue-500 bg-blue-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => handleMerchantSelect(merchant.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">{merchant.name}</div>
+                              <div className="text-xs text-gray-500">{merchant.email}</div>
+                              <div className="text-xs text-gray-500">{merchant.phone}</div>
+                            </div>
+                            {setupData.selectedMerchantId === merchant.id && (
+                              <Check className="w-4 h-4 text-blue-600" />
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {setupData.selectedMerchantId && (
+                  <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-700">
+                      Dados preenchidos automaticamente do comerciante selecionado
+                    </span>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setSetupData(prev => ({
+                          ...prev,
+                          selectedMerchantId: undefined,
+                          businessName: '',
+                          businessEmail: '',
+                          businessPhone: '',
+                          businessAddress: '',
+                          contactPerson: ''
+                        }));
+                      }}
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="businessName">Nome da Empresa</Label>
