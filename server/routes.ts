@@ -678,7 +678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         referencePoint: req.body.referencePoint,
         status: 'pending',
         priority: req.body.priority || 'medium',
-        price: String(req.body.estimatedValue || "0.00"),
+        price: String(req.body.deliveryFee || req.body.estimatedValue || "0.00"),
         deliveryFee: String(req.body.deliveryFee || "10.00"),
         delivererPayment: req.body.delivererPayment ? String(req.body.delivererPayment) : null,
         notes: req.body.notes || null,
