@@ -13,7 +13,8 @@ import {
   Package,
   Monitor,
   Wifi,
-  TrendingUp
+  TrendingUp,
+  Key
 } from "lucide-react";
 
 const navigation = [
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Monitor Tempo Real", href: "/monitor", icon: Wifi },
   { name: "App Entregador", href: "/deliverer-app", icon: Smartphone },
   { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
+  { name: "Credenciais", href: "/test-credentials", icon: Key },
   { name: "Configurações", href: "/settings", icon: Settings },
 ];
 

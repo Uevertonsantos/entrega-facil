@@ -19,6 +19,7 @@ import PlanManagement from "@/pages/plan-management";
 import ClientsOverview from "@/pages/clients-overview";
 import RealTimeMonitor from "@/pages/real-time-monitor";
 import PlatformCommission from "@/pages/platform-commission";
+import TestCredentials from "@/pages/test-credentials";
 import MerchantLogin from "@/pages/merchant-login";
 import DelivererLogin from "@/pages/deliverer-login";
 import NotFound from "@/pages/not-found";
@@ -64,6 +65,7 @@ function Router() {
           <Route path="/clients" component={ClientsOverview} />
           <Route path="/monitor" component={RealTimeMonitor} />
           <Route path="/commissions" component={PlatformCommission} />
+          <Route path="/test-credentials" component={TestCredentials} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
