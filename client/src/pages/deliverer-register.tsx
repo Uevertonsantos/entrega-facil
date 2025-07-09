@@ -117,7 +117,7 @@ export default function DelivererRegister() {
         <div className="text-center">
           <Button
             variant="ghost"
-            onClick={() => window.history.back()}
+            onClick={() => window.location.href = "/"}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
