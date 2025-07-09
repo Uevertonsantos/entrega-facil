@@ -91,10 +91,87 @@ const defaultPlans: PlanDetails[] = [
 ];
 
 export default function PlanManagement() {
-  const [plans, setPlans] = useState<PlanDetails[]>(defaultPlans);
   const [editingPlan, setEditingPlan] = useState<PlanDetails | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const { toast } = useToast();
+
+  // Query to fetch plans from database
+  const { data: plans = [], isLoading, refetch } = useQuery({
+    queryKey: ['/api/admin/plans'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/admin/plans', 'GET');
+      return response as PlanDetails[];
+    },
+  });
+
+  // Mutation to save plan
+  const savePlanMutation = useMutation({
+    mutationFn: async (plan: PlanDetails) => {
+      if (isCreatingNew) {
+        return await apiRequest('/api/admin/plans', 'POST', plan);
+      } else {
+        return await apiRequest(`/api/admin/plans/${plan.id}`, 'PUT', plan);
+      }
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Plano salvo",
+        description: `O plano foi salvo com sucesso no banco de dados.`,
+      });
+      refetch();
+      setEditingPlan(null);
+      setIsCreatingNew(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao salvar plano",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to delete plan
+  const deletePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      return await apiRequest(`/api/admin/plans/${planId}`, 'DELETE');
+    },
+    onSuccess: () => {
+      toast({
+        title: "Plano excluído",
+        description: "O plano foi removido com sucesso.",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao excluir plano",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to toggle active status
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ planId, isActive }: { planId: string; isActive: boolean }) => {
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) throw new Error('Plan not found');
+      
+      const updatedPlan = { ...plan, isActive };
+      return await apiRequest(`/api/admin/plans/${planId}`, 'PUT', updatedPlan);
+    },
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCreatePlan = () => {
     const newPlan: PlanDetails = {
@@ -114,33 +191,29 @@ export default function PlanManagement() {
   };
 
   const handleSavePlan = (plan: PlanDetails) => {
-    if (isCreatingNew) {
-      setPlans([...plans, plan]);
-      setIsCreatingNew(false);
-    } else {
-      setPlans(plans.map(p => p.id === plan.id ? plan : p));
-    }
-    setEditingPlan(null);
-    
-    toast({
-      title: "Plano salvo",
-      description: `O plano "${plan.name}" foi salvo com sucesso.`,
-    });
+    savePlanMutation.mutate(plan);
   };
 
   const handleDeletePlan = (planId: string) => {
-    setPlans(plans.filter(p => p.id !== planId));
-    toast({
-      title: "Plano excluído",
-      description: "O plano foi removido com sucesso.",
-    });
+    if (confirm('Tem certeza que deseja excluir este plano?')) {
+      deletePlanMutation.mutate(planId);
+    }
   };
 
   const handleToggleActive = (planId: string) => {
-    setPlans(plans.map(p => 
-      p.id === planId ? { ...p, isActive: !p.isActive } : p
-    ));
+    const plan = plans.find(p => p.id === planId);
+    if (plan) {
+      toggleActiveMutation.mutate({ planId, isActive: !plan.isActive });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const getPeriodLabel = (period: PlanDetails['period']) => {
     const labels = {

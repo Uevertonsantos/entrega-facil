@@ -1577,6 +1577,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Plan management endpoints
+  app.get('/api/admin/plans', isAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getAdminSettings();
+      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_'));
+      
+      // If no plans exist, create default plans
+      if (planSettings.length === 0) {
+        const defaultPlans = [
+          {
+            id: 'basic',
+            name: 'Plano Básico',
+            price: 99.00,
+            period: 'monthly',
+            deliveryLimit: 50,
+            features: ['Até 50 entregas por mês', 'Suporte por email', 'Painel básico'],
+            description: 'Ideal para pequenos negócios que estão começando',
+            isActive: true,
+            priority: 1,
+            color: '#3b82f6'
+          },
+          {
+            id: 'standard',
+            name: 'Plano Padrão',
+            price: 149.00,
+            period: 'monthly',
+            deliveryLimit: 150,
+            features: ['Até 150 entregas por mês', 'Suporte prioritário', 'Relatórios avançados', 'Integração com WhatsApp'],
+            description: 'Perfeito para negócios em crescimento',
+            isActive: true,
+            priority: 2,
+            color: '#10b981'
+          },
+          {
+            id: 'premium',
+            name: 'Plano Premium',
+            price: 299.00,
+            period: 'monthly',
+            deliveryLimit: null,
+            features: ['Entregas ilimitadas', 'Suporte 24/7', 'API personalizada', 'Múltiplos usuários', 'Relatórios em tempo real'],
+            description: 'Para negócios que precisam de máxima flexibilidade',
+            isActive: true,
+            priority: 3,
+            color: '#f59e0b'
+          }
+        ];
+        
+        // Create default plans
+        for (const plan of defaultPlans) {
+          await storage.createAdminSetting({
+            settingKey: `plan_${plan.id}`,
+            settingValue: JSON.stringify(plan),
+            settingType: 'plan',
+            description: `Configuração do ${plan.name}`
+          });
+        }
+        
+        res.json(defaultPlans);
+      } else {
+        const parsedPlans = planSettings.map(setting => JSON.parse(setting.settingValue));
+        res.json(parsedPlans);
+      }
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      res.status(500).json({ message: "Failed to fetch plans" });
+    }
+  });
+
+  app.post('/api/admin/plans', isAdmin, async (req, res) => {
+    try {
+      const plan = req.body;
+      
+      if (!plan.id || !plan.name || !plan.price) {
+        return res.status(400).json({ message: "Plan ID, name, and price are required" });
+      }
+      
+      const planKey = `plan_${plan.id}`;
+      
+      // Check if plan already exists
+      const existingPlan = await storage.getAdminSetting(planKey);
+      
+      if (existingPlan) {
+        // Update existing plan
+        await storage.updateAdminSetting(planKey, JSON.stringify(plan));
+      } else {
+        // Create new plan
+        await storage.createAdminSetting({
+          settingKey: planKey,
+          settingValue: JSON.stringify(plan),
+          settingType: 'plan',
+          description: `Configuração do ${plan.name}`
+        });
+      }
+      
+      res.json({ success: true, plan });
+    } catch (error) {
+      console.error("Error saving plan:", error);
+      res.status(500).json({ message: "Failed to save plan" });
+    }
+  });
+
+  app.put('/api/admin/plans/:planId', isAdmin, async (req, res) => {
+    try {
+      const planId = req.params.planId;
+      const plan = req.body;
+      
+      const planKey = `plan_${planId}`;
+      
+      await storage.updateAdminSetting(planKey, JSON.stringify(plan));
+      
+      res.json({ success: true, plan });
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      res.status(500).json({ message: "Failed to update plan" });
+    }
+  });
+
+  app.delete('/api/admin/plans/:planId', isAdmin, async (req, res) => {
+    try {
+      const planId = req.params.planId;
+      const planKey = `plan_${planId}`;
+      
+      // Get current plans
+      const plans = await storage.getAdminSettings();
+      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_'));
+      
+      // Find and remove the plan
+      const planToDelete = planSettings.find(setting => setting.settingKey === planKey);
+      
+      if (planToDelete) {
+        // Delete from database by updating to inactive
+        const planData = JSON.parse(planToDelete.settingValue);
+        planData.isActive = false;
+        await storage.updateAdminSetting(planKey, JSON.stringify(planData));
+      }
+      
+      res.json({ success: true, message: "Plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting plan:", error);
+      res.status(500).json({ message: "Failed to delete plan" });
+    }
+  });
+
   // Client setup endpoint for creating new client installations
   app.post('/api/admin/setup-client', isAuthenticated, async (req: any, res) => {
     try {
