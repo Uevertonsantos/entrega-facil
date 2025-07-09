@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon, TrendingUp, DollarSign, Users, CheckCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function FinancialDashboard() {
   const { toast } = useToast();
@@ -53,6 +53,11 @@ export default function FinancialDashboard() {
       
       await apiRequest(endpoint, 'PUT', { status });
       
+      // Invalidate cache to update UI instantly
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/merchant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/deliverer-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/financial-summary'] });
+      
       toast({
         title: "Status atualizado!",
         description: `Pagamento marcado como ${status === 'paid' ? 'pago' : 'pendente'}.`,
@@ -77,6 +82,11 @@ export default function FinancialDashboard() {
         : `/api/admin/deliverer-payments/${paymentId}`;
       
       await apiRequest(endpoint, 'DELETE');
+      
+      // Invalidate cache to update UI instantly
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/merchant-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/deliverer-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/financial-summary'] });
       
       toast({
         title: "Pagamento excluído!",
