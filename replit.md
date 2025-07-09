@@ -137,6 +137,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Updated all references in codebase, installer, documentation, and configuration files
 - July 09, 2025. Maintained PWA functionality with updated manifest and service worker cache names
 - July 09, 2025. Fixed all HTML meta tags, email addresses, and URLs to reflect new brand identity
+- July 09, 2025. Updated PWA icons to display "ENTREGA" text instead of "DELIVERY" for mobile app installation
+- July 09, 2025. Corrected icon-512x512.svg dimensions and positioning for proper PWA functionality
+- July 09, 2025. Incremented service worker cache version to force icon updates on client devices
 
 ## User Preferences
 

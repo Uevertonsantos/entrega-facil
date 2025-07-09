@@ -11,5 +11,5 @@
     <path d="M96 64c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32zm0 8c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24z"/>
     <circle cx="96" cy="96" r="8"/>
   </g>
-  <text x="96" y="170" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">DELIVERY</text>
+  <text x="96" y="170" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">ENTREGA</text>
 </svg>
