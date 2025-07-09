@@ -47,6 +47,7 @@ export const merchants = pgTable("merchants", {
   email: varchar("email"),
   password: varchar("password"),
   address: text("address").notNull(),
+  cep: varchar("cep", { length: 10 }),
   businessType: varchar("business_type"),
   type: varchar("type").notNull(),
   planType: varchar("plan_type").notNull(),

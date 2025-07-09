@@ -182,6 +182,16 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       form.reset();
     } else if (currentMerchant?.id) {
       form.setValue("merchantId", currentMerchant.id.toString());
+      
+      // Set default pickup address from merchant's address
+      if (currentMerchant.address) {
+        form.setValue('pickupAddress', currentMerchant.address);
+      }
+      
+      // Set default pickup CEP from merchant's CEP if available
+      if (currentMerchant.cep) {
+        form.setValue('pickupCep', currentMerchant.cep);
+      }
     }
   }, [isOpen, form, currentMerchant]);
 
