@@ -89,7 +89,7 @@ export const deliveries = pgTable("deliveries", {
   deliveryAddress: text("delivery_address").notNull(),
   deliveryCep: varchar("delivery_cep", { length: 10 }),
   referencePoint: text("reference_point"),
-  paymentMethod: varchar("payment_method").notNull().default("dinheiro"), // "dinheiro", "cartao_credito", "cartao_debito", "pix", "cartao_refeicao", "vale_alimentacao"
+  // paymentMethod: varchar("payment_method").notNull().default("dinheiro"), // "dinheiro", "cartao_credito", "cartao_debito", "pix", "cartao_refeicao", "vale_alimentacao" - temporarily disabled
   status: varchar("status").notNull(), // "pending", "accepted", "in_transit", "delivered", "cancelled"
   priority: varchar("priority").notNull().default("medium"), // "low", "medium", "high"
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),

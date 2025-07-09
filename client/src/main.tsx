@@ -33,7 +33,7 @@ setTimeout(async () => {
     
     // Try to import App
     updateStatus("Carregando App...");
-    const { default: App } = await import("./App.emergency");
+    const { default: App } = await import("./App");
     updateStatus("App carregado ✅");
     
     // Create root element
