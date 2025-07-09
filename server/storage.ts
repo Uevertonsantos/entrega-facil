@@ -407,7 +407,7 @@ export class DatabaseStorage implements IStorage {
       ));
 
     const [totalEarnings] = await db
-      .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+      .select({ sum: sql<number>`coalesce(sum(${deliveries.delivererPayment}), 0)` })
       .from(deliveries)
       .where(and(
         eq(deliveries.delivererId, delivererId),
@@ -415,7 +415,7 @@ export class DatabaseStorage implements IStorage {
       ));
 
     const [todayEarnings] = await db
-      .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+      .select({ sum: sql<number>`coalesce(sum(${deliveries.delivererPayment}), 0)` })
       .from(deliveries)
       .where(and(
         eq(deliveries.delivererId, delivererId),
@@ -434,7 +434,7 @@ export class DatabaseStorage implements IStorage {
       nextDay.setDate(nextDay.getDate() + 1);
       
       const [dayEarnings] = await db
-        .select({ sum: sql<number>`coalesce(sum(${deliveries.deliveryFee}), 0)` })
+        .select({ sum: sql<number>`coalesce(sum(${deliveries.delivererPayment}), 0)` })
         .from(deliveries)
         .where(and(
           eq(deliveries.delivererId, delivererId),

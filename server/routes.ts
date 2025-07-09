@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated as replitIsAuthenticated } from "./replitAuth";
 import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -431,6 +431,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/deliverers/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role === 'deliverer') {
+        const stats = await storage.getDelivererStats(Number(userInfo.id));
+        res.json(stats);
+      } else {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+    } catch (error) {
+      console.error("Error fetching deliverer stats:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer stats" });
+    }
+  });
+
+  // Commission report for deliverers
+  app.get('/api/deliverers/commission-report', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // For local JWT auth, check if user is a deliverer
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+      
+      const delivererId = Number(userInfo.id);
+      
+      const deliveries = await storage.getDeliveriesByDeliverer(delivererId);
+      const completedDeliveries = deliveries.filter(d => d.status === 'completed');
+      
+      const commissionReport = completedDeliveries.map(delivery => ({
+        id: delivery.id,
+        customerName: delivery.customerName,
+        deliveryAddress: delivery.deliveryAddress,
+        deliveryFee: parseFloat(delivery.deliveryFee),
+        commissionPercentage: parseFloat(delivery.commissionPercentage || "20.00"),
+        commissionAmount: parseFloat(delivery.commissionAmount || "0.00"),
+        delivererPayment: parseFloat(delivery.delivererPayment || "0.00"),
+        completedAt: delivery.completedAt,
+        createdAt: delivery.createdAt
+      }));
+      
+      const totals = commissionReport.reduce((acc, delivery) => ({
+        totalDeliveryFee: acc.totalDeliveryFee + delivery.deliveryFee,
+        totalCommission: acc.totalCommission + delivery.commissionAmount,
+        totalPayment: acc.totalPayment + delivery.delivererPayment
+      }), {
+        totalDeliveryFee: 0,
+        totalCommission: 0,
+        totalPayment: 0
+      });
+      
+      res.json({
+        deliveries: commissionReport,
+        totals
+      });
+    } catch (error) {
+      console.error("Error fetching commission report:", error);
+      res.status(500).json({ message: "Failed to fetch commission report" });
+    }
+  });
+
   app.get('/api/deliverers/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -544,81 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/deliverers/stats', isAuthenticated, async (req: any, res) => {
-    try {
-      const userInfo = req.user;
-      
-      // For local JWT auth, check if user is a deliverer
-      if (userInfo.role === 'deliverer') {
-        // Convert string ID to number (JWT tokens store everything as strings)
-        const delivererId = Number(userInfo.id);
-        if (!delivererId || isNaN(delivererId)) {
-          return res.status(400).json({ message: "Invalid deliverer ID" });
-        }
-        const stats = await storage.getDelivererStats(delivererId);
-        res.json(stats);
-      } else {
-        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
-      }
-    } catch (error) {
-      console.error("Error fetching deliverer stats:", error);
-      res.status(500).json({ message: "Failed to fetch deliverer stats" });
-    }
-  });
 
-  // Commission report for deliverers
-  app.get('/api/deliverers/commission-report', isAuthenticated, async (req: any, res) => {
-    try {
-      const userInfo = req.user;
-      
-      // For local JWT auth, check if user is a deliverer
-      if (userInfo.role !== 'deliverer') {
-        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
-      }
-      
-      const delivererId = Number(userInfo.id);
-      if (!delivererId || isNaN(delivererId)) {
-        return res.status(400).json({ message: "Invalid deliverer ID" });
-      }
-      
-      const deliveries = await storage.getDeliveriesByDeliverer(delivererId);
-      const completedDeliveries = deliveries.filter(d => d.status === 'completed');
-      
-      const commissionReport = completedDeliveries.map(delivery => ({
-        id: delivery.id,
-        customerName: delivery.customerName,
-        deliveryAddress: delivery.deliveryAddress,
-        deliveryFee: parseFloat(delivery.deliveryFee),
-        commissionPercentage: parseFloat(delivery.commissionPercentage || "15.00"),
-        commissionAmount: parseFloat(delivery.commissionAmount || "0.00"),
-        delivererPayment: parseFloat(delivery.delivererPayment || "0.00"),
-        completedAt: delivery.completedAt,
-        createdAt: delivery.createdAt
-      }));
-      
-      const totals = commissionReport.reduce((acc, delivery) => ({
-        totalDeliveryFee: acc.totalDeliveryFee + delivery.deliveryFee,
-        totalCommission: acc.totalCommission + delivery.commissionAmount,
-        totalPayment: acc.totalPayment + delivery.delivererPayment
-      }), {
-        totalDeliveryFee: 0,
-        totalCommission: 0,
-        totalPayment: 0
-      });
-      
-      res.json({
-        deliveries: commissionReport,
-        totals,
-        delivererInfo: {
-          id: delivererId,
-          name: completedDeliveries[0]?.deliverer?.name || "N/A"
-        }
-      });
-    } catch (error) {
-      console.error("Error fetching commission report:", error);
-      res.status(500).json({ message: "Failed to fetch commission report" });
-    }
-  });
 
   app.get('/api/deliveries/my-requests', isAuthenticated, async (req: any, res) => {
     try {
