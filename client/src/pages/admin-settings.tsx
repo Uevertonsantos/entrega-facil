@@ -368,6 +368,171 @@ export default function AdminSettings() {
                   </div>
                   <p className="text-sm text-gray-500">Valor cobrado por entrega avulsa</p>
                 </div>
+
+                {/* Quarterly Plan */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan_quarterly_price">Plano Trimestral (R$)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="plan_quarterly_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={getSettingValue("plan_quarterly_price")}
+                      onChange={(e) => handleInputChange("plan_quarterly_price", e.target.value)}
+                      placeholder="399.00"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSave("plan_quarterly_price")}
+                      disabled={!hasPendingChanges("plan_quarterly_price") || updateSettingMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("plan_quarterly_price")}
+                      disabled={!hasPendingChanges("plan_quarterly_price")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Valor da assinatura trimestral (3 meses)</p>
+                </div>
+
+                {/* Annual Plan */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan_annual_price">Plano Anual (R$)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="plan_annual_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={getSettingValue("plan_annual_price")}
+                      onChange={(e) => handleInputChange("plan_annual_price", e.target.value)}
+                      placeholder="1499.00"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSave("plan_annual_price")}
+                      disabled={!hasPendingChanges("plan_annual_price") || updateSettingMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("plan_annual_price")}
+                      disabled={!hasPendingChanges("plan_annual_price")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Valor da assinatura anual (12 meses)</p>
+                </div>
+
+                {/* Weekly Plan */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan_weekly_price">Plano Semanal (R$)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="plan_weekly_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={getSettingValue("plan_weekly_price")}
+                      onChange={(e) => handleInputChange("plan_weekly_price", e.target.value)}
+                      placeholder="49.00"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSave("plan_weekly_price")}
+                      disabled={!hasPendingChanges("plan_weekly_price") || updateSettingMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("plan_weekly_price")}
+                      disabled={!hasPendingChanges("plan_weekly_price")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Valor da assinatura semanal (7 dias)</p>
+                </div>
+
+                {/* Premium Plan */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan_premium_price">Plano Premium (R$)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="plan_premium_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={getSettingValue("plan_premium_price")}
+                      onChange={(e) => handleInputChange("plan_premium_price", e.target.value)}
+                      placeholder="299.00"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSave("plan_premium_price")}
+                      disabled={!hasPendingChanges("plan_premium_price") || updateSettingMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("plan_premium_price")}
+                      disabled={!hasPendingChanges("plan_premium_price")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Plano premium com recursos adicionais</p>
+                </div>
+
+                {/* Basic Plan */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan_basic_price">Plano Básico (R$)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="plan_basic_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={getSettingValue("plan_basic_price")}
+                      onChange={(e) => handleInputChange("plan_basic_price", e.target.value)}
+                      placeholder="99.00"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSave("plan_basic_price")}
+                      disabled={!hasPendingChanges("plan_basic_price") || updateSettingMutation.isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReset("plan_basic_price")}
+                      disabled={!hasPendingChanges("plan_basic_price")}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Plano básico com funcionalidades limitadas</p>
+                </div>
               </div>
             </CardContent>
           </Card>

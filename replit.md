@@ -112,6 +112,8 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Created robust geocoding system prioritizing street names over CEP for interior cities
 - July 09, 2025. Built street-specific coordinate database for Conde and common interior street names
 - July 09, 2025. Integrated ViaCEP API for fallback geocoding without requiring paid services
+- July 09, 2025. Added multiple subscription plan options: weekly, monthly, quarterly, annual, basic, and premium
+- July 09, 2025. Expanded admin settings with comprehensive plan configuration for different subscription types
 
 ## User Preferences
 
