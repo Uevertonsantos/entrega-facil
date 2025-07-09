@@ -30,20 +30,33 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
 function Router() {
-  const { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer } = useAuth();
+  try {
+    const { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer } = useAuth();
 
-  if (isLoading || !isAuthenticated) {
+    console.log("Router state:", { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer });
+
+    if (isLoading || !isAuthenticated) {
+      return (
+        <Switch>
+          <Route path="/" component={Landing} />
+          <Route path="/admin/login" component={AdminLogin} />
+          <Route path="/admin/forgot-password" component={AdminForgotPassword} />
+          <Route path="/admin/reset-password" component={AdminResetPassword} />
+          <Route path="/admin-login" component={AdminLogin} />
+          <Route path="/merchant-login" component={MerchantLogin} />
+          <Route path="/deliverer-login" component={DelivererLogin} />
+          <Route component={NotFound} />
+        </Switch>
+      );
+    }
+  } catch (error) {
+    console.error("Error in Router:", error);
     return (
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/admin/login" component={AdminLogin} />
-        <Route path="/admin/forgot-password" component={AdminForgotPassword} />
-        <Route path="/admin/reset-password" component={AdminResetPassword} />
-        <Route path="/admin-login" component={AdminLogin} />
-        <Route path="/merchant-login" component={MerchantLogin} />
-        <Route path="/deliverer-login" component={DelivererLogin} />
-        <Route component={NotFound} />
-      </Switch>
+      <div style={{ padding: '20px' }}>
+        <h1>Erro na Aplicação</h1>
+        <p>Erro: {error.message}</p>
+        <a href="/admin-login">Ir para Login</a>
+      </div>
     );
   }
 
