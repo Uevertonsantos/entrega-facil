@@ -48,6 +48,7 @@ export const merchants = pgTable("merchants", {
   password: varchar("password"),
   address: text("address").notNull(),
   cep: varchar("cep", { length: 10 }),
+  city: varchar("city").notNull().default(""),
   businessType: varchar("business_type"),
   type: varchar("type").notNull(),
   planType: varchar("plan_type").notNull(),
@@ -59,11 +60,12 @@ export const merchants = pgTable("merchants", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Neighborhoods table - valores fixos de distância por bairro
+// Neighborhoods table - valores fixos de distância por bairro por cidade
 export const neighborhoods = pgTable("neighborhoods", {
   id: serial("id").primaryKey(),
-  name: varchar("name").notNull().unique(),
-  city: varchar("city").notNull().default("Conde"),
+  name: varchar("name").notNull(),
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull().default(""),
   averageDistance: decimal("average_distance", { precision: 5, scale: 2 }).notNull(), // distância média em km
   baseFare: decimal("base_fare", { precision: 10, scale: 2 }).notNull().default("5.00"), // tarifa base
   isActive: boolean("is_active").default(true),

@@ -2471,22 +2471,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Routing and tracking endpoints
   
-  // Calculate delivery price by neighborhood
+  // Calculate delivery price by neighborhood and city
   app.post('/api/routing/calculate-delivery', async (req, res) => {
     try {
-      const { neighborhoodName, farePerKm } = req.body;
+      const { neighborhoodName, cityName, farePerKm } = req.body;
       
-      if (!neighborhoodName) {
-        return res.status(400).json({ message: "Neighborhood name is required" });
+      if (!neighborhoodName || !cityName) {
+        return res.status(400).json({ message: "Neighborhood name and city are required" });
       }
       
       const calculation = await neighborhoodService.calculateDeliveryByNeighborhood(
         neighborhoodName,
+        cityName,
         farePerKm || 2.50
       );
       
       if (!calculation) {
-        return res.status(404).json({ message: "Neighborhood not found" });
+        return res.status(404).json({ message: "Neighborhood not found in specified city" });
       }
       
       res.json({
@@ -2504,30 +2505,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all neighborhoods
-  app.get('/api/neighborhoods', async (req, res) => {
+  // Get all cities
+  app.get('/api/cities', async (req, res) => {
     try {
-      const neighborhoods = await neighborhoodService.getAllNeighborhoods();
+      const cities = await neighborhoodService.getAllCities();
+      res.json(cities);
+    } catch (error) {
+      console.error("Error getting cities:", error);
+      res.status(500).json({ message: "Failed to get cities" });
+    }
+  });
+
+  // Get neighborhoods by city
+  app.get('/api/neighborhoods/city/:cityName', async (req, res) => {
+    try {
+      const { cityName } = req.params;
+      const neighborhoods = await neighborhoodService.getNeighborhoodsByCity(cityName);
       res.json(neighborhoods);
     } catch (error) {
-      console.error("Error getting neighborhoods:", error);
+      console.error("Error getting neighborhoods by city:", error);
       res.status(500).json({ message: "Failed to get neighborhoods" });
     }
   });
 
-  // Search neighborhoods
-  app.get('/api/neighborhoods/search', async (req, res) => {
+  // Search neighborhoods in a city
+  app.get('/api/neighborhoods/search/:cityName', async (req, res) => {
     try {
+      const { cityName } = req.params;
       const { q } = req.query;
+      
       if (!q) {
         return res.status(400).json({ message: "Query parameter 'q' is required" });
       }
       
-      const neighborhoods = await neighborhoodService.searchNeighborhoods(q as string);
+      const neighborhoods = await neighborhoodService.searchNeighborhoods(q as string, cityName);
       res.json(neighborhoods);
     } catch (error) {
       console.error("Error searching neighborhoods:", error);
       res.status(500).json({ message: "Failed to search neighborhoods" });
+    }
+  });
+
+  // Add new neighborhood
+  app.post('/api/neighborhoods', isAdmin, async (req, res) => {
+    try {
+      const { name, city, state, averageDistance, baseFare } = req.body;
+      
+      if (!name || !city || !state || !averageDistance || !baseFare) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      const newNeighborhood = await neighborhoodService.addNeighborhood({
+        name,
+        city,
+        state,
+        averageDistance: parseFloat(averageDistance),
+        baseFare: parseFloat(baseFare)
+      });
+      
+      res.json(newNeighborhood);
+    } catch (error) {
+      console.error("Error adding neighborhood:", error);
+      res.status(500).json({ message: "Failed to add neighborhood" });
     }
   });
 

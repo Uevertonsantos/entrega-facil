@@ -192,6 +192,13 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Built reusable routing components: DeliveryRouteCalculator, NearestDelivererFinder, DeliveryTracker, LocationGeocoder
 - July 09, 2025. Integrated automatic route-based pricing system with distance calculations and ETA estimates
 - July 09, 2025. Added comprehensive delivery tracking system with real-time status updates and progress indicators
+- July 09, 2025. Replaced OpenRouteService API with city-based neighborhood system for localized delivery calculations
+- July 09, 2025. Added city field to merchants table and updated neighborhoods structure with city and state fields
+- July 09, 2025. Implemented dynamic neighborhood service that calculates delivery prices based on merchant's city location
+- July 09, 2025. Created comprehensive neighborhood configuration page with city and neighborhood management
+- July 09, 2025. Added sample data for multiple cities: Salvador/BA, Conde/PB, São Paulo/SP, Rio de Janeiro/RJ
+- July 09, 2025. Updated routing test page to work with new city-based neighborhood selection system
+- July 09, 2025. Added new API endpoints: /api/cities, /api/neighborhoods/city/:cityName, /api/neighborhoods/search/:cityName
 
 ## User Preferences
 

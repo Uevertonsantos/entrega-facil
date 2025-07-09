@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { neighborhoods } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export interface DeliveryCalculation {
   neighborhoodId: number;
@@ -15,18 +15,22 @@ export interface DeliveryCalculation {
 class NeighborhoodService {
   
   /**
-   * Calcula o valor da entrega baseado no bairro de destino
+   * Calcula o valor da entrega baseado no bairro de destino e cidade
    */
   async calculateDeliveryByNeighborhood(
     neighborhoodName: string,
+    cityName: string,
     farePerKm: number = 2.50
   ): Promise<DeliveryCalculation | null> {
     try {
-      // Busca o bairro no banco de dados
+      // Busca o bairro no banco de dados pela cidade
       const neighborhood = await db
         .select()
         .from(neighborhoods)
-        .where(eq(neighborhoods.name, neighborhoodName))
+        .where(and(
+          eq(neighborhoods.name, neighborhoodName),
+          eq(neighborhoods.city, cityName)
+        ))
         .limit(1);
 
       if (!neighborhood.length) {
@@ -58,30 +62,54 @@ class NeighborhoodService {
   }
 
   /**
-   * Lista todos os bairros disponíveis
+   * Lista todos os bairros disponíveis por cidade
    */
-  async getAllNeighborhoods() {
+  async getNeighborhoodsByCity(cityName: string) {
     try {
       return await db
         .select()
         .from(neighborhoods)
-        .where(eq(neighborhoods.isActive, true))
+        .where(and(
+          eq(neighborhoods.city, cityName),
+          eq(neighborhoods.isActive, true)
+        ))
         .orderBy(neighborhoods.name);
     } catch (error) {
-      console.error('Erro ao buscar bairros:', error);
+      console.error('Erro ao buscar bairros da cidade:', error);
       return [];
     }
   }
 
   /**
-   * Busca bairros por nome (para autocomplete)
+   * Lista todas as cidades disponíveis
    */
-  async searchNeighborhoods(query: string) {
+  async getAllCities() {
+    try {
+      const cities = await db
+        .selectDistinct({ city: neighborhoods.city, state: neighborhoods.state })
+        .from(neighborhoods)
+        .where(eq(neighborhoods.isActive, true))
+        .orderBy(neighborhoods.city);
+      
+      return cities;
+    } catch (error) {
+      console.error('Erro ao buscar cidades:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Busca bairros por nome em uma cidade específica (para autocomplete)
+   */
+  async searchNeighborhoods(query: string, cityName: string) {
     try {
       return await db
         .select()
         .from(neighborhoods)
-        .where(eq(neighborhoods.isActive, true))
+        .where(and(
+          eq(neighborhoods.city, cityName),
+          eq(neighborhoods.isActive, true)
+        ))
         .orderBy(neighborhoods.name)
         .then(results => 
           results.filter(n => 
@@ -91,6 +119,36 @@ class NeighborhoodService {
     } catch (error) {
       console.error('Erro ao buscar bairros:', error);
       return [];
+    }
+  }
+
+  /**
+   * Adiciona um novo bairro
+   */
+  async addNeighborhood(neighborhoodData: {
+    name: string;
+    city: string;
+    state: string;
+    averageDistance: number;
+    baseFare: number;
+  }) {
+    try {
+      const [newNeighborhood] = await db
+        .insert(neighborhoods)
+        .values({
+          name: neighborhoodData.name,
+          city: neighborhoodData.city,
+          state: neighborhoodData.state,
+          averageDistance: neighborhoodData.averageDistance.toString(),
+          baseFare: neighborhoodData.baseFare.toString(),
+          isActive: true
+        })
+        .returning();
+      
+      return newNeighborhood;
+    } catch (error) {
+      console.error('Erro ao adicionar bairro:', error);
+      throw error;
     }
   }
 }

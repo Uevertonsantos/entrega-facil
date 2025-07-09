@@ -18,7 +18,8 @@ import {
   Key,
   Mail,
   Menu,
-  X
+  X,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +39,7 @@ const navigation = [
   { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
   { name: "Credenciais", href: "/test-credentials", icon: Key },
   { name: "Teste de Routing", href: "/routing-test", icon: Route },
+  { name: "Bairros", href: "/neighborhoods-config", icon: MapPin },
   { name: "Configurações", href: "/settings", icon: Settings },
   { name: "Config. Sistema", href: "/admin-settings", icon: Settings },
   { name: "Email", href: "/email-settings", icon: Mail },

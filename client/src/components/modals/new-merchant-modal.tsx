@@ -77,6 +77,8 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
       email: "",
       password: "",
       address: "",
+      cep: "",
+      city: "",
       businessType: "padaria",
       planType: "por_entrega",
       isActive: true,
@@ -312,6 +314,35 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cep"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CEP</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="00000-000" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cidade</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ex: Salvador" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
