@@ -264,7 +264,11 @@ export default function Dashboard() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Entregadores Ativos</CardTitle>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsNewDelivererOpen(true)}
+            >
               <Plus className="h-4 w-4 mr-1" />
               Adicionar Entregador
             </Button>
