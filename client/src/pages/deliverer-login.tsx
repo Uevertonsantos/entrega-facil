@@ -32,6 +32,12 @@ export default function DelivererLogin() {
   const handleSubmit = async (data: DelivererLoginData) => {
     setIsLoading(true);
     try {
+      // Clear any existing tokens first
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("merchantToken");
+      localStorage.removeItem("delivererToken");
+      localStorage.removeItem("userType");
+      
       const response = await apiRequest('/api/deliverer/login', 'POST', data);
       const result = await response.json();
       

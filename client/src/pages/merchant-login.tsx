@@ -32,6 +32,12 @@ export default function MerchantLogin() {
   const handleSubmit = async (data: MerchantLoginData) => {
     setIsLoading(true);
     try {
+      // Clear any existing tokens first
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("merchantToken");
+      localStorage.removeItem("delivererToken");
+      localStorage.removeItem("userType");
+      
       const response = await apiRequest('/api/merchant/login', 'POST', data);
       const result = await response.json();
       
