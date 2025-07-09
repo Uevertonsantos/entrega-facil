@@ -178,7 +178,7 @@ export default function NewDelivererModal({ isOpen, onClose }: NewDelivererModal
                 name="commissionPercentage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Comissão (%)</FormLabel>
+                    <FormLabel>Taxa da Plataforma (%)</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 

@@ -90,7 +90,7 @@ export default function CommissionReport() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Relatório de Comissões</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Relatório de Taxa da Plataforma</h2>
         <Badge variant="secondary" className="text-sm">
           {report.deliveries.length} entregas concluídas
         </Badge>
@@ -115,7 +115,7 @@ export default function CommissionReport() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comissão da Plataforma</CardTitle>
+            <CardTitle className="text-sm font-medium">Taxa da Plataforma</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -157,7 +157,7 @@ export default function CommissionReport() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Endereço</TableHead>
                   <TableHead>Taxa</TableHead>
-                  <TableHead>Comissão (%)</TableHead>
+                  <TableHead>Taxa da Plataforma (%)</TableHead>
                   <TableHead>Desconto</TableHead>
                   <TableHead>Pagamento</TableHead>
                   <TableHead>Data</TableHead>
@@ -220,10 +220,10 @@ export default function CommissionReport() {
             <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
             <div>
               <h4 className="font-medium text-blue-900 mb-1">
-                Como funciona a comissão?
+                Como funciona a taxa da plataforma?
               </h4>
               <p className="text-sm text-blue-700">
-                A plataforma cobra uma comissão sobre cada entrega realizada. 
+                A plataforma cobra uma taxa sobre cada entrega realizada. 
                 O percentual é definido no seu cadastro e é descontado do valor total da entrega. 
                 O valor restante é o que você recebe como pagamento por cada entrega.
               </p>

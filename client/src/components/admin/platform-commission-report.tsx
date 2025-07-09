@@ -72,7 +72,7 @@ export default function PlatformCommissionReport() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Relatório de Comissões da Plataforma</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Relatório de Taxa da Plataforma</h2>
         <Badge variant="secondary" className="text-sm">
           {report.deliveries.length} entregas concluídas
         </Badge>
@@ -97,7 +97,7 @@ export default function PlatformCommissionReport() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sua Comissão</CardTitle>
+            <CardTitle className="text-sm font-medium">Sua Taxa da Plataforma</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -105,7 +105,7 @@ export default function PlatformCommissionReport() {
               {formatCurrency(report.totals.totalCommission)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Valor total de comissões recebidas
+              Valor total de taxa da plataforma recebida
             </p>
           </CardContent>
         </Card>
@@ -140,8 +140,8 @@ export default function PlatformCommissionReport() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Endereço</TableHead>
                   <TableHead>Valor Total</TableHead>
-                  <TableHead>Comissão (%)</TableHead>
-                  <TableHead>Sua Comissão</TableHead>
+                  <TableHead>Taxa da Plataforma (%)</TableHead>
+                  <TableHead>Sua Taxa da Plataforma</TableHead>
                   <TableHead>Pagamento Entregador</TableHead>
                   <TableHead>Data</TableHead>
                 </TableRow>

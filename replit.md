@@ -122,6 +122,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added client sync API endpoints for receiving merchants, deliverers, and deliveries data
 - July 09, 2025. Created Windows service integration for auto-start functionality
 - July 09, 2025. Developed comprehensive installer with business configuration and license key validation
+- July 09, 2025. Added new fields "Vehicle Model" and "Vehicle Plate" to deliverer registration and management
+- July 09, 2025. Updated all interfaces to use "Taxa da Plataforma" instead of "Comissão" for consistency
+- July 09, 2025. Enhanced new deliverer modal with complete form including vehicle information
 
 ## User Preferences
 
