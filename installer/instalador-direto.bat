@@ -48,7 +48,7 @@ echo     "electron-builder": "^23.0.0" >> package.json
 echo   }, >> package.json
 echo   "dependencies": { >> package.json
 echo     "express": "^4.18.2", >> package.json
-echo     "sqlite3": "^5.1.6", >> package.json
+echo     "better-sqlite3": "^8.7.0", >> package.json
 echo     "cors": "^2.8.5" >> package.json
 echo   }, >> package.json
 echo   "build": { >> package.json
@@ -110,97 +110,78 @@ echo         fs.mkdirSync(dirPath, { recursive: true }); >> main.js
 echo       } >> main.js
 echo     }); >> main.js
 echo     const serverCode = \`const express = require('express'); >> main.js
-echo const sqlite3 = require('sqlite3').verbose(); >> main.js
+echo const Database = require('better-sqlite3'); >> main.js
 echo const cors = require('cors'); >> main.js
 echo const fs = require('fs'); >> main.js
+echo const path = require('path'); >> main.js
 echo const app = express(); >> main.js
 echo const PORT = 3000; >> main.js
 echo const config = {\${JSON.stringify(config)}}; >> main.js
 echo app.use(cors()); >> main.js
 echo app.use(express.json()); >> main.js
 echo app.use(express.urlencoded({ extended: true })); >> main.js
-echo const db = new sqlite3.Database('./data/database.sqlite'); >> main.js
-echo db.serialize(() =^> { >> main.js
-echo   db.run(\\\`CREATE TABLE IF NOT EXISTS customers ( >> main.js
-echo     id INTEGER PRIMARY KEY AUTOINCREMENT, >> main.js
-echo     name TEXT NOT NULL, >> main.js
-echo     phone TEXT, >> main.js
-echo     address TEXT, >> main.js
-echo     created_at DATETIME DEFAULT CURRENT_TIMESTAMP >> main.js
-echo   )\\\`); >> main.js
-echo   db.run(\\\`CREATE TABLE IF NOT EXISTS deliveries ( >> main.js
-echo     id INTEGER PRIMARY KEY AUTOINCREMENT, >> main.js
-echo     customer_id INTEGER, >> main.js
-echo     customer_name TEXT NOT NULL, >> main.js
-echo     customer_phone TEXT, >> main.js
-echo     delivery_address TEXT NOT NULL, >> main.js
-echo     pickup_address TEXT NOT NULL, >> main.js
-echo     description TEXT, >> main.js
-echo     price REAL NOT NULL, >> main.js
-echo     delivery_fee REAL DEFAULT 7.00, >> main.js
-echo     payment_method TEXT DEFAULT 'dinheiro', >> main.js
-echo     status TEXT DEFAULT 'pending', >> main.js
-echo     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, >> main.js
-echo     FOREIGN KEY (customer_id) REFERENCES customers (id) >> main.js
-echo   )\\\`); >> main.js
-echo }); >> main.js
+echo const db = new Database('./data/database.sqlite'); >> main.js
+echo db.exec(\\\`CREATE TABLE IF NOT EXISTS customers ( >> main.js
+echo   id INTEGER PRIMARY KEY AUTOINCREMENT, >> main.js
+echo   name TEXT NOT NULL, >> main.js
+echo   phone TEXT, >> main.js
+echo   address TEXT, >> main.js
+echo   created_at DATETIME DEFAULT CURRENT_TIMESTAMP >> main.js
+echo )\\\`); >> main.js
+echo db.exec(\\\`CREATE TABLE IF NOT EXISTS deliveries ( >> main.js
+echo   id INTEGER PRIMARY KEY AUTOINCREMENT, >> main.js
+echo   customer_id INTEGER, >> main.js
+echo   customer_name TEXT NOT NULL, >> main.js
+echo   customer_phone TEXT, >> main.js
+echo   delivery_address TEXT NOT NULL, >> main.js
+echo   pickup_address TEXT NOT NULL, >> main.js
+echo   description TEXT, >> main.js
+echo   price REAL NOT NULL, >> main.js
+echo   delivery_fee REAL DEFAULT 7.00, >> main.js
+echo   payment_method TEXT DEFAULT 'dinheiro', >> main.js
+echo   status TEXT DEFAULT 'pending', >> main.js
+echo   created_at DATETIME DEFAULT CURRENT_TIMESTAMP, >> main.js
+echo   FOREIGN KEY (customer_id) REFERENCES customers (id) >> main.js
+echo )\\\`); >> main.js
 echo app.post('/api/deliveries', (req, res) =^> { >> main.js
 echo   const { customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method } = req.body; >> main.js
 echo   if (!customer_name ^|^| !customer_phone ^|^| !delivery_address ^|^| !price) { >> main.js
 echo     return res.status(400).json({ error: 'Dados obrigatórios faltando' }); >> main.js
 echo   } >> main.js
-echo   db.get('SELECT id FROM customers WHERE phone = ?', [customer_phone], (err, existingCustomer) =^> { >> main.js
-echo     if (err) { >> main.js
-echo       console.error('Erro ao buscar cliente:', err); >> main.js
-echo       return res.status(500).json({ error: 'Erro interno' }); >> main.js
-echo     } >> main.js
+echo   try { >> main.js
+echo     const existingCustomer = db.prepare('SELECT id FROM customers WHERE phone = ?').get(customer_phone); >> main.js
 echo     let customerId = existingCustomer ? existingCustomer.id : null; >> main.js
-echo     const insertCustomer = () =^> { >> main.js
-echo       if (!customerId) { >> main.js
-echo         const stmt = db.prepare('INSERT INTO customers (name, phone, address) VALUES (?, ?, ?)'); >> main.js
-echo         stmt.run([customer_name, customer_phone, delivery_address], function(err) { >> main.js
-echo           if (err) { >> main.js
-echo             console.error('Erro ao criar cliente:', err); >> main.js
-echo             return res.status(500).json({ error: 'Erro ao criar cliente' }); >> main.js
-echo           } >> main.js
-echo           customerId = this.lastID; >> main.js
-echo           insertDelivery(); >> main.js
-echo         }); >> main.js
-echo       } else { >> main.js
-echo         insertDelivery(); >> main.js
-echo       } >> main.js
-echo     }; >> main.js
-echo     const insertDelivery = () =^> { >> main.js
-echo       const stmt = db.prepare('INSERT INTO deliveries (customer_id, customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'); >> main.js
-echo       stmt.run([customerId, customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method], function(err) { >> main.js
-echo         if (err) { >> main.js
-echo           console.error('Erro ao criar entrega:', err); >> main.js
-echo           return res.status(500).json({ error: 'Erro ao criar entrega' }); >> main.js
-echo         } >> main.js
-echo         console.log(\\\`Entrega criada - Cliente: \\\${customer_name}, Valor: R$ \\\${price}\\\`); >> main.js
-echo         res.json({ id: this.lastID, customer_id: customerId, message: 'Entrega criada com sucesso' }); >> main.js
-echo       }); >> main.js
-echo     }; >> main.js
-echo     insertCustomer(); >> main.js
-echo   }); >> main.js
+echo     if (!customerId) { >> main.js
+echo       const insertCustomer = db.prepare('INSERT INTO customers (name, phone, address) VALUES (?, ?, ?)'); >> main.js
+echo       const customerResult = insertCustomer.run(customer_name, customer_phone, delivery_address); >> main.js
+echo       customerId = customerResult.lastInsertRowid; >> main.js
+echo     } >> main.js
+echo     const insertDelivery = db.prepare('INSERT INTO deliveries (customer_id, customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'); >> main.js
+echo     const deliveryResult = insertDelivery.run(customerId, customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method); >> main.js
+echo     console.log(\\\`Entrega criada - Cliente: \\\${customer_name}, Valor: R$ \\\${price}\\\`); >> main.js
+echo     res.json({ id: deliveryResult.lastInsertRowid, customer_id: customerId, message: 'Entrega criada com sucesso' }); >> main.js
+echo   } catch (error) { >> main.js
+echo     console.error('Erro ao processar entrega:', error); >> main.js
+echo     res.status(500).json({ error: 'Erro interno do servidor' }); >> main.js
+echo   } >> main.js
 echo }); >> main.js
 echo app.get('/api/deliveries', (req, res) =^> { >> main.js
-echo   db.all('SELECT * FROM deliveries ORDER BY created_at DESC LIMIT 50', (err, rows) =^> { >> main.js
-echo     if (err) { >> main.js
-echo       console.error('Erro ao buscar entregas:', err); >> main.js
-echo       return res.status(500).json({ error: 'Erro ao buscar entregas' }); >> main.js
-echo     } >> main.js
-echo     res.json(rows); >> main.js
-echo   }); >> main.js
+echo   try { >> main.js
+echo     const deliveries = db.prepare('SELECT * FROM deliveries ORDER BY created_at DESC LIMIT 50').all(); >> main.js
+echo     res.json(deliveries); >> main.js
+echo   } catch (error) { >> main.js
+echo     console.error('Erro ao buscar entregas:', error); >> main.js
+echo     res.status(500).json({ error: 'Erro ao buscar entregas' }); >> main.js
+echo   } >> main.js
 echo }); >> main.js
 echo app.get('/api/customers', (req, res) =^> { >> main.js
-echo   db.all('SELECT * FROM customers ORDER BY created_at DESC', (err, rows) =^> { >> main.js
-echo     if (err) { >> main.js
-echo       console.error('Erro ao buscar clientes:', err); >> main.js
-echo       return res.status(500).json({ error: 'Erro ao buscar clientes' }); >> main.js
-echo     } >> main.js
-echo     res.json(rows); >> main.js
-echo   }); >> main.js
+echo   try { >> main.js
+echo     const customers = db.prepare('SELECT * FROM customers ORDER BY created_at DESC').all(); >> main.js
+echo     res.json(customers); >> main.js
+echo   } catch (error) { >> main.js
+echo     console.error('Erro ao buscar clientes:', error); >> main.js
+echo     res.status(500).json({ error: 'Erro ao buscar clientes' }); >> main.js
+echo   } >> main.js
 echo }); >> main.js
 echo app.get('/', (req, res) =^> { >> main.js
 echo   res.send(\\\`^<!DOCTYPE html^> >> main.js
@@ -384,7 +365,7 @@ echo       name: 'entrega-facil-client', >> main.js
 echo       version: '1.0.0', >> main.js
 echo       dependencies: { >> main.js
 echo         express: '^4.18.2', >> main.js
-echo         sqlite3: '^5.1.6', >> main.js
+echo         'better-sqlite3': '^8.7.0', >> main.js
 echo         cors: '^2.8.5' >> main.js
 echo       } >> main.js
 echo     }; >> main.js
