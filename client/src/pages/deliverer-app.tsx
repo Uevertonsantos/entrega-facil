@@ -311,10 +311,23 @@ export default function DelivererApp() {
                                   <span className="text-gray-500">• {delivery.customerPhone}</span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                                 <MapPin className="h-4 w-4" />
                                 {delivery.deliveryAddress}
                               </div>
+                              {delivery.paymentMethod && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <DollarSign className="h-4 w-4" />
+                                  <span className="font-medium">Pagamento:</span>
+                                  {delivery.paymentMethod === 'dinheiro' ? 'Dinheiro' : 
+                                   delivery.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
+                                   delivery.paymentMethod === 'cartao_debito' ? 'Cartão de Débito' :
+                                   delivery.paymentMethod === 'pix' ? 'PIX' :
+                                   delivery.paymentMethod === 'cartao_refeicao' ? 'Cartão Refeição' :
+                                   delivery.paymentMethod === 'vale_alimentacao' ? 'Vale Alimentação' :
+                                   delivery.paymentMethod}
+                                </div>
+                              )}
                             </div>
                             <div className="flex justify-end">
                               <Button
@@ -382,6 +395,19 @@ export default function DelivererApp() {
                               <MapPin className="h-4 w-4" />
                               {delivery.deliveryAddress}
                             </div>
+                            {delivery.paymentMethod && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <DollarSign className="h-4 w-4" />
+                                <span className="font-medium">Pagamento:</span>
+                                {delivery.paymentMethod === 'dinheiro' ? 'Dinheiro' : 
+                                 delivery.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
+                                 delivery.paymentMethod === 'cartao_debito' ? 'Cartão de Débito' :
+                                 delivery.paymentMethod === 'pix' ? 'PIX' :
+                                 delivery.paymentMethod === 'cartao_refeicao' ? 'Cartão Refeição' :
+                                 delivery.paymentMethod === 'vale_alimentacao' ? 'Vale Alimentação' :
+                                 delivery.paymentMethod}
+                              </div>
+                            )}
                           </div>
                           {delivery.status === 'in_progress' && (
                             <div className="flex justify-end">

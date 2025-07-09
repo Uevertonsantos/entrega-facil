@@ -29,6 +29,7 @@ const deliveryFormSchema = z.object({
   deliveryAddress: z.string().min(5, "Endereço de entrega é obrigatório"),
   deliveryCep: z.string().optional(),
   referencePoint: z.string().optional(),
+  paymentMethod: z.string().min(1, "Forma de pagamento é obrigatória"),
   notes: z.string().optional(),
 });
 
@@ -71,6 +72,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       deliveryAddress: "",
       deliveryCep: "",
       referencePoint: "",
+      paymentMethod: "dinheiro",
       notes: "",
     },
   });
@@ -93,6 +95,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
         deliveryAddress: data.deliveryAddress,
         deliveryCep: data.deliveryCep || null,
         referencePoint: data.referencePoint || null,
+        paymentMethod: data.paymentMethod,
         status: "pending",
         deliveryFee: feeCalculation.finalFee,
         delivererPayment: (feeCalculation.finalFee * 0.7).toFixed(2), // 70% da taxa vai para o entregador
@@ -390,6 +393,32 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
                   <FormControl>
                     <Input placeholder="Ponto de referência para facilitar a entrega" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Forma de Pagamento</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a forma de pagamento" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                      <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="cartao_refeicao">Cartão Refeição</SelectItem>
+                      <SelectItem value="vale_alimentacao">Vale Alimentação</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

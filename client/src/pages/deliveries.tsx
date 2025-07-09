@@ -228,6 +228,17 @@ export default function Deliveries() {
                       <p className="text-sm text-gray-500">
                         {delivery.deliveryAddress}
                       </p>
+                      {delivery.paymentMethod && (
+                        <p className="text-sm text-gray-500">
+                          Pagamento: {delivery.paymentMethod === 'dinheiro' ? 'Dinheiro' : 
+                                     delivery.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
+                                     delivery.paymentMethod === 'cartao_debito' ? 'Cartão de Débito' :
+                                     delivery.paymentMethod === 'pix' ? 'PIX' :
+                                     delivery.paymentMethod === 'cartao_refeicao' ? 'Cartão Refeição' :
+                                     delivery.paymentMethod === 'vale_alimentacao' ? 'Vale Alimentação' :
+                                     delivery.paymentMethod}
+                        </p>
+                      )}
                       {delivery.deliverer && (
                         <p className="text-sm text-gray-500">
                           Entregador: {delivery.deliverer.name}

@@ -198,6 +198,24 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
                 </div>
               </div>
 
+              {delivery.paymentMethod && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Forma de Pagamento</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Package className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">
+                      {delivery.paymentMethod === 'dinheiro' ? 'Dinheiro' : 
+                       delivery.paymentMethod === 'cartao_credito' ? 'Cartão de Crédito' :
+                       delivery.paymentMethod === 'cartao_debito' ? 'Cartão de Débito' :
+                       delivery.paymentMethod === 'pix' ? 'PIX' :
+                       delivery.paymentMethod === 'cartao_refeicao' ? 'Cartão Refeição' :
+                       delivery.paymentMethod === 'vale_alimentacao' ? 'Vale Alimentação' :
+                       delivery.paymentMethod}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <Label className="text-sm font-medium text-gray-600">Endereço de Entrega</Label>
                 <div className="flex items-center gap-2 mt-1">
