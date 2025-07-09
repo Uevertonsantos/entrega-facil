@@ -1630,6 +1630,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deliverer payments routes (admin only)
+  app.get('/api/admin/deliverer-payments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const payments = await storage.getDelivererPayments();
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching deliverer payments:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer payments" });
+    }
+  });
+
+  app.get('/api/admin/deliverer-payments/summary', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const summary = await storage.getDelivererPaymentsSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching deliverer payments summary:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer payments summary" });
+    }
+  });
+
+  app.get('/api/admin/deliverer-payments/by-deliverer/:delivererId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const delivererId = parseInt(req.params.delivererId);
+      if (isNaN(delivererId)) {
+        return res.status(400).json({ message: "Invalid deliverer ID" });
+      }
+      
+      const payments = await storage.getDelivererPaymentsByDeliverer(delivererId);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching deliverer payments by deliverer:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer payments by deliverer" });
+    }
+  });
+
+  app.get('/api/admin/deliverer-payments/by-status/:status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const status = req.params.status;
+      if (!['pending', 'paid'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'pending' or 'paid'" });
+      }
+      
+      const payments = await storage.getDelivererPaymentsByStatus(status);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching deliverer payments by status:", error);
+      res.status(500).json({ message: "Failed to fetch deliverer payments by status" });
+    }
+  });
+
+  app.put('/api/admin/deliverer-payments/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment ID" });
+      }
+      
+      if (!['pending', 'paid'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'pending' or 'paid'" });
+      }
+      
+      const payment = await storage.updateDelivererPaymentStatus(id, status);
+      res.json(payment);
+    } catch (error) {
+      console.error("Error updating deliverer payment status:", error);
+      res.status(500).json({ message: "Failed to update deliverer payment status" });
+    }
+  });
+
   // Get client status
   app.get('/api/clients/:clientId/status', isValidClient, async (req, res) => {
     try {

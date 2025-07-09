@@ -8,6 +8,7 @@ import {
   clientInstallations,
   clientCustomers,
   clientDeliveries,
+  delivererPayments,
   type User,
   type UpsertUser,
   type InsertMerchant,
@@ -27,6 +28,8 @@ import {
   type ClientCustomer,
   type InsertClientDelivery,
   type ClientDelivery,
+  type InsertDelivererPayment,
+  type DelivererPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
@@ -117,6 +120,18 @@ export interface IStorage {
   // Client deliveries operations
   getClientDeliveries(installationId?: string): Promise<ClientDelivery[]>;
   createClientDelivery(delivery: InsertClientDelivery): Promise<ClientDelivery>;
+  
+  // Deliverer payments operations
+  getDelivererPayments(): Promise<DelivererPayment[]>;
+  getDelivererPaymentsByDeliverer(delivererId: number): Promise<DelivererPayment[]>;
+  getDelivererPaymentsByStatus(status: string): Promise<DelivererPayment[]>;
+  createDelivererPayment(payment: InsertDelivererPayment): Promise<DelivererPayment>;
+  updateDelivererPaymentStatus(id: number, status: string): Promise<DelivererPayment>;
+  getDelivererPaymentsSummary(): Promise<{
+    totalPending: number;
+    totalPaid: number;
+    delivererBalances: { delivererId: number; delivererName: string; pendingAmount: number; paidAmount: number; totalAmount: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -329,6 +344,34 @@ export class DatabaseStorage implements IStorage {
       .set({ ...delivery, updatedAt: new Date() })
       .where(eq(deliveries.id, id))
       .returning();
+
+    // Se a entrega foi completada, criar registro de pagamento
+    if (delivery.status === 'completed' && updatedDelivery.delivererId) {
+      // Buscar informações da entrega com relacionamentos
+      const deliveryWithRelations = await this.getDelivery(id);
+      
+      if (deliveryWithRelations && deliveryWithRelations.deliverer) {
+        const totalValue = parseFloat(updatedDelivery.deliveryFee);
+        const commissionPercentage = parseFloat(deliveryWithRelations.deliverer.commissionPercentage);
+        const commissionAmount = (totalValue * commissionPercentage) / 100;
+        const delivererAmount = totalValue - commissionAmount;
+
+        await this.createDelivererPayment({
+          deliveryId: updatedDelivery.id,
+          delivererId: deliveryWithRelations.deliverer.id,
+          merchantId: deliveryWithRelations.merchant.id,
+          merchantName: deliveryWithRelations.merchant.name,
+          delivererName: deliveryWithRelations.deliverer.name,
+          totalValue: totalValue.toString(),
+          commissionPercentage: commissionPercentage.toString(),
+          commissionAmount: commissionAmount.toString(),
+          delivererAmount: delivererAmount.toString(),
+          status: 'pending',
+          completedAt: new Date(),
+        });
+      }
+    }
+
     return updatedDelivery;
   }
 
@@ -659,6 +702,91 @@ export class DatabaseStorage implements IStorage {
   async createClientDelivery(delivery: InsertClientDelivery): Promise<ClientDelivery> {
     const [newDelivery] = await db.insert(clientDeliveries).values(delivery).returning();
     return newDelivery;
+  }
+
+  // Deliverer payments operations
+  async getDelivererPayments(): Promise<DelivererPayment[]> {
+    return await db.select().from(delivererPayments).orderBy(desc(delivererPayments.createdAt));
+  }
+
+  async getDelivererPaymentsByDeliverer(delivererId: number): Promise<DelivererPayment[]> {
+    return await db.select().from(delivererPayments)
+      .where(eq(delivererPayments.delivererId, delivererId))
+      .orderBy(desc(delivererPayments.createdAt));
+  }
+
+  async getDelivererPaymentsByStatus(status: string): Promise<DelivererPayment[]> {
+    return await db.select().from(delivererPayments)
+      .where(eq(delivererPayments.status, status))
+      .orderBy(desc(delivererPayments.createdAt));
+  }
+
+  async createDelivererPayment(payment: InsertDelivererPayment): Promise<DelivererPayment> {
+    const [newPayment] = await db.insert(delivererPayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updateDelivererPaymentStatus(id: number, status: string): Promise<DelivererPayment> {
+    const [updatedPayment] = await db
+      .update(delivererPayments)
+      .set({ 
+        status,
+        paidAt: status === 'paid' ? new Date() : null,
+        updatedAt: new Date()
+      })
+      .where(eq(delivererPayments.id, id))
+      .returning();
+    return updatedPayment;
+  }
+
+  async getDelivererPaymentsSummary(): Promise<{
+    totalPending: number;
+    totalPaid: number;
+    delivererBalances: { delivererId: number; delivererName: string; pendingAmount: number; paidAmount: number; totalAmount: number }[];
+  }> {
+    const payments = await db.select().from(delivererPayments);
+    
+    const totalPending = payments
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + parseFloat(p.delivererAmount), 0);
+    
+    const totalPaid = payments
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.delivererAmount), 0);
+    
+    // Group by deliverer
+    const delivererMap = new Map<number, { delivererId: number; delivererName: string; pendingAmount: number; paidAmount: number; totalAmount: number }>();
+    
+    payments.forEach(payment => {
+      const delivererId = payment.delivererId;
+      const delivererName = payment.delivererName;
+      const amount = parseFloat(payment.delivererAmount);
+      
+      if (!delivererMap.has(delivererId)) {
+        delivererMap.set(delivererId, {
+          delivererId,
+          delivererName,
+          pendingAmount: 0,
+          paidAmount: 0,
+          totalAmount: 0
+        });
+      }
+      
+      const delivererData = delivererMap.get(delivererId)!;
+      delivererData.totalAmount += amount;
+      
+      if (payment.status === 'pending') {
+        delivererData.pendingAmount += amount;
+      } else if (payment.status === 'paid') {
+        delivererData.paidAmount += amount;
+      }
+    });
+    
+    return {
+      totalPending,
+      totalPaid,
+      delivererBalances: Array.from(delivererMap.values())
+    };
   }
 }
 

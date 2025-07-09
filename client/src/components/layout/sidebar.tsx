@@ -30,6 +30,7 @@ const navigation = [
   { name: "Relatórios", href: "/reports", icon: FileText },
   { name: "Financeiro", href: "/financial", icon: CreditCard },
   { name: "Pagamentos", href: "/merchant-payments", icon: CreditCard },
+  { name: "Pagar Entregadores", href: "/deliverer-payments", icon: Users },
   { name: "Comissões", href: "/commissions", icon: TrendingUp },
   { name: "Planos", href: "/plans", icon: Package },
   { name: "Clientes", href: "/clients", icon: Monitor },

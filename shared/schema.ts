@@ -135,6 +135,25 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Deliverer payments table - controle de pagamentos dos entregadores
+export const delivererPayments = pgTable("deliverer_payments", {
+  id: serial("id").primaryKey(),
+  deliveryId: integer("delivery_id").notNull(),
+  delivererId: integer("deliverer_id").notNull(),
+  merchantId: integer("merchant_id").notNull(),
+  merchantName: varchar("merchant_name").notNull(),
+  delivererName: varchar("deliverer_name").notNull(),
+  totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(), // Valor total da entrega
+  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da comissão
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(), // Valor da comissão
+  delivererAmount: decimal("deliverer_amount", { precision: 10, scale: 2 }).notNull(), // Valor líquido para o entregador
+  status: varchar("status").notNull().default("pending"), // "pending", "paid"
+  paidAt: timestamp("paid_at"),
+  completedAt: timestamp("completed_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const merchantsRelations = relations(merchants, ({ many }) => ({
   deliveries: many(deliveries),
@@ -152,6 +171,21 @@ export const deliveriesRelations = relations(deliveries, ({ one }) => ({
   deliverer: one(deliverers, {
     fields: [deliveries.delivererId],
     references: [deliverers.id],
+  }),
+}));
+
+export const delivererPaymentsRelations = relations(delivererPayments, ({ one }) => ({
+  delivery: one(deliveries, {
+    fields: [delivererPayments.deliveryId],
+    references: [deliveries.id],
+  }),
+  deliverer: one(deliverers, {
+    fields: [delivererPayments.delivererId],
+    references: [deliverers.id],
+  }),
+  merchant: one(merchants, {
+    fields: [delivererPayments.merchantId],
+    references: [merchants.id],
   }),
 }));
 
@@ -203,6 +237,12 @@ export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
   updatedAt: true,
 });
 
+export const insertDelivererPaymentSchema = createInsertSchema(delivererPayments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -227,6 +267,9 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 
 export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
 export type AdminSetting = typeof adminSettings.$inferSelect;
+
+export type InsertDelivererPayment = z.infer<typeof insertDelivererPaymentSchema>;
+export type DelivererPayment = typeof delivererPayments.$inferSelect;
 
 // Client installations table for tracking remote installations
 export const clientInstallations = pgTable("client_installations", {

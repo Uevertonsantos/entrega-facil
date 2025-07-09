@@ -30,6 +30,7 @@ import MerchantLogin from "@/pages/merchant-login";
 import MerchantPage from "@/pages/merchant-page";
 import MerchantRegister from "@/pages/merchant-register";
 import MerchantPayments from "@/pages/merchant-payments";
+import DelivererPayments from "@/pages/deliverer-payments";
 import DelivererLogin from "@/pages/deliverer-login";
 import DelivererRegister from "@/pages/deliverer-register";
 import ClearAuth from "@/pages/clear-auth";
@@ -87,6 +88,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/financial" component={Financial} />
           <Route path="/merchant-payments" component={MerchantPayments} />
+          <Route path="/deliverer-payments" component={DelivererPayments} />
           <Route path="/settings" component={AdminSettings} />
           <Route path="/email-settings" component={EmailSettings} />
           <Route path="/plans" component={PlanManagement} />
