@@ -119,19 +119,31 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
     ]);
     
     // Clean and enhance the address
-    let cleanAddress = address.trim();
+    let cleanAddress = address.trim().toLowerCase();
+    
+    // Normalize common Brazilian address terms
+    cleanAddress = cleanAddress
+      .replace(/\s+/g, ' ')
+      .replace(/,+/g, ',')
+      .replace(/\s*,\s*/g, ', ');
     
     // If address doesn't contain city/state, add defaults
-    if (!cleanAddress.toLowerCase().includes('salvador') && 
-        !cleanAddress.toLowerCase().includes('bahia') && 
-        !cleanAddress.toLowerCase().includes('ba')) {
-      const city = defaultCity?.settingValue || 'Salvador';
-      const state = defaultState?.settingValue || 'BA';
+    const city = defaultCity?.settingValue || 'Salvador';
+    const state = defaultState?.settingValue || 'BA';
+    
+    if (!cleanAddress.includes('salvador') && 
+        !cleanAddress.includes('bahia') && 
+        !cleanAddress.includes(' ba') &&
+        !cleanAddress.includes(',ba')) {
       cleanAddress = `${cleanAddress}, ${city}, ${state}, Brasil`;
+    } else if (!cleanAddress.includes('brasil') && !cleanAddress.includes('brazil')) {
+      cleanAddress = `${cleanAddress}, Brasil`;
     }
     
+    console.log('Geocoding address:', cleanAddress);
+    
     const encodedAddress = encodeURIComponent(cleanAddress);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=br`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=3&countrycodes=br&addressdetails=1`;
     
     const response = await fetch(url, {
       headers: {
@@ -144,11 +156,20 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
     }
     
     const data = await response.json();
+    console.log('Geocoding response:', data);
     
     if (data && data.length > 0) {
+      // Prefer results with higher importance or more specific location
+      const bestResult = data.find(result => 
+        result.importance > 0.4 || 
+        result.address?.city || 
+        result.address?.town ||
+        result.address?.municipality
+      ) || data[0];
+      
       return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon)
+        lat: parseFloat(bestResult.lat),
+        lon: parseFloat(bestResult.lon)
       };
     }
     

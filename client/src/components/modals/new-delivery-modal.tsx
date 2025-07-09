@@ -29,8 +29,6 @@ const deliveryFormSchema = z.object({
   deliveryAddress: z.string().min(5, "Endereço de entrega é obrigatório"),
   deliveryCep: z.string().optional(),
   referencePoint: z.string().optional(),
-  deliveryFee: z.string().min(1, "Taxa de entrega é obrigatória"),
-  delivererPayment: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -73,14 +71,16 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       deliveryAddress: "",
       deliveryCep: "",
       referencePoint: "",
-      deliveryFee: "",
-      delivererPayment: "",
       notes: "",
     },
   });
 
   const createDeliveryMutation = useMutation({
     mutationFn: async (data: DeliveryFormData) => {
+      if (!feeCalculation) {
+        throw new Error("É necessário calcular a taxa de entrega antes de criar a entrega");
+      }
+      
       await apiRequest("/api/deliveries", "POST", {
         merchantId: parseInt(data.merchantId),
         delivererId: data.delivererId && data.delivererId !== "none" ? parseInt(data.delivererId) : null,
@@ -94,8 +94,8 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
         deliveryCep: data.deliveryCep || null,
         referencePoint: data.referencePoint || null,
         status: "pending",
-        deliveryFee: parseFloat(data.deliveryFee),
-        delivererPayment: data.delivererPayment ? parseFloat(data.delivererPayment) : null,
+        deliveryFee: feeCalculation.finalFee,
+        delivererPayment: (feeCalculation.finalFee * 0.7).toFixed(2), // 70% da taxa vai para o entregador
         notes: data.notes || null,
       });
     },
@@ -151,8 +151,6 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
       
       if (response.ok) {
         setFeeCalculation(result);
-        // Update the delivery fee in the form
-        form.setValue('deliveryFee', result.finalFee.toString());
       } else {
         toast({
           title: "Erro no cálculo",
@@ -383,60 +381,22 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="deliveryFee"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Taxa de Entrega</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleCalculateFee}
-                        disabled={isCalculating}
-                        title="Calcular taxa automaticamente"
-                      >
-                        {isCalculating ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Calculator className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
+            {/* Botão para calcular taxa */}
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCalculateFee}
+                disabled={isCalculating}
+                className="w-full max-w-md"
+              >
+                {isCalculating ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Calculator className="h-4 w-4 mr-2" />
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="delivererPayment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pagamento ao Entregador</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                Calcular Taxa de Entrega
+              </Button>
             </div>
 
             {/* Resultado do Cálculo da Taxa */}
@@ -511,7 +471,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
               </Button>
               <Button 
                 type="submit" 
-                disabled={createDeliveryMutation.isPending}
+                disabled={createDeliveryMutation.isPending || !feeCalculation}
                 className="bg-primary hover:bg-primary/90"
               >
                 {createDeliveryMutation.isPending ? "Criando..." : "Criar Entrega"}
