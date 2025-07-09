@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const delivererLoginSchema = z.object({
-  email: z.string().email("E-mail inválido"),
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
@@ -24,7 +24,7 @@ export default function DelivererLogin() {
   const form = useForm<DelivererLoginData>({
     resolver: zodResolver(delivererLoginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -84,14 +84,14 @@ export default function DelivererLogin() {
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Nome de Usuário</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="Digite seu e-mail"
+                        type="text"
+                        placeholder="Digite seu nome de usuário"
                         {...field}
                         disabled={isLoading}
                       />
