@@ -1,0 +1,44 @@
+{
+  "name": "delivery-express-installer",
+  "version": "1.0.0",
+  "description": "Instalador do sistema Delivery Express para clientes",
+  "main": "installer.js",
+  "scripts": {
+    "start": "node installer.js",
+    "build": "pkg installer.js --out-path=dist",
+    "build-win": "pkg installer.js --targets=node18-win-x64 --out-path=dist",
+    "build-linux": "pkg installer.js --targets=node18-linux-x64 --out-path=dist",
+    "build-mac": "pkg installer.js --targets=node18-macos-x64 --out-path=dist"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "inquirer": "^9.2.7",
+    "fs-extra": "^11.1.1",
+    "axios": "^1.4.0",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "archiver": "^5.3.1",
+    "extract-zip": "^2.0.1",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "bin": {
+    "delivery-express-installer": "./installer.js"
+  },
+  "pkg": {
+    "scripts": [
+      "installer.js",
+      "app/**/*.js"
+    ],
+    "assets": [
+      "app/**/*",
+      "templates/**/*"
+    ]
+  },
+  "keywords": ["delivery", "express", "installer", "sistema", "entregas"],
+  "author": "Delivery Express",
+  "license": "MIT"
+}

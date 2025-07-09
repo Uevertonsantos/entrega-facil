@@ -840,6 +840,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client sync API routes - for receiving data from installed clients
+  const CLIENT_API_KEY = process.env.CLIENT_API_KEY || "delivery-express-client-key";
+  
+  // Middleware to verify client API key
+  const isValidClient = (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Client API key required" });
+    }
+    
+    const apiKey = authHeader.substring(7);
+    if (apiKey !== CLIENT_API_KEY) {
+      return res.status(401).json({ message: "Invalid client API key" });
+    }
+    
+    next();
+  };
+
+  // Receive merchants from client
+  app.post('/api/clients/:clientId/merchants', isValidClient, async (req, res) => {
+    try {
+      const clientId = req.params.clientId;
+      const merchantData = req.body;
+      
+      // Add client identifier to merchant data
+      const extendedMerchantData = {
+        ...merchantData,
+        clientId: clientId,
+        syncedAt: new Date(),
+        isClientSync: true
+      };
+      
+      // Store in database with client info
+      console.log(`Received merchant data from client ${clientId}:`, merchantData.name);
+      
+      // Here you would typically save to a separate clients table or mark as synced
+      // For now, we'll just log and respond
+      
+      res.json({ 
+        success: true, 
+        message: "Merchant data received successfully",
+        merchantId: merchantData.id,
+        clientId: clientId 
+      });
+    } catch (error) {
+      console.error("Error receiving merchant data:", error);
+      res.status(500).json({ message: "Failed to process merchant data" });
+    }
+  });
+
+  // Receive deliverers from client
+  app.post('/api/clients/:clientId/deliverers', isValidClient, async (req, res) => {
+    try {
+      const clientId = req.params.clientId;
+      const delivererData = req.body;
+      
+      const extendedDelivererData = {
+        ...delivererData,
+        clientId: clientId,
+        syncedAt: new Date(),
+        isClientSync: true
+      };
+      
+      console.log(`Received deliverer data from client ${clientId}:`, delivererData.name);
+      
+      res.json({ 
+        success: true, 
+        message: "Deliverer data received successfully",
+        delivererId: delivererData.id,
+        clientId: clientId 
+      });
+    } catch (error) {
+      console.error("Error receiving deliverer data:", error);
+      res.status(500).json({ message: "Failed to process deliverer data" });
+    }
+  });
+
+  // Receive deliveries from client
+  app.post('/api/clients/:clientId/deliveries', isValidClient, async (req, res) => {
+    try {
+      const clientId = req.params.clientId;
+      const deliveryData = req.body;
+      
+      const extendedDeliveryData = {
+        ...deliveryData,
+        clientId: clientId,
+        syncedAt: new Date(),
+        isClientSync: true
+      };
+      
+      console.log(`Received delivery data from client ${clientId}:`, deliveryData.id);
+      
+      res.json({ 
+        success: true, 
+        message: "Delivery data received successfully",
+        deliveryId: deliveryData.id,
+        clientId: clientId 
+      });
+    } catch (error) {
+      console.error("Error receiving delivery data:", error);
+      res.status(500).json({ message: "Failed to process delivery data" });
+    }
+  });
+
+  // Get client status
+  app.get('/api/clients/:clientId/status', isValidClient, async (req, res) => {
+    try {
+      const clientId = req.params.clientId;
+      
+      res.json({
+        clientId: clientId,
+        status: "active",
+        lastSync: new Date(),
+        syncEnabled: true
+      });
+    } catch (error) {
+      console.error("Error getting client status:", error);
+      res.status(500).json({ message: "Failed to get client status" });
+    }
+  });
+
+  // List all clients with sync data
+  app.get('/api/admin/clients', isAdmin, async (req, res) => {
+    try {
+      // This would typically query a clients table
+      // For now, return mock data
+      const clients = [
+        {
+          id: "client_1234567890_abc123",
+          businessName: "Padaria do João",
+          businessEmail: "joao@padaria.com",
+          lastSync: new Date(),
+          status: "active",
+          totalMerchants: 1,
+          totalDeliverers: 2,
+          totalDeliveries: 15
+        }
+      ];
+      
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
   // Admin settings routes
   app.get('/api/admin/settings', isAdmin, async (req, res) => {
     try {

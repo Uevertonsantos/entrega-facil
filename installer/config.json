@@ -1,0 +1,62 @@
+{
+  "name": "Delivery Express",
+  "version": "1.0.0",
+  "description": "Sistema de gerenciamento de entregas locais",
+  "author": "Delivery Express",
+  "website": "https://deliveryexpress.com",
+  "support": {
+    "email": "suporte@deliveryexpress.com",
+    "phone": "(11) 9999-9999",
+    "website": "https://suporte.deliveryexpress.com"
+  },
+  "installation": {
+    "defaultPort": 3000,
+    "defaultInstallDir": "DeliveryExpress",
+    "requiresAdminKey": true,
+    "autoStartDefault": true,
+    "syncDefault": true
+  },
+  "sync": {
+    "intervalMinutes": 15,
+    "maxRetries": 3,
+    "timeoutSeconds": 30
+  },
+  "database": {
+    "type": "sqlite",
+    "filename": "database.sqlite",
+    "backupEnabled": true,
+    "backupIntervalHours": 24
+  },
+  "adminApi": {
+    "baseUrl": "https://admin.deliveryexpress.com/api",
+    "endpoints": {
+      "merchants": "/clients/{clientId}/merchants",
+      "deliverers": "/clients/{clientId}/deliverers",
+      "deliveries": "/clients/{clientId}/deliveries",
+      "status": "/clients/{clientId}/status"
+    }
+  },
+  "features": {
+    "whatsappIntegration": true,
+    "emailNotifications": true,
+    "backupSystem": true,
+    "autoUpdate": true,
+    "reporting": true
+  },
+  "ui": {
+    "theme": "modern",
+    "colors": {
+      "primary": "#667eea",
+      "secondary": "#764ba2",
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444"
+    }
+  },
+  "system": {
+    "minNodeVersion": "16.0.0",
+    "minRamMB": 512,
+    "minDiskMB": 500,
+    "supportedOS": ["win32", "linux", "darwin"]
+  }
+}

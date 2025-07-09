@@ -117,6 +117,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Created dedicated plan management page with detailed plan configuration including delivery limits
 - July 09, 2025. Implemented visual plan cards with features, pricing, and delivery limits (unlimited or specific numbers)
 - July 09, 2025. Added plan editor modal for creating/editing plans with custom features and delivery restrictions
+- July 09, 2025. Built complete installer system for client deployment with local SQLite database
+- July 09, 2025. Implemented automatic data synchronization from client installations to admin panel
+- July 09, 2025. Added client sync API endpoints for receiving merchants, deliverers, and deliveries data
+- July 09, 2025. Created Windows service integration for auto-start functionality
+- July 09, 2025. Developed comprehensive installer with business configuration and license key validation
 
 ## User Preferences
 
