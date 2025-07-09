@@ -97,6 +97,17 @@ export const deliveries = pgTable("deliveries", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Admin settings table
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: varchar("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  settingType: varchar("setting_type").notNull(), // "string", "number", "boolean", "json"
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const merchantsRelations = relations(merchants, ({ many }) => ({
   deliveries: many(deliveries),
@@ -151,6 +162,12 @@ export const insertDeliverySchema = createInsertSchema(deliveries).omit({
   completedAt: true,
 });
 
+export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -169,3 +186,6 @@ export type DeliveryWithRelations = Delivery & {
   deliverer: Deliverer | null;
   estimatedValue?: number; // Alias for price for frontend compatibility
 };
+
+export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
+export type AdminSetting = typeof adminSettings.$inferSelect;

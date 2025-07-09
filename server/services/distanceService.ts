@@ -1,5 +1,5 @@
-// Distance calculation service using Haversine formula
-// This provides a good approximation for delivery fee calculation
+// Distance calculation service using real geocoding and enhanced address parsing
+// This provides accurate delivery fee calculation based on real street addresses
 
 export interface DistanceResult {
   distance: number; // in kilometers
@@ -15,13 +15,37 @@ export interface PricingConfig {
   timeBasedMultiplier?: number;
 }
 
-// Default pricing configuration
+// Default pricing configuration (fallback)
 const DEFAULT_PRICING: PricingConfig = {
   baseFee: 5.00,        // Taxa base: R$ 5.00
   perKmRate: 2.50,      // Por km: R$ 2.50
   minimumFee: 7.00,     // Mínimo: R$ 7.00
   maximumFee: 25.00,    // Máximo: R$ 25.00
 };
+
+// Get pricing configuration from database settings
+export async function getPricingConfig(): Promise<PricingConfig> {
+  try {
+    const { storage } = await import('../storage');
+    
+    const [baseFee, perKmRate, minimumFee, maximumFee] = await Promise.all([
+      storage.getAdminSetting('delivery_base_fee'),
+      storage.getAdminSetting('delivery_per_km_rate'),
+      storage.getAdminSetting('delivery_minimum_fee'),
+      storage.getAdminSetting('delivery_maximum_fee')
+    ]);
+    
+    return {
+      baseFee: baseFee ? parseFloat(baseFee.settingValue) : DEFAULT_PRICING.baseFee,
+      perKmRate: perKmRate ? parseFloat(perKmRate.settingValue) : DEFAULT_PRICING.perKmRate,
+      minimumFee: minimumFee ? parseFloat(minimumFee.settingValue) : DEFAULT_PRICING.minimumFee,
+      maximumFee: maximumFee ? parseFloat(maximumFee.settingValue) : DEFAULT_PRICING.maximumFee,
+    };
+  } catch (error) {
+    console.error('Error getting pricing config:', error);
+    return DEFAULT_PRICING;
+  }
+}
 
 /**
  * Calculate the distance between two points using Haversine formula
@@ -81,14 +105,33 @@ function calculateDeliveryFee(distance: number, config: PricingConfig = DEFAULT_
 }
 
 /**
- * Simple geocoding using OpenStreetMap Nominatim (free)
+ * Enhanced geocoding using OpenStreetMap Nominatim with better Brazilian address handling
  * @param address Address to geocode
  * @returns Coordinates {lat, lon} or null if not found
  */
 export async function geocodeAddress(address: string): Promise<{lat: number, lon: number} | null> {
   try {
-    const encodedAddress = encodeURIComponent(address);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`;
+    // Get default city and state from settings
+    const { storage } = await import('../storage');
+    const [defaultCity, defaultState] = await Promise.all([
+      storage.getAdminSetting('default_city'),
+      storage.getAdminSetting('default_state')
+    ]);
+    
+    // Clean and enhance the address
+    let cleanAddress = address.trim();
+    
+    // If address doesn't contain city/state, add defaults
+    if (!cleanAddress.toLowerCase().includes('salvador') && 
+        !cleanAddress.toLowerCase().includes('bahia') && 
+        !cleanAddress.toLowerCase().includes('ba')) {
+      const city = defaultCity?.settingValue || 'Salvador';
+      const state = defaultState?.settingValue || 'BA';
+      cleanAddress = `${cleanAddress}, ${city}, ${state}, Brasil`;
+    }
+    
+    const encodedAddress = encodeURIComponent(cleanAddress);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=br`;
     
     const response = await fetch(url, {
       headers: {
@@ -117,18 +160,19 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
 }
 
 /**
- * Calculate distance and delivery fee between two addresses
+ * Calculate distance and delivery fee between two addresses using dynamic pricing
  * @param pickupAddress Pickup address
  * @param deliveryAddress Delivery address
- * @param config Optional pricing configuration
  * @returns Distance result with fee calculation
  */
 export async function calculateDeliveryDistance(
   pickupAddress: string,
-  deliveryAddress: string,
-  config: PricingConfig = DEFAULT_PRICING
+  deliveryAddress: string
 ): Promise<DistanceResult | null> {
   try {
+    // Get dynamic pricing configuration from database
+    const config = await getPricingConfig();
+    
     // Geocode both addresses
     const [pickupCoords, deliveryCoords] = await Promise.all([
       geocodeAddress(pickupAddress),
@@ -136,7 +180,7 @@ export async function calculateDeliveryDistance(
     ]);
     
     if (!pickupCoords || !deliveryCoords) {
-      console.error('Failed to geocode addresses');
+      console.error('Failed to geocode addresses:', { pickupAddress, deliveryAddress });
       return null;
     }
     
@@ -156,6 +200,18 @@ export async function calculateDeliveryDistance(
     // Calculate estimated time and fee
     const estimatedTime = estimateTravelTime(actualDistance);
     const deliveryFee = calculateDeliveryFee(actualDistance, config);
+    
+    console.log('Distance calculation:', {
+      pickupAddress,
+      deliveryAddress,
+      pickupCoords,
+      deliveryCoords,
+      straightDistance,
+      actualDistance,
+      estimatedTime,
+      deliveryFee,
+      config
+    });
     
     return {
       distance: Math.round(actualDistance * 100) / 100, // Round to 2 decimal places

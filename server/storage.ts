@@ -3,6 +3,7 @@ import {
   merchants,
   deliverers,
   deliveries,
+  adminSettings,
   type User,
   type UpsertUser,
   type InsertMerchant,
@@ -12,6 +13,8 @@ import {
   type InsertDelivery,
   type Delivery,
   type DeliveryWithRelations,
+  type InsertAdminSetting,
+  type AdminSetting,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
@@ -70,6 +73,12 @@ export interface IStorage {
     averageRating: number;
     weeklyEarnings: number[];
   }>;
+  
+  // Admin settings operations
+  getAdminSettings(): Promise<AdminSetting[]>;
+  getAdminSetting(key: string): Promise<AdminSetting | undefined>;
+  updateAdminSetting(key: string, value: string): Promise<AdminSetting>;
+  createAdminSetting(setting: InsertAdminSetting): Promise<AdminSetting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -447,6 +456,36 @@ export class DatabaseStorage implements IStorage {
       averageRating: 4.8, // Mock rating for now
       weeklyEarnings
     };
+  }
+  
+  // Admin settings operations
+  async getAdminSettings(): Promise<AdminSetting[]> {
+    return await db.select().from(adminSettings).orderBy(adminSettings.settingKey);
+  }
+  
+  async getAdminSetting(key: string): Promise<AdminSetting | undefined> {
+    const [setting] = await db.select().from(adminSettings).where(eq(adminSettings.settingKey, key));
+    return setting;
+  }
+  
+  async updateAdminSetting(key: string, value: string): Promise<AdminSetting> {
+    const [setting] = await db
+      .update(adminSettings)
+      .set({ 
+        settingValue: value,
+        updatedAt: new Date()
+      })
+      .where(eq(adminSettings.settingKey, key))
+      .returning();
+    return setting;
+  }
+  
+  async createAdminSetting(setting: InsertAdminSetting): Promise<AdminSetting> {
+    const [newSetting] = await db
+      .insert(adminSettings)
+      .values(setting)
+      .returning();
+    return newSetting;
   }
 }
 

@@ -835,6 +835,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin settings routes
+  app.get('/api/admin/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      res.status(500).json({ message: "Failed to fetch admin settings" });
+    }
+  });
+
+  app.get('/api/admin/settings/:key', isAdmin, async (req, res) => {
+    try {
+      const key = req.params.key;
+      const setting = await storage.getAdminSetting(key);
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching admin setting:", error);
+      res.status(500).json({ message: "Failed to fetch admin setting" });
+    }
+  });
+
+  app.put('/api/admin/settings/:key', isAdmin, async (req, res) => {
+    try {
+      const key = req.params.key;
+      const { value } = req.body;
+      
+      if (!value) {
+        return res.status(400).json({ message: "Value is required" });
+      }
+      
+      const setting = await storage.updateAdminSetting(key, value);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating admin setting:", error);
+      res.status(500).json({ message: "Failed to update admin setting" });
+    }
+  });
+
+  app.post('/api/admin/settings', isAdmin, async (req, res) => {
+    try {
+      const { settingKey, settingValue, settingType, description } = req.body;
+      
+      if (!settingKey || !settingValue || !settingType) {
+        return res.status(400).json({ message: "Setting key, value, and type are required" });
+      }
+      
+      const setting = await storage.createAdminSetting({
+        settingKey,
+        settingValue,
+        settingType,
+        description
+      });
+      res.status(201).json(setting);
+    } catch (error) {
+      console.error("Error creating admin setting:", error);
+      res.status(500).json({ message: "Failed to create admin setting" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
