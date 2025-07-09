@@ -17,17 +17,34 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: Verificar se já existe package.json
-if exist "package.json" (
-    echo ✅ package.json encontrado
-) else (
-    echo Criando package.json...
-    copy package-installer.json package.json
+:: Sempre criar package.json novo para evitar problemas
+echo Criando package.json...
+if exist "package.json" del package.json
+copy package-installer.json package.json
+if %errorlevel% neq 0 (
+    echo ❌ Erro ao criar package.json!
+    pause
+    exit /b 1
 )
+echo ✅ package.json criado com sucesso
 
 :: Instalar dependências
 echo [1/4] Instalando dependências...
-call npm install
+echo Limpando cache do npm...
+call npm cache clean --force >nul 2>&1
+echo Instalando dependências...
+call npm install --verbose
+if %errorlevel% neq 0 (
+    echo ❌ Erro ao instalar dependências!
+    echo Tentando com --legacy-peer-deps...
+    call npm install --legacy-peer-deps
+    if %errorlevel% neq 0 (
+        echo ❌ Falha na instalação das dependências!
+        pause
+        exit /b 1
+    )
+)
+echo ✅ Dependências instaladas
 
 :: Verificar se Electron está instalado
 echo [2/4] Verificando Electron...
@@ -49,7 +66,14 @@ if not exist "assets\icon.ico" (
 
 :: Construir o executável
 echo [4/4] Construindo executável...
-call npx electron-builder --win
+echo Limpando pasta dist...
+if exist "dist" rmdir /s /q dist
+echo Iniciando build...
+call npx electron-builder --win --publish=never
+if %errorlevel% neq 0 (
+    echo ❌ Erro na primeira tentativa, tentando build-dir...
+    call npx electron-builder --win --dir
+)
 
 if %errorlevel% equ 0 (
     echo.
