@@ -130,6 +130,7 @@ export interface IStorage {
   getDelivererPaymentsByStatus(status: string): Promise<DelivererPayment[]>;
   createDelivererPayment(payment: InsertDelivererPayment): Promise<DelivererPayment>;
   updateDelivererPaymentStatus(id: number, status: string): Promise<DelivererPayment>;
+  deleteDelivererPayment(id: number): Promise<void>;
   getDelivererPaymentsSummary(): Promise<{
     totalPending: number;
     totalPaid: number;
@@ -142,6 +143,7 @@ export interface IStorage {
   getMerchantPaymentsByStatus(status: string): Promise<MerchantPayment[]>;
   createMerchantPayment(payment: InsertMerchantPayment): Promise<MerchantPayment>;
   updateMerchantPaymentStatus(id: number, status: string): Promise<MerchantPayment>;
+  deleteMerchantPayment(id: number): Promise<void>;
   getMerchantPaymentsSummary(): Promise<{
     totalPending: number;
     totalPaid: number;
@@ -767,6 +769,10 @@ export class DatabaseStorage implements IStorage {
     return updatedPayment;
   }
 
+  async deleteDelivererPayment(id: number): Promise<void> {
+    await db.delete(delivererPayments).where(eq(delivererPayments.id, id));
+  }
+
   async getDelivererPaymentsSummary(): Promise<{
     totalPending: number;
     totalPaid: number;
@@ -850,6 +856,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(merchantPayments.id, id))
       .returning();
     return updatedPayment;
+  }
+
+  async deleteMerchantPayment(id: number): Promise<void> {
+    await db.delete(merchantPayments).where(eq(merchantPayments.id, id));
   }
 
   async getMerchantPaymentsSummary(): Promise<{

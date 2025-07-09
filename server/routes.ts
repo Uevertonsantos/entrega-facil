@@ -1737,6 +1737,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete deliverer payment
+  app.delete('/api/admin/deliverer-payments/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment ID" });
+      }
+      
+      await storage.deleteDelivererPayment(id);
+      res.json({ message: "Payment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting deliverer payment:", error);
+      res.status(500).json({ message: "Failed to delete payment" });
+    }
+  });
+
   // Merchant payments endpoints
   app.get('/api/admin/merchant-payments', isAuthenticated, async (req: any, res) => {
     try {
@@ -1807,6 +1831,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating merchant payment status:", error);
       res.status(500).json({ message: "Failed to update merchant payment status" });
+    }
+  });
+
+  // Delete merchant payment
+  app.delete('/api/admin/merchant-payments/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment ID" });
+      }
+      
+      await storage.deleteMerchantPayment(id);
+      res.json({ message: "Payment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting merchant payment:", error);
+      res.status(500).json({ message: "Failed to delete payment" });
     }
   });
 

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, TrendingUp, DollarSign, Users, CheckCircle } from "lucide-react";
+import { CalendarIcon, TrendingUp, DollarSign, Users, CheckCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -61,6 +61,31 @@ export default function FinancialDashboard() {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o status do pagamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: number, type: 'merchant' | 'deliverer') => {
+    if (!confirm("Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+
+    try {
+      const endpoint = type === 'merchant' 
+        ? `/api/admin/merchant-payments/${paymentId}`
+        : `/api/admin/deliverer-payments/${paymentId}`;
+      
+      await apiRequest(endpoint, 'DELETE');
+      
+      toast({
+        title: "Pagamento excluído!",
+        description: "O pagamento foi removido do sistema.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o pagamento.",
         variant: "destructive",
       });
     }
@@ -251,17 +276,26 @@ export default function FinancialDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant={payment.status === 'paid' ? 'secondary' : 'default'}
-                          size="sm"
-                          onClick={() => handleUpdatePaymentStatus(
-                            payment.id,
-                            payment.status === 'paid' ? 'pending' : 'paid',
-                            'merchant'
-                          )}
-                        >
-                          {payment.status === 'paid' ? 'Marcar Pendente' : 'Marcar Pago'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant={payment.status === 'paid' ? 'secondary' : 'default'}
+                            size="sm"
+                            onClick={() => handleUpdatePaymentStatus(
+                              payment.id,
+                              payment.status === 'paid' ? 'pending' : 'paid',
+                              'merchant'
+                            )}
+                          >
+                            {payment.status === 'paid' ? 'Marcar Pendente' : 'Marcar Pago'}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeletePayment(payment.id, 'merchant')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -330,17 +364,26 @@ export default function FinancialDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant={payment.status === 'paid' ? 'secondary' : 'default'}
-                          size="sm"
-                          onClick={() => handleUpdatePaymentStatus(
-                            payment.id,
-                            payment.status === 'paid' ? 'pending' : 'paid',
-                            'deliverer'
-                          )}
-                        >
-                          {payment.status === 'paid' ? 'Marcar Pendente' : 'Marcar Pago'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant={payment.status === 'paid' ? 'secondary' : 'default'}
+                            size="sm"
+                            onClick={() => handleUpdatePaymentStatus(
+                              payment.id,
+                              payment.status === 'paid' ? 'pending' : 'paid',
+                              'deliverer'
+                            )}
+                          >
+                            {payment.status === 'paid' ? 'Marcar Pendente' : 'Marcar Pago'}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeletePayment(payment.id, 'deliverer')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
