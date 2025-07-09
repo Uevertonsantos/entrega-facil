@@ -103,6 +103,17 @@ class NeighborhoodService {
    */
   async createCity(cityName: string, stateName: string) {
     try {
+      // Verifica se já existe a cidade
+      const existingCity = await db
+        .select()
+        .from(neighborhoods)
+        .where(eq(neighborhoods.city, cityName))
+        .limit(1);
+      
+      if (existingCity.length > 0) {
+        throw new Error(`Cidade "${cityName}" já existe no sistema`);
+      }
+      
       // Cria um bairro padrão "Centro" para a nova cidade
       const newNeighborhood = await db
         .insert(neighborhoods)

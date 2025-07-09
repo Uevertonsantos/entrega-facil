@@ -21,12 +21,53 @@ export default function NeighborhoodsConfig() {
     city: '',
     state: '',
     averageDistance: '',
-    baseFare: ''
+    baseFare: '',
+    cep: ''
   });
+
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [cityFormData, setCityFormData] = useState({
     city: '',
     state: ''
   });
+
+  const fetchCepData = async (cep: string) => {
+    setIsLoadingCep(true);
+    try {
+      const cleanCep = cep.replace(/\D/g, '');
+      if (cleanCep.length !== 8) {
+        throw new Error('CEP deve ter 8 dígitos');
+      }
+
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        throw new Error('CEP não encontrado');
+      }
+
+      // Preenche automaticamente os campos
+      setNeighborhoodFormData(prev => ({
+        ...prev,
+        city: data.localidade,
+        state: data.uf,
+        name: data.bairro || '',
+      }));
+
+      toast({
+        title: "CEP encontrado!",
+        description: `Dados carregados para ${data.localidade}/${data.uf}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao buscar CEP",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCep(false);
+    }
+  };
 
   // Load cities
   useEffect(() => {
@@ -89,7 +130,7 @@ export default function NeighborhoodsConfig() {
       });
 
       setIsAddNeighborhoodDialogOpen(false);
-      setNeighborhoodFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '' });
+      setNeighborhoodFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '', cep: '' });
       loadCities();
       if (selectedCity) {
         loadNeighborhoods(selectedCity);
@@ -215,6 +256,32 @@ export default function NeighborhoodsConfig() {
             <form onSubmit={handleNeighborhoodSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="cep">CEP (Buscar Online)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="cep"
+                      value={neighborhoodFormData.cep}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length > 5) {
+                          value = value.slice(0, 5) + '-' + value.slice(5, 8);
+                        }
+                        setNeighborhoodFormData({...neighborhoodFormData, cep: value});
+                      }}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => fetchCepData(neighborhoodFormData.cep)}
+                      disabled={isLoadingCep || !neighborhoodFormData.cep}
+                    >
+                      {isLoadingCep ? 'Buscando...' : 'Buscar'}
+                    </Button>
+                  </div>
+                </div>
+                <div>
                   <Label htmlFor="name">Nome do Bairro</Label>
                   <Input
                     id="name"
@@ -224,6 +291,8 @@ export default function NeighborhoodsConfig() {
                     required
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="city">Cidade</Label>
                   <Input
@@ -234,16 +303,16 @@ export default function NeighborhoodsConfig() {
                     required
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="state">Estado</Label>
-                <Input
-                  id="state"
-                  value={neighborhoodFormData.state}
-                  onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, state: e.target.value})}
-                  placeholder="Ex: BA"
-                  required
-                />
+                <div>
+                  <Label htmlFor="state">Estado</Label>
+                  <Input
+                    id="state"
+                    value={neighborhoodFormData.state}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, state: e.target.value})}
+                    placeholder="Ex: BA"
+                    required
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
