@@ -439,7 +439,7 @@ export default function DelivererApp() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">R$ {(stats.todayEarnings || 0).toFixed(2)}</div>
+                  <div className="text-2xl font-bold">R$ {(Number(stats.todayEarnings) || 0).toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">
                     Meta: R$ 150,00
                   </p>
@@ -452,7 +452,7 @@ export default function DelivererApp() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{(stats.averageRating || 0).toFixed(1)}</div>
+                  <div className="text-2xl font-bold">{(Number(stats.averageRating) || 0).toFixed(1)}</div>
                   <p className="text-xs text-muted-foreground">
                     ⭐ de 5 estrelas
                   </p>
@@ -474,7 +474,7 @@ export default function DelivererApp() {
                     return (
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm font-medium">{dayName}</span>
-                        <span className="text-sm">R$ {earning.toFixed(2)}</span>
+                        <span className="text-sm">R$ {Number(earning).toFixed(2)}</span>
                       </div>
                     );
                   })}
@@ -492,18 +492,18 @@ export default function DelivererApp() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total de Ganhos</span>
-                    <span className="text-lg font-bold">R$ {(stats.totalEarnings || 0).toFixed(2)}</span>
+                    <span className="text-lg font-bold">R$ {(Number(stats.totalEarnings) || 0).toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Ganhos Hoje</span>
-                    <span className="text-lg font-bold text-green-600">R$ {(stats.todayEarnings || 0).toFixed(2)}</span>
+                    <span className="text-lg font-bold text-green-600">R$ {(Number(stats.todayEarnings) || 0).toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Média por Entrega</span>
                     <span className="text-lg font-bold">
-                      R$ {stats.totalDeliveries > 0 ? (stats.totalEarnings / stats.totalDeliveries).toFixed(2) : '0.00'}
+                      R$ {stats.totalDeliveries > 0 ? (Number(stats.totalEarnings) / Number(stats.totalDeliveries)).toFixed(2) : '0.00'}
                     </span>
                   </div>
                 </CardContent>
@@ -517,12 +517,12 @@ export default function DelivererApp() {
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">Meta Diária</span>
-                      <span className="text-sm">R$ {(stats.todayEarnings || 0).toFixed(2)} / R$ 150,00</span>
+                      <span className="text-sm">R$ {(Number(stats.todayEarnings) || 0).toFixed(2)} / R$ 150,00</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${Math.min((stats.todayEarnings || 0) / 150 * 100, 100)}%` }}
+                        style={{ width: `${Math.min((Number(stats.todayEarnings) || 0) / 150 * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -530,12 +530,12 @@ export default function DelivererApp() {
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">Meta Semanal</span>
-                      <span className="text-sm">R$ {((stats.weeklyEarnings || []).reduce((a: number, b: number) => a + b, 0)).toFixed(2)} / R$ 1.000,00</span>
+                      <span className="text-sm">R$ {((stats.weeklyEarnings || []).reduce((a: number, b: number) => Number(a) + Number(b), 0)).toFixed(2)} / R$ 1.000,00</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-green-600 h-2 rounded-full" 
-                        style={{ width: `${Math.min((stats.weeklyEarnings || []).reduce((a: number, b: number) => a + b, 0) / 1000 * 100, 100)}%` }}
+                        style={{ width: `${Math.min((stats.weeklyEarnings || []).reduce((a: number, b: number) => Number(a) + Number(b), 0) / 1000 * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
