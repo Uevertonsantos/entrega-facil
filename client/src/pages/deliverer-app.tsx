@@ -12,6 +12,7 @@ import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, 
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 import DeliveryManagementModal from "@/components/modals/delivery-management-modal";
 import PlatformFeeReport from "@/components/deliverer/commission-report";
+import DelivererFinancialReport from "@/components/deliverer/financial-report";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
@@ -269,7 +270,7 @@ export default function DelivererApp() {
             <TabsTrigger value="deliveries">Entregas</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
-            <TabsTrigger value="commission">Comissões</TabsTrigger>
+            <TabsTrigger value="commission">Taxa da Plataforma</TabsTrigger>
           </TabsList>
           
           <TabsContent value="deliveries" className="space-y-4">
@@ -510,70 +511,7 @@ export default function DelivererApp() {
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-4">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Resumo Financeiro</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total de Ganhos</span>
-                    <span className="text-lg font-bold">R$ {(Number(stats.totalEarnings) || 0).toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Ganhos Hoje</span>
-                    <span className="text-lg font-bold text-green-600">R$ {(Number(stats.todayEarnings) || 0).toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Média por Entrega</span>
-                    <span className="text-lg font-bold">
-                      R$ {stats.totalDeliveries > 0 ? (Number(stats.totalEarnings) / Number(stats.totalDeliveries)).toFixed(2) : '0.00'}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Metas e Objetivos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Meta Diária</span>
-                      <span className="text-sm">R$ {(Number(stats.todayEarnings) || 0).toFixed(2)} / R$ 150,00</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${Math.min((Number(stats.todayEarnings) || 0) / 150 * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Meta Semanal</span>
-                      <span className="text-sm">R$ {((stats.weeklyEarnings || []).reduce((a: number, b: number) => Number(a) + Number(b), 0)).toFixed(2)} / R$ 1.000,00</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full" 
-                        style={{ width: `${Math.min((stats.weeklyEarnings || []).reduce((a: number, b: number) => Number(a) + Number(b), 0) / 1000 * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Dica:</strong> Mantenha-se online nos horários de pico (11h-14h e 18h-21h) para maximizar seus ganhos!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DelivererFinancialReport />
           </TabsContent>
 
           <TabsContent value="commission" className="space-y-4">

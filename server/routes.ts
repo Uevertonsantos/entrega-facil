@@ -1004,6 +1004,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get deliverer financial report
+  app.get('/api/deliverers/financial-report', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+      
+      const delivererId = Number(userInfo.id);
+      const { startDate, endDate, status, merchant } = req.query;
+      
+      let deliveries = await storage.getDeliveriesByDeliverer(delivererId);
+      
+      // Apply filters
+      if (startDate) {
+        deliveries = deliveries.filter(d => new Date(d.createdAt) >= new Date(startDate as string));
+      }
+      
+      if (endDate) {
+        deliveries = deliveries.filter(d => new Date(d.createdAt) <= new Date(endDate as string));
+      }
+      
+      if (status && status !== 'all') {
+        deliveries = deliveries.filter(d => d.status === status);
+      }
+      
+      if (merchant && merchant !== 'all') {
+        deliveries = deliveries.filter(d => d.merchant?.id === parseInt(merchant as string));
+      }
+      
+      const formattedDeliveries = deliveries.map(delivery => {
+        const deliveryValue = parseFloat(delivery.deliveryFee);
+        const platformFee = parseFloat(delivery.commissionAmount || '0.00');
+        const delivererAmount = parseFloat(delivery.delivererPayment || '0.00');
+        
+        return {
+          id: delivery.id,
+          merchantName: delivery.merchant?.name || 'N/A',
+          deliveryValue,
+          platformFee,
+          delivererAmount,
+          status: delivery.status,
+          completedAt: delivery.completedAt,
+          paymentMethod: delivery.paymentMethod || 'dinheiro',
+          pickupAddress: delivery.pickupAddress || '',
+          deliveryAddress: delivery.deliveryAddress || ''
+        };
+      });
+      
+      res.json({
+        deliveries: formattedDeliveries
+      });
+    } catch (error) {
+      console.error("Error getting financial report:", error);
+      res.status(500).json({ message: "Failed to get financial report" });
+    }
+  });
+
+  // Get deliverer financial summary
+  app.get('/api/deliverers/financial-summary', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+      
+      const delivererId = Number(userInfo.id);
+      const deliveries = await storage.getDeliveriesByDeliverer(delivererId);
+      
+      const totalDeliveries = deliveries.length;
+      const completedDeliveries = deliveries.filter(d => d.status === 'completed').length;
+      
+      const totalEarned = deliveries
+        .filter(d => d.status === 'completed')
+        .reduce((sum, d) => sum + parseFloat(d.deliveryFee), 0);
+      
+      const totalPlatformFees = deliveries
+        .filter(d => d.status === 'completed')
+        .reduce((sum, d) => sum + parseFloat(d.commissionAmount || '0.00'), 0);
+      
+      const totalReceived = deliveries
+        .filter(d => d.status === 'completed')
+        .reduce((sum, d) => sum + parseFloat(d.delivererPayment || '0.00'), 0);
+      
+      const pendingDeliveries = deliveries.filter(d => d.status !== 'completed' && d.status !== 'cancelled');
+      const totalPending = pendingDeliveries.reduce((sum, d) => sum + parseFloat(d.delivererPayment || '0.00'), 0);
+      
+      // Cálculo do mês atual e anterior
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      
+      const currentMonthEarnings = deliveries
+        .filter(d => {
+          if (!d.completedAt) return false;
+          const completedDate = new Date(d.completedAt);
+          return completedDate.getMonth() === currentMonth && 
+                 completedDate.getFullYear() === currentYear &&
+                 d.status === 'completed';
+        })
+        .reduce((sum, d) => sum + parseFloat(d.delivererPayment || '0.00'), 0);
+      
+      const lastMonthEarnings = deliveries
+        .filter(d => {
+          if (!d.completedAt) return false;
+          const completedDate = new Date(d.completedAt);
+          return completedDate.getMonth() === lastMonth && 
+                 completedDate.getFullYear() === lastMonthYear &&
+                 d.status === 'completed';
+        })
+        .reduce((sum, d) => sum + parseFloat(d.delivererPayment || '0.00'), 0);
+      
+      res.json({
+        totalDeliveries,
+        totalEarned,
+        totalPlatformFees,
+        totalReceived,
+        totalPending,
+        completedDeliveries,
+        currentMonthEarnings,
+        lastMonthEarnings
+      });
+    } catch (error) {
+      console.error("Error getting financial summary:", error);
+      res.status(500).json({ message: "Failed to get financial summary" });
+    }
+  });
+
+  // Get merchants that deliverer has worked with
+  app.get('/api/deliverers/merchants', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      if (userInfo.role !== 'deliverer') {
+        return res.status(403).json({ message: "Only deliverers can access this endpoint" });
+      }
+      
+      const delivererId = Number(userInfo.id);
+      const deliveries = await storage.getDeliveriesByDeliverer(delivererId);
+      
+      const uniqueMerchants = Array.from(
+        new Map(deliveries.map(d => [d.merchant?.id, d.merchant]).filter(([id, merchant]) => merchant))
+          .values()
+      );
+      
+      res.json(uniqueMerchants);
+    } catch (error) {
+      console.error("Error getting deliverer merchants:", error);
+      res.status(500).json({ message: "Failed to get merchants" });
+    }
+  });
+
   app.get('/api/deliverers/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

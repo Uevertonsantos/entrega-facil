@@ -12,8 +12,8 @@ interface PlatformFeeDelivery {
   customerName: string;
   deliveryAddress: string;
   deliveryFee: number;
-  platformFeePercentage: number;
-  platformFeeAmount: number;
+  commissionPercentage: number;
+  commissionAmount: number;
   delivererPayment: number;
   completedAt: string;
   createdAt: string;
@@ -21,7 +21,7 @@ interface PlatformFeeDelivery {
 
 interface PlatformFeeTotals {
   totalDeliveryFee: number;
-  totalPlatformFee: number;
+  totalCommission: number;
   totalPayment: number;
 }
 
@@ -120,7 +120,7 @@ export default function PlatformFeeReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(report.totals.totalPlatformFee)}
+              {formatCurrency(report.totals.totalCommission)}
             </div>
             <p className="text-xs text-muted-foreground">
               Taxa cobrada pela plataforma
@@ -184,12 +184,12 @@ export default function PlatformFeeReport() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {delivery.platformFeePercentage}%
+                        {delivery.commissionPercentage}%
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <span className="text-red-600">
-                        -{formatCurrency(delivery.platformFeeAmount)}
+                        -{formatCurrency(delivery.commissionAmount)}
                       </span>
                     </TableCell>
                     <TableCell>
