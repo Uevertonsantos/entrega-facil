@@ -31,6 +31,17 @@ export default function NeighborhoodsConfig() {
     state: ''
   });
 
+  const checkCityExists = (cityName: string) => {
+    return cities.some(city => city.city.toLowerCase() === cityName.toLowerCase());
+  };
+
+  const checkNeighborhoodExists = (neighborhoodName: string, cityName: string) => {
+    return neighborhoods.some(neighborhood => 
+      neighborhood.name.toLowerCase() === neighborhoodName.toLowerCase() && 
+      neighborhood.city.toLowerCase() === cityName.toLowerCase()
+    );
+  };
+
   const fetchCepData = async (cep: string) => {
     setIsLoadingCep(true);
     try {
@@ -116,13 +127,18 @@ export default function NeighborhoodsConfig() {
     }
 
     try {
-      await apiRequest('/api/neighborhoods', 'POST', {
+      const response = await apiRequest('/api/neighborhoods', 'POST', {
         name: neighborhoodFormData.name,
         city: neighborhoodFormData.city,
         state: neighborhoodFormData.state,
         averageDistance: parseFloat(neighborhoodFormData.averageDistance),
         baseFare: parseFloat(neighborhoodFormData.baseFare)
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao adicionar bairro");
+      }
 
       toast({
         title: "Sucesso",
@@ -157,10 +173,15 @@ export default function NeighborhoodsConfig() {
     }
 
     try {
-      await apiRequest('/api/cities', 'POST', {
+      const response = await apiRequest('/api/cities', 'POST', {
         city: cityFormData.city,
         state: cityFormData.state
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao adicionar cidade");
+      }
 
       toast({
         title: "Sucesso",
@@ -206,7 +227,11 @@ export default function NeighborhoodsConfig() {
                     onChange={(e) => setCityFormData({...cityFormData, city: e.target.value})}
                     placeholder="Ex: Salvador"
                     required
+                    className={checkCityExists(cityFormData.city) ? 'border-red-500' : ''}
                   />
+                  {checkCityExists(cityFormData.city) && (
+                    <p className="text-sm text-red-600 mt-1">Esta cidade já existe no sistema</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="cityState">Estado</Label>
@@ -235,7 +260,7 @@ export default function NeighborhoodsConfig() {
                   <Button type="button" variant="outline" onClick={() => setIsAddCityDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={checkCityExists(cityFormData.city)}>
                     Adicionar Cidade
                   </Button>
                 </div>

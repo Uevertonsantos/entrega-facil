@@ -2527,8 +2527,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const newCity = await neighborhoodService.createCity(city, state);
       res.json(newCity);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating city:", error);
+      if (error.message.includes("já existe")) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to create city" });
     }
   });
@@ -2563,8 +2566,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(newNeighborhood);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating neighborhood:", error);
+      if (error.message.includes("duplicate key") || error.message.includes("unique constraint")) {
+        return res.status(400).json({ message: `Bairro "${req.body.name}" já existe na cidade "${req.body.city}"` });
+      }
       res.status(500).json({ message: "Failed to create neighborhood" });
     }
   });
