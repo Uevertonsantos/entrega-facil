@@ -47,7 +47,7 @@ class RoutingService {
       const response = await fetch(`${this.baseUrl}/directions/driving-car/geojson`, {
         method: 'POST',
         headers: {
-          'Authorization': this.apiKey,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -110,7 +110,7 @@ class RoutingService {
       const response = await fetch(`${this.baseUrl}/matrix/driving-car`, {
         method: 'POST',
         headers: {
-          'Authorization': this.apiKey,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -188,11 +188,11 @@ class RoutingService {
 
     try {
       const response = await fetch(
-        `${this.baseUrl}/geocode/reverse?api_key=${this.apiKey}&point.lon=${location.longitude}&point.lat=${location.latitude}&size=1`,
+        `${this.baseUrl}/geocode/reverse?point.lon=${location.longitude}&point.lat=${location.latitude}&size=1`,
         {
           method: 'GET',
           headers: {
-            'Authorization': this.apiKey
+            'Authorization': `Bearer ${this.apiKey}`
           }
         }
       );
