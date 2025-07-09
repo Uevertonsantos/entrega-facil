@@ -62,6 +62,7 @@ export const getQueryFn: <T>(options: {
     }
     
     const res = await fetch(url, {
+      method: "GET",
       headers,
       credentials: "include",
     });
