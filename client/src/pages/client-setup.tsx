@@ -20,7 +20,8 @@ import {
   Smartphone,
   CheckCircle,
   Truck,
-  Infinity
+  Infinity,
+  FileText
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -190,25 +191,229 @@ export default function ClientSetup() {
   };
 
   const downloadInstaller = () => {
-    // Create installer configuration
-    const installerConfig = {
+    // Generate installer configuration
+    const config = {
+      installationId: generatedCredentials?.installationId || '',
+      apiKey: generatedCredentials?.apiKey || '',
       businessName: setupData.businessName,
       businessEmail: setupData.businessEmail,
       businessPhone: setupData.businessPhone,
       businessAddress: setupData.businessAddress,
-      installationId: generatedCredentials?.installationId,
-      apiKey: generatedCredentials?.apiKey,
+      contactPerson: setupData.contactPerson,
+      planType: setupData.planType,
       serverUrl: window.location.origin,
-      setupDate: new Date().toISOString()
+      version: '1.0.0',
+      generatedAt: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(installerConfig, null, 2)], { type: 'application/json' });
+    // Generate complete installer script
+    const installerScript = `@echo off
+echo ====================================
+echo    ENTREGA FACIL - INSTALADOR
+echo ====================================
+echo.
+echo Configurando sistema para: ${setupData.businessName}
+echo.
+
+REM Verificar se Node.js está instalado
+node --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERRO] Node.js não encontrado!
+    echo.
+    echo Por favor, instale o Node.js primeiro:
+    echo https://nodejs.org/download/
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Criar diretório do sistema
+if not exist "C:\\EntregaFacil" mkdir "C:\\EntregaFacil"
+cd /d "C:\\EntregaFacil"
+
+REM Criar estrutura de pastas
+if not exist "config" mkdir "config"
+if not exist "public" mkdir "public"
+if not exist "logs" mkdir "logs"
+
+REM Criar arquivo de configuração
+echo {"installationId":"${config.installationId}","apiKey":"${config.apiKey}","businessName":"${config.businessName}","businessEmail":"${config.businessEmail}","businessPhone":"${config.businessPhone}","businessAddress":"${config.businessAddress}","serverUrl":"${config.serverUrl}","version":"${config.version}","generatedAt":"${config.generatedAt}"} > config\\installation.json
+
+REM Criar package.json
+echo {"name":"entrega-facil-local","version":"1.0.0","description":"Sistema Local Entrega Fácil","main":"server.js","scripts":{"start":"node server.js","dev":"nodemon server.js","install-service":"node install-service.js"},"dependencies":{"express":"^4.18.2","sqlite3":"^5.1.6","cors":"^2.8.5","body-parser":"^1.20.2","node-fetch":"^3.3.2"}} > package.json
+
+REM Instalar dependências
+echo Instalando dependências...
+call npm install
+
+REM Criar servidor
+echo Criando servidor...
+(
+echo const express = require('express'^);
+echo const sqlite3 = require('sqlite3'^).verbose('^);
+echo const cors = require('cors'^);
+echo const bodyParser = require('body-parser'^);
+echo const path = require('path'^);
+echo const fs = require('fs'^);
+echo.
+echo const app = express('^);
+echo const PORT = 3000;
+echo.
+echo // Configuração
+echo const config = JSON.parse(fs.readFileSync('./config/installation.json', 'utf8'^)^);
+echo.
+echo // Middleware
+echo app.use(cors('^)^);
+echo app.use(bodyParser.json('^)^);
+echo app.use(express.static('public'^)^);
+echo.
+echo // Banco de dados
+echo const db = new sqlite3.Database('./database.db'^);
+echo.
+echo // Inicializar banco
+echo db.serialize((^) =^> {
+echo   db.run(\`CREATE TABLE IF NOT EXISTS deliveries (
+echo     id INTEGER PRIMARY KEY AUTOINCREMENT,
+echo     customer_name TEXT NOT NULL,
+echo     customer_phone TEXT,
+echo     delivery_address TEXT NOT NULL,
+echo     pickup_address TEXT NOT NULL,
+echo     description TEXT,
+echo     price REAL NOT NULL,
+echo     delivery_fee REAL DEFAULT 7.00,
+echo     payment_method TEXT DEFAULT 'dinheiro',
+echo     status TEXT DEFAULT 'pending',
+echo     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+echo   ^)\`^);
+echo }^);
+echo.
+echo // Rotas
+echo app.post('/api/deliveries', (req, res^) =^> {
+echo   const { customerName, customerPhone, deliveryAddress, description, price, paymentMethod } = req.body;
+echo   db.run(\`INSERT INTO deliveries (customer_name, customer_phone, delivery_address, pickup_address, description, price, payment_method^) VALUES (?, ?, ?, ?, ?, ?, ?^)\`, [customerName, customerPhone, deliveryAddress, config.businessAddress, description, price, paymentMethod], function(err^) {
+echo     if (err^) {
+echo       res.status(500^).json({ error: err.message }^);
+echo       return;
+echo     }
+echo     res.json({ id: this.lastID, message: 'Entrega criada com sucesso' }^);
+echo   }^);
+echo }^);
+echo.
+echo app.get('/api/deliveries', (req, res^) =^> {
+echo   db.all('SELECT * FROM deliveries ORDER BY created_at DESC', [], (err, rows^) =^> {
+echo     if (err^) {
+echo       res.status(500^).json({ error: err.message }^);
+echo       return;
+echo     }
+echo     res.json(rows^);
+echo   }^);
+echo }^);
+echo.
+echo app.get('/', (req, res^) =^> {
+echo   res.sendFile(path.join(__dirname, 'public', 'index.html'^)^);
+echo }^);
+echo.
+echo app.listen(PORT, (^) =^> {
+echo   console.log(\`Sistema Entrega Fácil rodando em http://localhost:\${PORT}\`^);
+echo   console.log(\`Empresa: \${config.businessName}\`^);
+echo }^);
+) > server.js
+
+echo Criando interface web...
+(
+echo ^<!DOCTYPE html^>
+echo ^<html lang="pt-BR"^>
+echo ^<head^>
+echo     ^<meta charset="UTF-8"^>
+echo     ^<meta name="viewport" content="width=device-width, initial-scale=1.0"^>
+echo     ^<title^>Entrega Fácil - ${config.businessName}^</title^>
+echo     ^<style^>
+echo         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+echo         .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+echo         .header { text-align: center; margin-bottom: 30px; }
+echo         .form-group { margin-bottom: 15px; }
+echo         label { display: block; margin-bottom: 5px; font-weight: bold; }
+echo         input, textarea, select { width: 100%%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+echo         button { background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; }
+echo         button:hover { background: #0056b3; }
+echo         .delivery-item { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+echo     ^</style^>
+echo ^</head^>
+echo ^<body^>
+echo     ^<div class="container"^>
+echo         ^<div class="header"^>
+echo             ^<h1^>🚚 Entrega Fácil^</h1^>
+echo             ^<h2^>${config.businessName}^</h2^>
+echo         ^</div^>
+echo         ^<form id="deliveryForm"^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="customerName"^>Nome do Cliente^</label^>
+echo                 ^<input type="text" id="customerName" required^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="customerPhone"^>Telefone^</label^>
+echo                 ^<input type="tel" id="customerPhone"^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="deliveryAddress"^>Endereço de Entrega^</label^>
+echo                 ^<textarea id="deliveryAddress" required^>^</textarea^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="description"^>Descrição^</label^>
+echo                 ^<textarea id="description"^>^</textarea^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="price"^>Valor (R$^)^</label^>
+echo                 ^<input type="number" id="price" step="0.01" required^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label for="paymentMethod"^>Pagamento^</label^>
+echo                 ^<select id="paymentMethod"^>
+echo                     ^<option value="dinheiro"^>Dinheiro^</option^>
+echo                     ^<option value="cartao"^>Cartão^</option^>
+echo                     ^<option value="pix"^>PIX^</option^>
+echo                 ^</select^>
+echo             ^</div^>
+echo             ^<button type="submit"^>Solicitar Entrega^</button^>
+echo         ^</form^>
+echo         ^<h3^>Entregas Solicitadas^</h3^>
+echo         ^<div id="deliveriesList"^>^</div^>
+echo     ^</div^>
+echo ^</body^>
+echo ^</html^>
+) > public\\index.html
+
+echo.
+echo ====================================
+echo    INSTALAÇÃO CONCLUÍDA!
+echo ====================================
+echo.
+echo Sistema instalado em: C:\\EntregaFacil
+echo.
+echo Para iniciar o sistema:
+echo cd C:\\EntregaFacil
+echo npm start
+echo.
+echo Acesse: http://localhost:3000
+echo.
+pause
+`;
+
+    // Create and download the installer
+    const blob = new Blob([installerScript], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `entrega-facil-${setupData.businessName.toLowerCase().replace(/\s+/g, '-')}-config.json`;
+    a.download = `entrega-facil-installer-${setupData.businessName.toLowerCase().replace(/\s+/g, '-')}.bat`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    toast({
+      title: "Instalador criado!",
+      description: `Arquivo de instalação baixado: entrega-facil-installer-${setupData.businessName.toLowerCase().replace(/\s+/g, '-')}.bat`,
+    });
   };
 
   // Show error states
@@ -622,21 +827,61 @@ export default function ClientSetup() {
                   <div className="flex gap-2">
                     <Button onClick={downloadInstaller} className="flex-1">
                       <Download className="w-4 h-4 mr-2" />
-                      Baixar Configuração
+                      Baixar Instalador
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Smartphone className="w-4 h-4 mr-2" />
-                      Gerar QR Code
+                    <Button variant="outline" className="flex-1" onClick={() => {
+                      const instructions = `INSTRUÇÕES - SISTEMA ENTREGA FÁCIL
+
+PARA: ${setupData.businessName}
+
+PASSO 1: INSTALAR NODE.JS
+- Baixe em: https://nodejs.org/download/
+- Instale a versão LTS (recomendada)
+- Reinicie o computador após instalação
+
+PASSO 2: EXECUTAR INSTALADOR
+- Salve o arquivo entrega-facil-installer-${setupData.businessName.toLowerCase().replace(/\s+/g, '-')}.bat
+- Clique com botão direito e "Executar como administrador"
+- Aguarde a instalação finalizar
+
+PASSO 3: ACESSAR SISTEMA
+- Abra o navegador
+- Acesse: http://localhost:3000
+- Sistema estará pronto para uso
+
+SUPORTE TÉCNICO:
+- WhatsApp: (83) 99999-9999
+- Email: suporte@entregafacil.com
+
+ID DA INSTALAÇÃO: ${generatedCredentials?.installationId || ''}
+CHAVE API: ${generatedCredentials?.apiKey || ''}
+`;
+                      const blob = new Blob([instructions], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `entrega-facil-instrucoes-${setupData.businessName.toLowerCase().replace(/\s+/g, '-')}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      toast({
+                        title: "Instruções baixadas!",
+                        description: "Manual de instalação criado",
+                      });
+                    }}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Instruções
                     </Button>
                   </div>
                   
                   <div className="p-4 bg-yellow-50 rounded-lg">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Próximos Passos:</h4>
+                    <h4 className="font-semibold text-yellow-800 mb-2">Instruções para Instalação:</h4>
                     <ul className="text-sm text-yellow-700 space-y-1">
-                      <li>1. Envie o arquivo de configuração para o cliente</li>
-                      <li>2. Cliente executa o instalador local</li>
-                      <li>3. Sistema sincroniza automaticamente</li>
-                      <li>4. Monitore via painel administrativo</li>
+                      <li>1. Baixe o arquivo instalador (.bat)</li>
+                      <li>2. Envie para o cliente via email ou WhatsApp</li>
+                      <li>3. Cliente deve ter Node.js instalado</li>
+                      <li>4. Executar como administrador</li>
+                      <li>5. Sistema será instalado em C:\EntregaFacil</li>
+                      <li>6. Acesso em http://localhost:3000</li>
                     </ul>
                   </div>
                 </CardContent>
