@@ -173,6 +173,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Created dedicated merchant access page at /merchant-page with combined login and registration
 - July 09, 2025. Enhanced merchant UX with benefits showcase and direct access from landing page
 - July 09, 2025. Implemented merchant-specific page with business-focused features and statistics display
+- July 09, 2025. Fixed merchant registration endpoint routing - corrected from protected /api/merchants to public /api/merchant/register
+- July 09, 2025. Resolved TypeScript errors and plan loading issues in merchant registration forms
+- July 09, 2025. Successfully integrated active plan selection in both admin modal and merchant registration page
 
 ## User Preferences
 

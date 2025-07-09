@@ -47,30 +47,23 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
     try {
       const key = setting.settingKey || setting.key;
       const value = setting.settingValue || setting.value;
-      console.log('Plan setting:', { key, value, setting });
       return key?.startsWith('plan_') && value && 
              JSON.parse(value).isActive;
     } catch (error) {
-      console.error('Error processing plan setting:', error, setting);
       return false;
     }
   }).map((setting: any) => {
     try {
       const key = setting.settingKey || setting.key;
       const value = setting.settingValue || setting.value;
-      const plan = {
+      return {
         ...JSON.parse(value),
         id: key.replace('plan_', ''),
       };
-      console.log('Processed plan:', plan);
-      return plan;
     } catch (error) {
-      console.error('Error mapping plan:', error, setting);
       return null;
     }
   }).filter(Boolean) || [];
-
-  console.log('Active plans:', activePlans);
 
   const form = useForm<MerchantFormData & { password: string }>({
     resolver: zodResolver(insertMerchantSchema.extend({
@@ -92,7 +85,7 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
 
   const createMerchant = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/merchants", "POST", data);
+      return await apiRequest("/api/merchant/register", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });
