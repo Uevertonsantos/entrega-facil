@@ -37,11 +37,7 @@ const navigation = [
   { name: "Monitor Tempo Real", href: "/monitor", icon: Wifi },
   { name: "App Entregador", href: "/deliverer-app", icon: Smartphone },
   { name: "App Comerciante", href: "/merchant-app", icon: ShoppingBag },
-  { name: "Credenciais", href: "/test-credentials", icon: Key },
-  { name: "Bairros", href: "/neighborhoods-config", icon: MapPin },
-  { name: "Configurações", href: "/settings", icon: Settings },
-  { name: "Config. Sistema", href: "/admin-settings", icon: Settings },
-  { name: "Email", href: "/email-settings", icon: Mail },
+  { name: "Configurações", href: "/admin-configurations", icon: Settings },
 ];
 
 export default function Sidebar() {

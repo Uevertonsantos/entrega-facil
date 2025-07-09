@@ -99,6 +99,37 @@ class NeighborhoodService {
   }
 
   /**
+   * Cria uma nova cidade inserindo um bairro inicial
+   */
+  async createCity(cityName: string, stateName: string) {
+    try {
+      // Cria um bairro padrão "Centro" para a nova cidade
+      const newNeighborhood = await db
+        .insert(neighborhoods)
+        .values({
+          name: 'Centro',
+          city: cityName,
+          state: stateName,
+          averageDistance: '2.0',
+          baseFare: '5.00',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      
+      return {
+        city: cityName,
+        state: stateName,
+        neighborhood: newNeighborhood[0]
+      };
+    } catch (error) {
+      console.error('Erro ao criar cidade:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Busca bairros por nome em uma cidade específica (para autocomplete)
    */
   async searchNeighborhoods(query: string, cityName: string) {

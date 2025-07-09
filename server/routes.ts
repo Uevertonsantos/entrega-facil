@@ -2516,6 +2516,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new city
+  app.post('/api/cities', isAuthenticated, async (req, res) => {
+    try {
+      const { city, state } = req.body;
+      
+      if (!city || !state) {
+        return res.status(400).json({ message: "City and state are required" });
+      }
+      
+      const newCity = await neighborhoodService.createCity(city, state);
+      res.json(newCity);
+    } catch (error) {
+      console.error("Error creating city:", error);
+      res.status(500).json({ message: "Failed to create city" });
+    }
+  });
+
   // Get neighborhoods by city
   app.get('/api/neighborhoods/city/:cityName', async (req, res) => {
     try {
@@ -2525,6 +2542,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting neighborhoods by city:", error);
       res.status(500).json({ message: "Failed to get neighborhoods" });
+    }
+  });
+
+  // Create a new neighborhood
+  app.post('/api/neighborhoods', isAuthenticated, async (req, res) => {
+    try {
+      const { name, city, state, averageDistance, baseFare } = req.body;
+      
+      if (!name || !city || !state || !averageDistance || !baseFare) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      const newNeighborhood = await neighborhoodService.addNeighborhood({
+        name,
+        city,
+        state,
+        averageDistance,
+        baseFare
+      });
+      
+      res.json(newNeighborhood);
+    } catch (error) {
+      console.error("Error creating neighborhood:", error);
+      res.status(500).json({ message: "Failed to create neighborhood" });
     }
   });
 

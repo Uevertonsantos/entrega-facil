@@ -14,13 +14,18 @@ export default function NeighborhoodsConfig() {
   const [cities, setCities] = useState<any[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
   const [selectedCity, setSelectedCity] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [isAddNeighborhoodDialogOpen, setIsAddNeighborhoodDialogOpen] = useState(false);
+  const [isAddCityDialogOpen, setIsAddCityDialogOpen] = useState(false);
+  const [neighborhoodFormData, setNeighborhoodFormData] = useState({
     name: '',
     city: '',
     state: '',
     averageDistance: '',
     baseFare: ''
+  });
+  const [cityFormData, setCityFormData] = useState({
+    city: '',
+    state: ''
   });
 
   // Load cities
@@ -57,10 +62,10 @@ export default function NeighborhoodsConfig() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleNeighborhoodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.city || !formData.state || !formData.averageDistance || !formData.baseFare) {
+    if (!neighborhoodFormData.name || !neighborhoodFormData.city || !neighborhoodFormData.state || !neighborhoodFormData.averageDistance || !neighborhoodFormData.baseFare) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos",
@@ -71,11 +76,11 @@ export default function NeighborhoodsConfig() {
 
     try {
       await apiRequest('/api/neighborhoods', 'POST', {
-        name: formData.name,
-        city: formData.city,
-        state: formData.state,
-        averageDistance: parseFloat(formData.averageDistance),
-        baseFare: parseFloat(formData.baseFare)
+        name: neighborhoodFormData.name,
+        city: neighborhoodFormData.city,
+        state: neighborhoodFormData.state,
+        averageDistance: parseFloat(neighborhoodFormData.averageDistance),
+        baseFare: parseFloat(neighborhoodFormData.baseFare)
       });
 
       toast({
@@ -83,8 +88,8 @@ export default function NeighborhoodsConfig() {
         description: "Bairro adicionado com sucesso!",
       });
 
-      setIsAddDialogOpen(false);
-      setFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '' });
+      setIsAddNeighborhoodDialogOpen(false);
+      setNeighborhoodFormData({ name: '', city: '', state: '', averageDistance: '', baseFare: '' });
       loadCities();
       if (selectedCity) {
         loadNeighborhoods(selectedCity);
@@ -98,11 +103,105 @@ export default function NeighborhoodsConfig() {
     }
   };
 
+  const handleCitySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!cityFormData.city || !cityFormData.state) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest('/api/cities', 'POST', {
+        city: cityFormData.city,
+        state: cityFormData.state
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Cidade adicionada com sucesso!",
+      });
+
+      setIsAddCityDialogOpen(false);
+      setCityFormData({ city: '', state: '' });
+      loadCities();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao adicionar cidade",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Configuração de Cidades e Bairros</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <p className="text-sm text-muted-foreground">
+          Configure cidades e bairros para cálculos de entrega
+        </p>
+        <div className="flex gap-2">
+          <Dialog open={isAddCityDialogOpen} onOpenChange={setIsAddCityDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Cidade
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Adicionar Nova Cidade</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCitySubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="cityName">Nome da Cidade</Label>
+                  <Input
+                    id="cityName"
+                    value={cityFormData.city}
+                    onChange={(e) => setCityFormData({...cityFormData, city: e.target.value})}
+                    placeholder="Ex: Salvador"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cityState">Estado</Label>
+                  <Select 
+                    value={cityFormData.state} 
+                    onValueChange={(value) => setCityFormData({...cityFormData, state: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC">Acre</SelectItem>
+                      <SelectItem value="AL">Alagoas</SelectItem>
+                      <SelectItem value="BA">Bahia</SelectItem>
+                      <SelectItem value="CE">Ceará</SelectItem>
+                      <SelectItem value="PB">Paraíba</SelectItem>
+                      <SelectItem value="PE">Pernambuco</SelectItem>
+                      <SelectItem value="RJ">Rio de Janeiro</SelectItem>
+                      <SelectItem value="SP">São Paulo</SelectItem>
+                      <SelectItem value="RN">Rio Grande do Norte</SelectItem>
+                      <SelectItem value="SE">Sergipe</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsAddCityDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    Adicionar Cidade
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isAddNeighborhoodDialogOpen} onOpenChange={setIsAddNeighborhoodDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -113,14 +212,14 @@ export default function NeighborhoodsConfig() {
             <DialogHeader>
               <DialogTitle>Adicionar Novo Bairro</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleNeighborhoodSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Nome do Bairro</Label>
                   <Input
                     id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    value={neighborhoodFormData.name}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, name: e.target.value})}
                     placeholder="Ex: Centro"
                     required
                   />
@@ -129,8 +228,8 @@ export default function NeighborhoodsConfig() {
                   <Label htmlFor="city">Cidade</Label>
                   <Input
                     id="city"
-                    value={formData.city}
-                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                    value={neighborhoodFormData.city}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, city: e.target.value})}
                     placeholder="Ex: Salvador"
                     required
                   />
@@ -140,8 +239,8 @@ export default function NeighborhoodsConfig() {
                 <Label htmlFor="state">Estado</Label>
                 <Input
                   id="state"
-                  value={formData.state}
-                  onChange={(e) => setFormData({...formData, state: e.target.value})}
+                  value={neighborhoodFormData.state}
+                  onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, state: e.target.value})}
                   placeholder="Ex: BA"
                   required
                 />
@@ -153,8 +252,8 @@ export default function NeighborhoodsConfig() {
                     id="averageDistance"
                     type="number"
                     step="0.1"
-                    value={formData.averageDistance}
-                    onChange={(e) => setFormData({...formData, averageDistance: e.target.value})}
+                    value={neighborhoodFormData.averageDistance}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, averageDistance: e.target.value})}
                     placeholder="Ex: 5.0"
                     required
                   />
@@ -165,15 +264,15 @@ export default function NeighborhoodsConfig() {
                     id="baseFare"
                     type="number"
                     step="0.01"
-                    value={formData.baseFare}
-                    onChange={(e) => setFormData({...formData, baseFare: e.target.value})}
+                    value={neighborhoodFormData.baseFare}
+                    onChange={(e) => setNeighborhoodFormData({...neighborhoodFormData, baseFare: e.target.value})}
                     placeholder="Ex: 8.00"
                     required
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsAddNeighborhoodDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button type="submit">
@@ -183,6 +282,7 @@ export default function NeighborhoodsConfig() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

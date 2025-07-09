@@ -21,6 +21,7 @@ import AdminResetPassword from "@/pages/admin-reset-password";
 import AdminSettings from "@/pages/admin-settings";
 import AdminSystemSettings from "@/pages/admin-settings";
 import EmailSettings from "@/pages/email-settings";
+import AdminConfigurations from "@/pages/admin-configurations";
 import PlanManagement from "@/pages/plan-management";
 import ClientsOverview from "@/pages/clients-overview";
 import ClientsMonitoring from "@/pages/clients-monitoring";
@@ -106,8 +107,8 @@ function Router() {
           <Route path="/monitor" component={RealTimeMonitor} />
           <Route path="/commissions" component={PlatformCommission} />
           <Route path="/test-credentials" component={TestCredentials} />
-
           <Route path="/neighborhoods-config" component={NeighborhoodsConfig} />
+          <Route path="/admin-configurations" component={AdminConfigurations} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
