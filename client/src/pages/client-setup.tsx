@@ -115,7 +115,7 @@ export default function ClientSetup() {
   const setupMutation = useMutation({
     mutationFn: async (data: ClientSetupData) => {
       const response = await apiRequest('/api/admin/setup-client', 'POST', data);
-      return response;
+      return response.json();
     },
     onSuccess: (data) => {
       setGeneratedCredentials(data);
@@ -521,11 +521,11 @@ export default function ClientSetup() {
                   <div className="space-y-2">
                     <Label>ID da Instalação</Label>
                     <div className="flex gap-2">
-                      <Input value={generatedCredentials.installationId} readOnly />
+                      <Input value={generatedCredentials?.installationId || ''} readOnly />
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => copyToClipboard(generatedCredentials.installationId)}
+                        onClick={() => copyToClipboard(generatedCredentials?.installationId || '')}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -535,11 +535,11 @@ export default function ClientSetup() {
                   <div className="space-y-2">
                     <Label>Chave de API</Label>
                     <div className="flex gap-2">
-                      <Input value={generatedCredentials.apiKey} readOnly />
+                      <Input value={generatedCredentials?.apiKey || ''} readOnly />
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => copyToClipboard(generatedCredentials.apiKey)}
+                        onClick={() => copyToClipboard(generatedCredentials?.apiKey || '')}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -561,18 +561,18 @@ export default function ClientSetup() {
                   <div className="space-y-2">
                     <Label>URL de Acesso</Label>
                     <div className="flex gap-2">
-                      <Input value={generatedCredentials.accessUrl} readOnly />
+                      <Input value={generatedCredentials?.accessUrl || ''} readOnly />
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => copyToClipboard(generatedCredentials.accessUrl)}
+                        onClick={() => copyToClipboard(generatedCredentials?.accessUrl || '')}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(generatedCredentials.accessUrl, '_blank')}
+                        onClick={() => window.open(generatedCredentials?.accessUrl || '', '_blank')}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Button>
