@@ -1,9 +1,9 @@
-import PlatformCommissionReport from "@/components/admin/platform-commission-report";
+import PlatformFeeReport from "@/components/admin/platform-commission-report";
 
-export default function PlatformCommission() {
+export default function PlatformFee() {
   return (
     <div className="p-8">
-      <PlatformCommissionReport />
+      <PlatformFeeReport />
     </div>
   );
 }

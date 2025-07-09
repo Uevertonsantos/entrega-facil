@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { MapPin, Clock, DollarSign, Package, CheckCircle, XCircle, User, Phone, LogOut, Settings, Volume2, BarChart3, TrendingUp, Calendar, Eye, FileText } from "lucide-react";
 import type { DeliveryWithRelations, Deliverer } from "@shared/schema";
 import DeliveryManagementModal from "@/components/modals/delivery-management-modal";
-import CommissionReport from "@/components/deliverer/commission-report";
+import PlatformFeeReport from "@/components/deliverer/commission-report";
 
 export default function DelivererApp() {
   const [isOnline, setIsOnline] = useState(false);
@@ -577,7 +577,7 @@ export default function DelivererApp() {
           </TabsContent>
 
           <TabsContent value="commission" className="space-y-4">
-            <CommissionReport />
+            <PlatformFeeReport />
           </TabsContent>
         </Tabs>
       </div>

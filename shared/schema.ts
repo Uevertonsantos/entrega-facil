@@ -69,7 +69,7 @@ export const deliverers = pgTable("deliverers", {
   vehicleType: varchar("vehicle_type").notNull(), // bicicleta, moto, carro, a_pe
   vehicleModel: varchar("vehicle_model"),
   vehiclePlate: varchar("vehicle_plate"),
-  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("15.00"),
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).default("15.00"),
   isActive: boolean("is_active").default(true),
   isOnline: boolean("is_online").default(false),
   currentDeliveries: integer("current_deliveries").default(0),
@@ -100,8 +100,8 @@ export const deliveries = pgTable("deliveries", {
   platformFee: decimal("platform_fee", { precision: 10, scale: 2 }), // Taxa da plataforma (você recebe)
   merchantOwes: decimal("merchant_owes", { precision: 10, scale: 2 }), // Valor que comerciante deve pagar
   delivererEarns: decimal("deliverer_earns", { precision: 10, scale: 2 }), // Valor que entregador recebe
-  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }),
-  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }),
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }),
   notes: text("notes"),
   scheduledTime: timestamp("scheduled_time"),
   completedAt: timestamp("completed_at"),
@@ -144,8 +144,8 @@ export const delivererPayments = pgTable("deliverer_payments", {
   merchantName: varchar("merchant_name").notNull(),
   delivererName: varchar("deliverer_name").notNull(),
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(), // Valor total da entrega
-  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da comissão
-  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(), // Valor da comissão
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da taxa de plataforma
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }).notNull(), // Valor da taxa de plataforma
   delivererAmount: decimal("deliverer_amount", { precision: 10, scale: 2 }).notNull(), // Valor líquido para o entregador
   status: varchar("status").notNull().default("pending"), // "pending", "paid"
   paidAt: timestamp("paid_at"),
@@ -161,8 +161,8 @@ export const merchantPayments = pgTable("merchant_payments", {
   merchantName: varchar("merchant_name").notNull(),
   totalDeliveries: integer("total_deliveries").notNull().default(0), // Total de entregas no período
   totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(), // Valor total repassado à plataforma
-  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da comissão
-  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(), // Valor da comissão da plataforma
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da taxa de plataforma
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }).notNull(), // Valor da taxa de plataforma
   delivererAmount: decimal("deliverer_amount", { precision: 10, scale: 2 }).notNull(), // Valor repassado aos entregadores
   status: varchar("status").notNull().default("pending"), // "pending", "paid"
   paidAt: timestamp("paid_at"),

@@ -957,7 +957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Commission report for deliverers
-  app.get('/api/deliverers/commission-report', isAuthenticated, async (req: any, res) => {
+  app.get('/api/deliverers/platform-fee-report', isAuthenticated, async (req: any, res) => {
     try {
       const userInfo = req.user;
       
@@ -1585,7 +1585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Platform commission report (admin only)
-  app.get('/api/admin/platform-commission-report', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/platform-fee-report', isAuthenticated, async (req: any, res) => {
     try {
       const userInfo = req.user;
       

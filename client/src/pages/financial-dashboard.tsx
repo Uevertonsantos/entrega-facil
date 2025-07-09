@@ -132,12 +132,12 @@ export default function FinancialDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comissão da Plataforma</CardTitle>
+            <CardTitle className="text-sm font-medium">Taxa da Plataforma</CardTitle>
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(financialSummary?.totalCommission || 0)}
+              {formatCurrency(financialSummary?.totalPlatformFee || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Receita da plataforma
@@ -230,7 +230,7 @@ export default function FinancialDashboard() {
                     <TableHead>Período</TableHead>
                     <TableHead>Entregas</TableHead>
                     <TableHead>Valor Total</TableHead>
-                    <TableHead>Comissão</TableHead>
+                    <TableHead>Taxa da Plataforma</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
@@ -244,7 +244,7 @@ export default function FinancialDashboard() {
                       </TableCell>
                       <TableCell>{payment.totalDeliveries}</TableCell>
                       <TableCell>{formatCurrency(payment.totalValue)}</TableCell>
-                      <TableCell>{formatCurrency(payment.commissionAmount)}</TableCell>
+                      <TableCell>{formatCurrency(payment.platformFeeAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'}>
                           {payment.status === 'paid' ? 'Pago' : 'Pendente'}
@@ -310,7 +310,7 @@ export default function FinancialDashboard() {
                     <TableHead>Entregador</TableHead>
                     <TableHead>Comerciante</TableHead>
                     <TableHead>Valor Total</TableHead>
-                    <TableHead>Comissão</TableHead>
+                    <TableHead>Taxa da Plataforma</TableHead>
                     <TableHead>Valor Líquido</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
@@ -322,7 +322,7 @@ export default function FinancialDashboard() {
                       <TableCell className="font-medium">{payment.delivererName}</TableCell>
                       <TableCell>{payment.merchantName}</TableCell>
                       <TableCell>{formatCurrency(payment.totalValue)}</TableCell>
-                      <TableCell>{formatCurrency(payment.commissionAmount)}</TableCell>
+                      <TableCell>{formatCurrency(payment.platformFeeAmount)}</TableCell>
                       <TableCell>{formatCurrency(payment.delivererAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'}>
@@ -368,9 +368,9 @@ export default function FinancialDashboard() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Comissão da Plataforma:</span>
+                  <span>Taxa da Plataforma:</span>
                   <span className="font-bold text-blue-600">
-                    {formatCurrency(financialSummary?.totalCommission || 0)}
+                    {formatCurrency(financialSummary?.totalPlatformFee || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

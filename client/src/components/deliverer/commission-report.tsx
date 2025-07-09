@@ -7,43 +7,43 @@ import { DollarSign, TrendingUp, Calendar, MapPin } from "lucide-react";
 // import { formatDistanceToNow } from "date-fns";
 // import { ptBR } from "date-fns/locale";
 
-interface CommissionDelivery {
+interface PlatformFeeDelivery {
   id: number;
   customerName: string;
   deliveryAddress: string;
   deliveryFee: number;
-  commissionPercentage: number;
-  commissionAmount: number;
+  platformFeePercentage: number;
+  platformFeeAmount: number;
   delivererPayment: number;
   completedAt: string;
   createdAt: string;
 }
 
-interface CommissionTotals {
+interface PlatformFeeTotals {
   totalDeliveryFee: number;
-  totalCommission: number;
+  totalPlatformFee: number;
   totalPayment: number;
 }
 
-interface CommissionReport {
-  deliveries: CommissionDelivery[];
-  totals: CommissionTotals;
+interface PlatformFeeReport {
+  deliveries: PlatformFeeDelivery[];
+  totals: PlatformFeeTotals;
   delivererInfo: {
     id: number;
     name: string;
   };
 }
 
-export default function CommissionReport() {
-  const { data: report, isLoading, error } = useQuery<CommissionReport>({
-    queryKey: ['/api/deliverers/commission-report'],
+export default function PlatformFeeReport() {
+  const { data: report, isLoading, error } = useQuery<PlatformFeeReport>({
+    queryKey: ['/api/deliverers/platform-fee-report'],
   });
 
   if (error) {
     console.error("Commission report error:", error);
     return (
       <div className="text-center py-8">
-        <p className="text-red-600">Erro ao carregar relatório de comissões</p>
+        <p className="text-red-600">Erro ao carregar relatório de taxas da plataforma</p>
         <p className="text-gray-600 text-sm mt-2">
           {error instanceof Error ? error.message : "Erro desconhecido"}
         </p>
@@ -120,7 +120,7 @@ export default function CommissionReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(report.totals.totalCommission)}
+              {formatCurrency(report.totals.totalPlatformFee)}
             </div>
             <p className="text-xs text-muted-foreground">
               Taxa cobrada pela plataforma
@@ -184,12 +184,12 @@ export default function CommissionReport() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {delivery.commissionPercentage}%
+                        {delivery.platformFeePercentage}%
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <span className="text-red-600">
-                        -{formatCurrency(delivery.commissionAmount)}
+                        -{formatCurrency(delivery.platformFeeAmount)}
                       </span>
                     </TableCell>
                     <TableCell>

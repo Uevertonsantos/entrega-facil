@@ -9,35 +9,35 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState, useMemo } from "react";
 
-interface PlatformCommissionDelivery {
+interface PlatformFeeDelivery {
   id: number;
   delivererName: string;
   customerName: string;
   deliveryAddress: string;
   deliveryFee: number;
-  commissionPercentage: number;
-  commissionAmount: number;
+  platformFeePercentage: number;
+  platformFeeAmount: number;
   delivererPayment: number;
   completedAt: string;
   createdAt: string;
 }
 
-interface PlatformCommissionTotals {
+interface PlatformFeeTotals {
   totalDeliveryFee: number;
-  totalCommission: number;
+  totalPlatformFee: number;
   totalDelivererPayment: number;
 }
 
-interface PlatformCommissionReport {
-  deliveries: PlatformCommissionDelivery[];
-  totals: PlatformCommissionTotals;
+interface PlatformFeeReport {
+  deliveries: PlatformFeeDelivery[];
+  totals: PlatformFeeTotals;
 }
 
-export default function PlatformCommissionReport() {
+export default function PlatformFeeReport() {
   const [selectedDeliverer, setSelectedDeliverer] = useState<string>("all");
   
-  const { data: report, isLoading } = useQuery<PlatformCommissionReport>({
-    queryKey: ['/api/admin/platform-commission-report'],
+  const { data: report, isLoading } = useQuery<PlatformFeeReport>({
+    queryKey: ['/api/admin/platform-fee-report'],
   });
 
   // Get unique deliverers for filter
@@ -57,12 +57,12 @@ export default function PlatformCommissionReport() {
 
   // Calculate totals for filtered deliveries
   const filteredTotals = useMemo(() => {
-    if (!filteredDeliveries.length) return { totalDeliveryFee: 0, totalCommission: 0, totalDelivererPayment: 0 };
+    if (!filteredDeliveries.length) return { totalDeliveryFee: 0, totalPlatformFee: 0, totalDelivererPayment: 0 };
     return filteredDeliveries.reduce((acc, delivery) => ({
       totalDeliveryFee: acc.totalDeliveryFee + delivery.deliveryFee,
-      totalCommission: acc.totalCommission + delivery.commissionAmount,
+      totalPlatformFee: acc.totalPlatformFee + delivery.platformFeeAmount,
       totalDelivererPayment: acc.totalDelivererPayment + delivery.delivererPayment
-    }), { totalDeliveryFee: 0, totalCommission: 0, totalDelivererPayment: 0 });
+    }), { totalDeliveryFee: 0, totalPlatformFee: 0, totalDelivererPayment: 0 });
   }, [filteredDeliveries]);
 
   if (isLoading) {
@@ -149,7 +149,7 @@ export default function PlatformCommissionReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(filteredTotals.totalCommission)}
+              {formatCurrency(filteredTotals.totalPlatformFee)}
             </div>
             <p className="text-xs text-muted-foreground">
               Valor total de taxa da plataforma recebida
@@ -226,12 +226,12 @@ export default function PlatformCommissionReport() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {delivery.commissionPercentage}%
+                          {delivery.platformFeePercentage}%
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <span className="font-medium text-green-600">
-                          {formatCurrency(delivery.commissionAmount)}
+                          {formatCurrency(delivery.platformFeeAmount)}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -263,10 +263,10 @@ export default function PlatformCommissionReport() {
             <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
             <div>
               <h4 className="font-medium text-green-900 mb-1">
-                Modelo de Comissão da Plataforma
+                Modelo de Taxa da Plataforma
               </h4>
               <p className="text-sm text-green-700">
-                A plataforma cobra uma comissão sobre cada entrega realizada pelos entregadores. 
+                A plataforma cobra uma taxa sobre cada entrega realizada pelos entregadores. 
                 O percentual é definido no cadastro de cada entregador e é automaticamente descontado 
                 do valor total da entrega. O restante é pago diretamente ao entregador.
               </p>
