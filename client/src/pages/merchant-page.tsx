@@ -69,13 +69,23 @@ export default function MerchantPage() {
     retry: false,
   });
 
-  const activePlans = plansData?.filter((setting: any) => 
-    setting.key.startsWith('plan_') && setting.value && 
-    JSON.parse(setting.value).isActive
-  ).map((setting: any) => ({
-    ...JSON.parse(setting.value),
-    id: setting.key.replace('plan_', ''),
-  })) || [];
+  const activePlans = plansData?.filter((setting: any) => {
+    try {
+      return setting.key?.startsWith('plan_') && setting.value && 
+             JSON.parse(setting.value).isActive;
+    } catch (error) {
+      return false;
+    }
+  }).map((setting: any) => {
+    try {
+      return {
+        ...JSON.parse(setting.value),
+        id: setting.key.replace('plan_', ''),
+      };
+    } catch (error) {
+      return null;
+    }
+  }).filter(Boolean) || [];
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

@@ -43,13 +43,23 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
     retry: false,
   });
 
-  const activePlans = plansData?.filter((setting: any) => 
-    setting.key.startsWith('plan_') && setting.value && 
-    JSON.parse(setting.value).isActive
-  ).map((setting: any) => ({
-    ...JSON.parse(setting.value),
-    id: setting.key.replace('plan_', ''),
-  })) || [];
+  const activePlans = plansData?.filter((setting: any) => {
+    try {
+      return setting.key?.startsWith('plan_') && setting.value && 
+             JSON.parse(setting.value).isActive;
+    } catch (error) {
+      return false;
+    }
+  }).map((setting: any) => {
+    try {
+      return {
+        ...JSON.parse(setting.value),
+        id: setting.key.replace('plan_', ''),
+      };
+    } catch (error) {
+      return null;
+    }
+  }).filter(Boolean) || [];
 
   const form = useForm<MerchantFormData & { password: string }>({
     resolver: zodResolver(insertMerchantSchema.extend({
@@ -70,7 +80,7 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
   });
 
   const createMerchant = useMutation({
-    mutationFn: async (data: MerchantFormData) => {
+    mutationFn: async (data: any) => {
       return await apiRequest("/api/merchants", "POST", data);
     },
     onSuccess: () => {
@@ -102,7 +112,7 @@ export default function NewMerchantModal({ isOpen, onClose }: NewMerchantModalPr
     },
   });
 
-  const handleSubmit = (data: MerchantFormData) => {
+  const handleSubmit = (data: MerchantFormData & { password: string }) => {
     // Find selected plan details
     const selectedPlan = activePlans.find(plan => plan.id === data.planType);
     
