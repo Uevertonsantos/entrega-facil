@@ -140,6 +140,12 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Updated PWA icons to display "ENTREGA" text instead of "DELIVERY" for mobile app installation
 - July 09, 2025. Corrected icon-512x512.svg dimensions and positioning for proper PWA functionality
 - July 09, 2025. Incremented service worker cache version to force icon updates on client devices
+- July 09, 2025. Implemented comprehensive payment method system for deliveries with multiple options
+- July 09, 2025. Added payment_method field to deliveries table with support for cash, credit card, debit card, PIX, meal card, and food voucher
+- July 09, 2025. Enhanced new delivery form with payment method selection dropdown
+- July 09, 2025. Updated delivery views for admin and deliverer to display payment method information
+- July 09, 2025. Integrated payment method display in delivery management modal for complete order information
+- July 09, 2025. Fixed admin login authentication to properly use bcrypt password hashing
 
 ## User Preferences
 
