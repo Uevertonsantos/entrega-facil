@@ -30,6 +30,15 @@ export default function TestCredentials() {
     queryKey: ["/api/deliverers"],
   });
 
+  const { data: adminCredentials, refetch: refetchAdminCredentials } = useQuery({
+    queryKey: ["/api/test-credentials"],
+    queryFn: async () => {
+      const response = await apiRequest('/api/test-credentials', 'GET');
+      const result = await response.json();
+      return result.credentials;
+    },
+  });
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -52,6 +61,30 @@ export default function TestCredentials() {
       toast({
         title: "Erro",
         description: "Falha ao atualizar a senha do entregador",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateAdminCredentials = async (username: string, email: string, password: string) => {
+    try {
+      await apiRequest('/api/admin-update-credentials', 'PUT', { username, email, password });
+      toast({
+        title: "Credenciais atualizadas!",
+        description: "As credenciais administrativas foram atualizadas com sucesso",
+      });
+      
+      // Limpar campos
+      (document.getElementById('newUsername') as HTMLInputElement).value = '';
+      (document.getElementById('newEmail') as HTMLInputElement).value = '';
+      (document.getElementById('newPassword') as HTMLInputElement).value = '';
+      
+      // Recarregar credenciais administrativas
+      refetchAdminCredentials();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar as credenciais administrativas",
         variant: "destructive",
       });
     }
@@ -88,15 +121,28 @@ export default function TestCredentials() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label>Email</Label>
+              <Label>Usuário</Label>
               <div className="flex items-center gap-2 mt-1">
-                <Input value="admin@deliveryexpress.com" readOnly />
+                <Input value={adminCredentials?.username || "admin"} readOnly />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => copyToClipboard("admin@deliveryexpress.com")}
+                  onClick={() => copyToClipboard(adminCredentials?.username || "admin")}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label>Email</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input value={adminCredentials?.email || "admin@deliveryexpress.com"} readOnly />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyToClipboard(adminCredentials?.email || "admin@deliveryexpress.com")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -107,18 +153,71 @@ export default function TestCredentials() {
               <div className="flex items-center gap-2 mt-1">
                 <Input
                   type={showPasswords ? "text" : "password"}
-                  value="admin123"
+                  value={adminCredentials?.password || "admin123"}
                   readOnly
                 />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => copyToClipboard("admin123")}
+                  onClick={() => copyToClipboard(adminCredentials?.password || "admin123")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
+          </div>
+          
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground mb-4">
+              Para alterar suas credenciais administrativas, use o formulário abaixo:
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="newUsername">Novo Usuário</Label>
+                <Input
+                  id="newUsername"
+                  placeholder="Digite o novo nome de usuário"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="newEmail">Novo Email</Label>
+                <Input
+                  id="newEmail"
+                  type="email"
+                  placeholder="Digite o novo email"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="newPassword">Nova Senha</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  placeholder="Digite a nova senha"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            <Button className="mt-4" onClick={() => {
+              const username = (document.getElementById('newUsername') as HTMLInputElement)?.value;
+              const email = (document.getElementById('newEmail') as HTMLInputElement)?.value;
+              const password = (document.getElementById('newPassword') as HTMLInputElement)?.value;
+              
+              if (username && email && password) {
+                updateAdminCredentials(username, email, password);
+              } else {
+                toast({
+                  title: "Erro",
+                  description: "Por favor, preencha todos os campos",
+                  variant: "destructive",
+                });
+              }
+            }}>
+              Atualizar Credenciais
+            </Button>
           </div>
         </CardContent>
       </Card>

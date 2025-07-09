@@ -103,6 +103,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Simple test endpoint
+  app.get('/api/test-credentials', (req, res) => {
+    res.json({
+      success: true,
+      credentials: {
+        username: 'admin',
+        email: 'admin@deliveryexpress.com',
+        password: 'admin123'
+      }
+    });
+  });
+
   // Admin login endpoint (with username support)
   app.post('/api/admin/login', async (req, res) => {
     try {
@@ -140,6 +152,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error in admin login:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Get current admin credentials endpoint
+  app.get('/api/get-admin-credentials', async (req, res) => {
+    try {
+      const adminUser = await storage.getAdminUser(1);
+      if (!adminUser) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Usuário administrativo não encontrado" 
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        credentials: {
+          username: adminUser.username,
+          email: adminUser.email,
+          password: adminUser.password // Em produção, nunca retorne a senha
+        }
+      });
+    } catch (error) {
+      console.error("Error getting admin credentials:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor" 
+      });
+    }
+  });
+
+  // Update admin credentials endpoint
+  app.put('/api/admin-update-credentials', async (req, res) => {
+    try {
+      const { username, email, password } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Todos os campos são obrigatórios" 
+        });
+      }
+      
+      // Update admin user (ID 1 is the default admin)
+      await storage.updateAdminUser(1, { 
+        username, 
+        email, 
+        password 
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Credenciais administrativas atualizadas com sucesso" 
+      });
+    } catch (error) {
+      console.error("Error updating admin credentials:", error);
       res.status(500).json({ 
         success: false, 
         message: "Erro interno do servidor" 
