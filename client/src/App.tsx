@@ -26,6 +26,7 @@ import PlatformCommission from "@/pages/platform-commission";
 import TestCredentials from "@/pages/test-credentials";
 import MerchantLogin from "@/pages/merchant-login";
 import DelivererLogin from "@/pages/deliverer-login";
+import ClearAuth from "@/pages/clear-auth";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/admin-login" component={AdminLogin} />
         <Route path="/merchant-login" component={MerchantLogin} />
         <Route path="/deliverer-login" component={DelivererLogin} />
+        <Route path="/clear-auth" component={ClearAuth} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -90,6 +92,7 @@ function Router() {
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/merchant-login" component={MerchantLogin} />
       <Route path="/deliverer-login" component={DelivererLogin} />
+      <Route path="/clear-auth" component={ClearAuth} />
       <Route component={NotFound} />
     </Switch>
   );

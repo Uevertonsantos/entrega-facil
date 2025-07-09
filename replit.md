@@ -140,6 +140,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Updated PWA icons to display "ENTREGA" text instead of "DELIVERY" for mobile app installation
 - July 09, 2025. Corrected icon-512x512.svg dimensions and positioning for proper PWA functionality
 - July 09, 2025. Incremented service worker cache version to force icon updates on client devices
+- July 09, 2025. Implemented comprehensive payment method system for deliveries
+- July 09, 2025. Added payment_method field to delivery database schema with multiple options (dinheiro, cartão, PIX, etc.)
+- July 09, 2025. Enhanced delivery creation form with payment method selection dropdown
+- July 09, 2025. Updated all delivery views (admin, deliverer, modals) to display payment method information
+- July 09, 2025. Added clear-auth page to help users reset authentication state and return to landing page
 
 ## User Preferences
 
