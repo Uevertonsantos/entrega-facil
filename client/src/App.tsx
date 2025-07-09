@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth"; // Temporarily disabled
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -30,9 +30,47 @@ import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
 function Router() {
-  const { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer } = useAuth();
+  try {
+    // Check for stored authentication tokens
+    const adminToken = localStorage.getItem("adminToken");
+    const merchantToken = localStorage.getItem("merchantToken");
+    const delivererToken = localStorage.getItem("delivererToken");
+    const userType = localStorage.getItem("userType");
 
-  if (isLoading || !isAuthenticated) {
+    // Route based on user type
+    if (userType === "merchant" && merchantToken) {
+      return <MerchantApp />;
+    }
+    
+    if (userType === "deliverer" && delivererToken) {
+      return <DelivererApp />;
+    }
+    
+    // If user is admin, show admin dashboard
+    if (userType === "admin" && adminToken) {
+      return (
+        <Layout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/deliveries" component={Deliveries} />
+            <Route path="/merchants" component={Merchants} />
+            <Route path="/deliverers" component={Deliverers} />
+            <Route path="/reports" component={Reports} />
+            <Route path="/financial" component={Financial} />
+            <Route path="/settings" component={AdminSettings} />
+            <Route path="/email-settings" component={EmailSettings} />
+            <Route path="/plans" component={PlanManagement} />
+            <Route path="/clients" component={ClientsOverview} />
+            <Route path="/monitor" component={RealTimeMonitor} />
+            <Route path="/commissions" component={PlatformCommission} />
+            <Route path="/test-credentials" component={TestCredentials} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
+      );
+    }
+    
+    // Default to landing page if no specific user type
     return (
       <Switch>
         <Route path="/" component={Landing} />
@@ -45,54 +83,19 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
     );
-  }
-
-  // Route based on user type
-  if (isMerchant) {
-    return <MerchantApp />;
-  }
-  
-  if (isDeliverer) {
-    return <DelivererApp />;
-  }
-  
-  // If user is admin, show admin dashboard
-  if (isAdmin) {
+  } catch (error) {
+    console.error("Error in Router:", error);
+    // Fallback to login page if there's an error
     return (
-      <Layout>
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/deliveries" component={Deliveries} />
-          <Route path="/merchants" component={Merchants} />
-          <Route path="/deliverers" component={Deliverers} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/financial" component={Financial} />
-          <Route path="/settings" component={AdminSettings} />
-          <Route path="/email-settings" component={EmailSettings} />
-          <Route path="/plans" component={PlanManagement} />
-          <Route path="/clients" component={ClientsOverview} />
-          <Route path="/monitor" component={RealTimeMonitor} />
-          <Route path="/commissions" component={PlatformCommission} />
-          <Route path="/test-credentials" component={TestCredentials} />
-          <Route component={NotFound} />
-        </Switch>
-      </Layout>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/merchant-login" component={MerchantLogin} />
+        <Route path="/deliverer-login" component={DelivererLogin} />
+        <Route component={NotFound} />
+      </Switch>
     );
   }
-  
-  // Default to landing page if no specific user type
-  return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/forgot-password" component={AdminForgotPassword} />
-      <Route path="/admin/reset-password" component={AdminResetPassword} />
-      <Route path="/admin-login" component={AdminLogin} />
-      <Route path="/merchant-login" component={MerchantLogin} />
-      <Route path="/deliverer-login" component={DelivererLogin} />
-      <Route component={NotFound} />
-    </Switch>
-  );
 }
 
 function App() {

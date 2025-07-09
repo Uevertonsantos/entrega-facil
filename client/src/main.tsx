@@ -2,7 +2,7 @@ console.log("🚀 Starting Entrega Fácil...");
 
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
-import App from "./App.simple";
+import App from "./App";
 import "./index.css";
 
 const rootElement = document.getElementById("root");
