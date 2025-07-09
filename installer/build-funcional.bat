@@ -35,13 +35,54 @@ if %errorlevel% neq 0 (
 :: Preparar package.json
 echo [2/5] Preparando configuração...
 if exist "package.json" del package.json
-copy package-funcional.json package.json
-if %errorlevel% neq 0 (
-    echo ❌ Erro ao criar package.json!
-    pause
-    exit /b 1
+
+if exist "package-funcional.json" (
+    copy package-funcional.json package.json
+    if %errorlevel% neq 0 (
+        echo ❌ Erro ao copiar package-funcional.json!
+        pause
+        exit /b 1
+    )
+    echo ✅ Configuração copiada de package-funcional.json
+) else (
+    echo ⚠️ package-funcional.json não encontrado, criando automaticamente...
+    (
+        echo {
+        echo   "name": "entrega-facil-installer-funcional",
+        echo   "version": "1.0.0",
+        echo   "description": "Instalador GUI Funcional para Sistema Entrega Fácil",
+        echo   "main": "instalador-gui-funcional.js",
+        echo   "scripts": {
+        echo     "start": "electron .",
+        echo     "build": "electron-builder --win --publish=never"
+        echo   },
+        echo   "devDependencies": {
+        echo     "electron": "^22.0.0",
+        echo     "electron-builder": "^23.0.0"
+        echo   },
+        echo   "build": {
+        echo     "appId": "com.entregafacil.installer",
+        echo     "productName": "Entrega Facil Instalador",
+        echo     "directories": {
+        echo       "output": "dist"
+        echo     },
+        echo     "files": [
+        echo       "instalador-gui-funcional.js",
+        echo       "installer-ui-funcional.html",
+        echo       "assets/**/*"
+        echo     ],
+        echo     "win": {
+        echo       "target": "nsis"
+        echo     },
+        echo     "nsis": {
+        echo       "oneClick": false,
+        echo       "allowToChangeInstallationDirectory": true
+        echo     }
+        echo   }
+        echo }
+    ) > package.json
+    echo ✅ package.json criado automaticamente
 )
-echo ✅ Configuração preparada
 
 :: Limpar e instalar dependências
 echo [3/5] Instalando dependências...
