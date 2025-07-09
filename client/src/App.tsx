@@ -12,6 +12,7 @@ import Merchants from "@/pages/merchants";
 import Deliverers from "@/pages/deliverers";
 import Reports from "@/pages/reports";
 import Financial from "@/pages/financial";
+import FinancialDashboard from "@/pages/financial-dashboard";
 import DelivererApp from "@/pages/deliverer-app";
 import MerchantApp from "@/pages/merchant-app";
 import AdminLogin from "@/pages/admin-login";
@@ -87,6 +88,7 @@ function Router() {
           <Route path="/deliverers" component={Deliverers} />
           <Route path="/reports" component={Reports} />
           <Route path="/financial" component={Financial} />
+          <Route path="/financial-dashboard" component={FinancialDashboard} />
           <Route path="/merchant-payments" component={MerchantPayments} />
           <Route path="/deliverer-payments" component={DelivererPayments} />
           <Route path="/settings" component={AdminSettings} />

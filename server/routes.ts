@@ -1737,6 +1737,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Merchant payments endpoints
+  app.get('/api/admin/merchant-payments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const { merchantId, status } = req.query;
+      
+      let payments;
+      if (merchantId && !isNaN(parseInt(merchantId))) {
+        payments = await storage.getMerchantPaymentsByMerchant(parseInt(merchantId));
+      } else if (status) {
+        payments = await storage.getMerchantPaymentsByStatus(status);
+      } else {
+        payments = await storage.getMerchantPayments();
+      }
+      
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching merchant payments:", error);
+      res.status(500).json({ message: "Failed to fetch merchant payments" });
+    }
+  });
+
+  app.get('/api/admin/merchant-payments/summary', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const summary = await storage.getMerchantPaymentsSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching merchant payments summary:", error);
+      res.status(500).json({ message: "Failed to fetch merchant payments summary" });
+    }
+  });
+
+  app.put('/api/admin/merchant-payments/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment ID" });
+      }
+      
+      if (!['pending', 'paid'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'pending' or 'paid'" });
+      }
+      
+      const payment = await storage.updateMerchantPaymentStatus(id, status);
+      res.json(payment);
+    } catch (error) {
+      console.error("Error updating merchant payment status:", error);
+      res.status(500).json({ message: "Failed to update merchant payment status" });
+    }
+  });
+
+  // Financial summary endpoint
+  app.get('/api/admin/financial-summary', isAuthenticated, async (req: any, res) => {
+    try {
+      const userInfo = req.user;
+      
+      // Check if user is admin
+      if (userInfo.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+      
+      const { periodStart, periodEnd } = req.query;
+      
+      let startDate, endDate;
+      if (periodStart && periodEnd) {
+        startDate = new Date(periodStart);
+        endDate = new Date(periodEnd);
+      }
+      
+      const summary = await storage.getFinancialSummary(startDate, endDate);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching financial summary:", error);
+      res.status(500).json({ message: "Failed to fetch financial summary" });
+    }
+  });
+
   // Get client status
   app.get('/api/clients/:clientId/status', isValidClient, async (req, res) => {
     try {

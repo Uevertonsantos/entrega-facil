@@ -154,6 +154,24 @@ export const delivererPayments = pgTable("deliverer_payments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Merchant payments table - controle de pagamentos dos comerciantes
+export const merchantPayments = pgTable("merchant_payments", {
+  id: serial("id").primaryKey(),
+  merchantId: integer("merchant_id").notNull(),
+  merchantName: varchar("merchant_name").notNull(),
+  totalDeliveries: integer("total_deliveries").notNull().default(0), // Total de entregas no período
+  totalValue: decimal("total_value", { precision: 10, scale: 2 }).notNull(), // Valor total repassado à plataforma
+  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).notNull(), // Percentual da comissão
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(), // Valor da comissão da plataforma
+  delivererAmount: decimal("deliverer_amount", { precision: 10, scale: 2 }).notNull(), // Valor repassado aos entregadores
+  status: varchar("status").notNull().default("pending"), // "pending", "paid"
+  paidAt: timestamp("paid_at"),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const merchantsRelations = relations(merchants, ({ many }) => ({
   deliveries: many(deliveries),
@@ -185,6 +203,13 @@ export const delivererPaymentsRelations = relations(delivererPayments, ({ one })
   }),
   merchant: one(merchants, {
     fields: [delivererPayments.merchantId],
+    references: [merchants.id],
+  }),
+}));
+
+export const merchantPaymentsRelations = relations(merchantPayments, ({ one }) => ({
+  merchant: one(merchants, {
+    fields: [merchantPayments.merchantId],
     references: [merchants.id],
   }),
 }));
@@ -243,6 +268,12 @@ export const insertDelivererPaymentSchema = createInsertSchema(delivererPayments
   updatedAt: true,
 });
 
+export const insertMerchantPaymentSchema = createInsertSchema(merchantPayments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -270,6 +301,9 @@ export type AdminSetting = typeof adminSettings.$inferSelect;
 
 export type InsertDelivererPayment = z.infer<typeof insertDelivererPaymentSchema>;
 export type DelivererPayment = typeof delivererPayments.$inferSelect;
+
+export type InsertMerchantPayment = z.infer<typeof insertMerchantPaymentSchema>;
+export type MerchantPayment = typeof merchantPayments.$inferSelect;
 
 // Client installations table for tracking remote installations
 export const clientInstallations = pgTable("client_installations", {

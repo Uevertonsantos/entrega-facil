@@ -9,6 +9,7 @@ import {
   clientCustomers,
   clientDeliveries,
   delivererPayments,
+  merchantPayments,
   type User,
   type UpsertUser,
   type InsertMerchant,
@@ -30,6 +31,8 @@ import {
   type ClientDelivery,
   type InsertDelivererPayment,
   type DelivererPayment,
+  type InsertMerchantPayment,
+  type MerchantPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lt, or } from "drizzle-orm";
@@ -131,6 +134,31 @@ export interface IStorage {
     totalPending: number;
     totalPaid: number;
     delivererBalances: { delivererId: number; delivererName: string; pendingAmount: number; paidAmount: number; totalAmount: number }[];
+  }>;
+  
+  // Merchant payments operations
+  getMerchantPayments(): Promise<MerchantPayment[]>;
+  getMerchantPaymentsByMerchant(merchantId: number): Promise<MerchantPayment[]>;
+  getMerchantPaymentsByStatus(status: string): Promise<MerchantPayment[]>;
+  createMerchantPayment(payment: InsertMerchantPayment): Promise<MerchantPayment>;
+  updateMerchantPaymentStatus(id: number, status: string): Promise<MerchantPayment>;
+  getMerchantPaymentsSummary(): Promise<{
+    totalPending: number;
+    totalPaid: number;
+    merchantBalances: { merchantId: number; merchantName: string; pendingAmount: number; paidAmount: number; totalAmount: number }[];
+  }>;
+  
+  // Financial summary operations
+  getFinancialSummary(periodStart?: Date, periodEnd?: Date): Promise<{
+    totalRevenue: number;
+    totalCommission: number;
+    totalDelivererPayments: number;
+    totalMerchantPayments: number;
+    totalDeliveries: number;
+    pendingDelivererPayments: number;
+    paidDelivererPayments: number;
+    pendingMerchantPayments: number;
+    paidMerchantPayments: number;
   }>;
 }
 
@@ -786,6 +814,170 @@ export class DatabaseStorage implements IStorage {
       totalPending,
       totalPaid,
       delivererBalances: Array.from(delivererMap.values())
+    };
+  }
+
+  // Merchant payments operations
+  async getMerchantPayments(): Promise<MerchantPayment[]> {
+    return await db.select().from(merchantPayments).orderBy(desc(merchantPayments.createdAt));
+  }
+
+  async getMerchantPaymentsByMerchant(merchantId: number): Promise<MerchantPayment[]> {
+    return await db.select().from(merchantPayments)
+      .where(eq(merchantPayments.merchantId, merchantId))
+      .orderBy(desc(merchantPayments.createdAt));
+  }
+
+  async getMerchantPaymentsByStatus(status: string): Promise<MerchantPayment[]> {
+    return await db.select().from(merchantPayments)
+      .where(eq(merchantPayments.status, status))
+      .orderBy(desc(merchantPayments.createdAt));
+  }
+
+  async createMerchantPayment(payment: InsertMerchantPayment): Promise<MerchantPayment> {
+    const [newPayment] = await db.insert(merchantPayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updateMerchantPaymentStatus(id: number, status: string): Promise<MerchantPayment> {
+    const [updatedPayment] = await db
+      .update(merchantPayments)
+      .set({ 
+        status,
+        paidAt: status === 'paid' ? new Date() : null,
+        updatedAt: new Date()
+      })
+      .where(eq(merchantPayments.id, id))
+      .returning();
+    return updatedPayment;
+  }
+
+  async getMerchantPaymentsSummary(): Promise<{
+    totalPending: number;
+    totalPaid: number;
+    merchantBalances: { merchantId: number; merchantName: string; pendingAmount: number; paidAmount: number; totalAmount: number }[];
+  }> {
+    const payments = await db.select().from(merchantPayments);
+    
+    const totalPending = payments
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + parseFloat(p.totalValue), 0);
+    
+    const totalPaid = payments
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.totalValue), 0);
+    
+    // Group by merchant
+    const merchantMap = new Map<number, { merchantId: number; merchantName: string; pendingAmount: number; paidAmount: number; totalAmount: number }>();
+    
+    payments.forEach(payment => {
+      const merchantId = payment.merchantId;
+      const merchantName = payment.merchantName;
+      const amount = parseFloat(payment.totalValue);
+      
+      if (!merchantMap.has(merchantId)) {
+        merchantMap.set(merchantId, {
+          merchantId,
+          merchantName,
+          pendingAmount: 0,
+          paidAmount: 0,
+          totalAmount: 0
+        });
+      }
+      
+      const merchantData = merchantMap.get(merchantId)!;
+      merchantData.totalAmount += amount;
+      
+      if (payment.status === 'pending') {
+        merchantData.pendingAmount += amount;
+      } else if (payment.status === 'paid') {
+        merchantData.paidAmount += amount;
+      }
+    });
+    
+    return {
+      totalPending,
+      totalPaid,
+      merchantBalances: Array.from(merchantMap.values())
+    };
+  }
+
+  // Financial summary operations
+  async getFinancialSummary(periodStart?: Date, periodEnd?: Date): Promise<{
+    totalRevenue: number;
+    totalCommission: number;
+    totalDelivererPayments: number;
+    totalMerchantPayments: number;
+    totalDeliveries: number;
+    pendingDelivererPayments: number;
+    paidDelivererPayments: number;
+    pendingMerchantPayments: number;
+    paidMerchantPayments: number;
+  }> {
+    let deliveryQuery = db.select().from(deliveries);
+    let delivererPaymentQuery = db.select().from(delivererPayments);
+    let merchantPaymentQuery = db.select().from(merchantPayments);
+
+    if (periodStart && periodEnd) {
+      deliveryQuery = deliveryQuery.where(and(
+        gte(deliveries.createdAt, periodStart),
+        lt(deliveries.createdAt, periodEnd)
+      ));
+      delivererPaymentQuery = delivererPaymentQuery.where(and(
+        gte(delivererPayments.createdAt, periodStart),
+        lt(delivererPayments.createdAt, periodEnd)
+      ));
+      merchantPaymentQuery = merchantPaymentQuery.where(and(
+        gte(merchantPayments.createdAt, periodStart),
+        lt(merchantPayments.createdAt, periodEnd)
+      ));
+    }
+
+    const [deliveriesData, delivererPaymentsData, merchantPaymentsData] = await Promise.all([
+      deliveryQuery,
+      delivererPaymentQuery,
+      merchantPaymentQuery
+    ]);
+
+    const totalRevenue = deliveriesData
+      .filter(d => d.status === 'delivered')
+      .reduce((sum, d) => sum + parseFloat(d.deliveryFee || '0'), 0);
+
+    const totalCommission = delivererPaymentsData
+      .reduce((sum, p) => sum + parseFloat(p.commissionAmount), 0);
+
+    const totalDelivererPayments = delivererPaymentsData
+      .reduce((sum, p) => sum + parseFloat(p.delivererAmount), 0);
+
+    const totalMerchantPayments = merchantPaymentsData
+      .reduce((sum, p) => sum + parseFloat(p.totalValue), 0);
+
+    const pendingDelivererPayments = delivererPaymentsData
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + parseFloat(p.delivererAmount), 0);
+
+    const paidDelivererPayments = delivererPaymentsData
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.delivererAmount), 0);
+
+    const pendingMerchantPayments = merchantPaymentsData
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + parseFloat(p.totalValue), 0);
+
+    const paidMerchantPayments = merchantPaymentsData
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.totalValue), 0);
+
+    return {
+      totalRevenue,
+      totalCommission,
+      totalDelivererPayments,
+      totalMerchantPayments,
+      totalDeliveries: deliveriesData.length,
+      pendingDelivererPayments,
+      paidDelivererPayments,
+      pendingMerchantPayments,
+      paidMerchantPayments
     };
   }
 }
