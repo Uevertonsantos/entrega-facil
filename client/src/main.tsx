@@ -1,83 +1,134 @@
+import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+import "./index.css";
+
 console.log("🚀 Starting Entrega Fácil...");
 
-// First, show a basic loading screen
-document.body.innerHTML = `
-<div style="padding: 20px; text-align: center; font-family: Arial, sans-serif; background: #f0f0f0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <h1 style="color: #333; margin-bottom: 20px;">🚚 Entrega Fácil</h1>
-    <p style="color: #666; margin-bottom: 20px;">Carregando sistema...</p>
-    <div id="loading-status" style="color: #007bff;">Iniciando...</div>
-  </div>
-</div>
-`;
-
-const updateStatus = (message) => {
-  const statusEl = document.getElementById('loading-status');
-  if (statusEl) statusEl.textContent = message;
-};
-
-// Try to load React step by step
-setTimeout(async () => {
-  try {
-    updateStatus("Carregando React...");
-    
-    const { createRoot } = await import("react-dom/client");
-    updateStatus("React DOM carregado ✅");
-    
-    const { StrictMode } = await import("react");
-    updateStatus("React carregado ✅");
-    
-    // Import CSS
-    await import("./index.css");
-    updateStatus("Estilos carregados ✅");
-    
-    // Try to import App
-    updateStatus("Carregando App...");
-    const { default: App } = await import("./App");
-    updateStatus("App carregado ✅");
-    
-    // Create root element
-    const rootElement = document.getElementById("root");
-    if (!rootElement) {
-      // Create root if it doesn't exist
-      const newRoot = document.createElement("div");
-      newRoot.id = "root";
-      document.body.appendChild(newRoot);
-    }
-    
-    updateStatus("Renderizando App...");
-    const root = createRoot(document.getElementById("root"));
-    
-    root.render(
-      <StrictMode>
-        <App />
-      </StrictMode>
-    );
-    
-    updateStatus("App renderizado com sucesso ✅");
-    console.log("✅ React app rendered successfully");
-    
-  } catch (error) {
-    console.error("❌ Error loading app:", error);
-    updateStatus(`Erro: ${error.message}`);
-    
-    // Show error and fallback options
-    document.body.innerHTML = `
-      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif; background: #f0f0f0; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <h1 style="color: #333; margin-bottom: 20px;">🚚 Entrega Fácil</h1>
-          <div style="color: #d32f2f; margin-bottom: 20px;">❌ Erro ao carregar: ${error.message}</div>
+// Simple working app component
+function SimpleApp() {
+  return (
+    <div style={{ 
+      padding: '20px', 
+      textAlign: 'center', 
+      fontFamily: 'Arial, sans-serif',
+      background: '#f0f0f0',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        background: 'white',
+        padding: '40px',
+        borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        maxWidth: '600px',
+        width: '100%'
+      }}>
+        <h1 style={{ color: '#333', marginBottom: '10px' }}>🚚 Entrega Fácil</h1>
+        <p style={{ color: '#666', marginBottom: '30px' }}>Sistema de Gerenciamento de Entregas</p>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+          gap: '20px',
+          marginBottom: '30px'
+        }}>
+          <div style={{
+            background: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}>
+            <h3 style={{ color: '#333', marginTop: 0 }}>👨‍💼 Administrador</h3>
+            <p style={{ color: '#666', fontSize: '14px' }}>Gerencie todo o sistema</p>
+            <button 
+              onClick={() => window.location.href = '/admin-login'}
+              style={{
+                background: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Entrar
+            </button>
+          </div>
           
-          <div style="margin-top: 20px;">
-            <h3>Páginas alternativas:</h3>
-            <a href="/test.html" style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">Teste Básico</a>
-            <a href="/debug.html" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">Debug</a>
+          <div style={{
+            background: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}>
+            <h3 style={{ color: '#333', marginTop: 0 }}>🏪 Comerciante</h3>
+            <p style={{ color: '#666', fontSize: '14px' }}>Solicite entregas</p>
+            <button 
+              onClick={() => window.location.href = '/merchant-login'}
+              style={{
+                background: '#28a745',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Entrar
+            </button>
+          </div>
+          
+          <div style={{
+            background: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}>
+            <h3 style={{ color: '#333', marginTop: 0 }}>🚴 Entregador</h3>
+            <p style={{ color: '#666', fontSize: '14px' }}>Receba entregas</p>
+            <button 
+              onClick={() => window.location.href = '/deliverer-login'}
+              style={{
+                background: '#ffc107',
+                color: 'black',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Entrar
+            </button>
+          </div>
+        </div>
+        
+        <div style={{ fontSize: '14px', color: '#666' }}>
+          <h3 style={{ marginBottom: '10px' }}>Credenciais de Teste</h3>
+          <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+            <p><strong>Admin:</strong> Admin / admin123</p>
+            <p><strong>Comerciante:</strong> joao@padaria.com / 123456789</p>
+            <p><strong>Entregador:</strong> maria@entregador.com / 987654321</p>
           </div>
         </div>
       </div>
-    `;
-  }
-}, 100);
+    </div>
+  );
+}
+
+// Simple render
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<SimpleApp />);
+  console.log("✅ Simple app rendered successfully");
+} else {
+  console.error("❌ Root element not found!");
+}
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
