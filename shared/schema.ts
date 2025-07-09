@@ -59,6 +59,18 @@ export const merchants = pgTable("merchants", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Neighborhoods table - valores fixos de distância por bairro
+export const neighborhoods = pgTable("neighborhoods", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull().unique(),
+  city: varchar("city").notNull().default("Conde"),
+  averageDistance: decimal("average_distance", { precision: 5, scale: 2 }).notNull(), // distância média em km
+  baseFare: decimal("base_fare", { precision: 10, scale: 2 }).notNull().default("5.00"), // tarifa base
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Deliverers table
 export const deliverers = pgTable("deliverers", {
   id: serial("id").primaryKey(),
@@ -262,6 +274,12 @@ export const insertAdminSettingSchema = createInsertSchema(adminSettings).omit({
   updatedAt: true,
 });
 
+export const insertNeighborhoodSchema = createInsertSchema(neighborhoods).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDelivererPaymentSchema = createInsertSchema(delivererPayments).omit({
   id: true,
   createdAt: true,
@@ -298,6 +316,9 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 
 export type InsertAdminSetting = z.infer<typeof insertAdminSettingSchema>;
 export type AdminSetting = typeof adminSettings.$inferSelect;
+
+export type InsertNeighborhood = z.infer<typeof insertNeighborhoodSchema>;
+export type Neighborhood = typeof neighborhoods.$inferSelect;
 
 export type InsertDelivererPayment = z.infer<typeof insertDelivererPaymentSchema>;
 export type DelivererPayment = typeof delivererPayments.$inferSelect;

@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
 import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } from "@shared/schema";
 import { z } from "zod";
 import { calculateDeliveryDistance, applySurgePricing, getDeliveryZone } from "./services/distanceService";
-import { routingService } from "./services/routingService";
+import { neighborhoodService } from "./services/neighborhoodService";
 
 // Admin credentials (in production, these should be in environment variables)
 const ADMIN_CREDENTIALS = {
@@ -2471,43 +2471,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Routing and tracking endpoints
   
-  // Calculate route and delivery price
+  // Calculate delivery price by neighborhood
   app.post('/api/routing/calculate-delivery', async (req, res) => {
     try {
-      const { pickupLocation, deliveryLocation, baseFare, farePerKm } = req.body;
+      const { neighborhoodName, farePerKm } = req.body;
       
-      if (!pickupLocation || !deliveryLocation) {
-        return res.status(400).json({ message: "Pickup and delivery locations are required" });
+      if (!neighborhoodName) {
+        return res.status(400).json({ message: "Neighborhood name is required" });
       }
       
-      const routeData = await routingService.calculateRoute(pickupLocation, deliveryLocation);
-      
-      if (!routeData) {
-        return res.status(400).json({ message: "Unable to calculate route" });
-      }
-      
-      const pricing = routingService.calculateDeliveryPrice(
-        routeData.distance,
-        baseFare || 5.00,
+      const calculation = await neighborhoodService.calculateDeliveryByNeighborhood(
+        neighborhoodName,
         farePerKm || 2.50
       );
       
-      const eta = routingService.calculateETA(routeData.distance);
+      if (!calculation) {
+        return res.status(404).json({ message: "Neighborhood not found" });
+      }
       
       res.json({
-        route: routeData,
-        pricing,
-        eta: eta,
+        neighborhood: calculation,
         summary: {
-          distanceKm: pricing.distanceKm,
-          durationMinutes: Math.round(routeData.duration / 60),
-          totalFare: pricing.totalFare,
-          etaMinutes: eta
+          distanceKm: calculation.averageDistance,
+          durationMinutes: calculation.estimatedDuration,
+          totalFare: calculation.totalFare,
+          etaMinutes: calculation.estimatedDuration
         }
       });
     } catch (error) {
-      console.error("Error calculating delivery:", error);
-      res.status(500).json({ message: "Failed to calculate delivery" });
+      console.error("Error calculating delivery by neighborhood:", error);
+      res.status(500).json({ message: "Failed to calculate delivery price" });
+    }
+  });
+
+  // Get all neighborhoods
+  app.get('/api/neighborhoods', async (req, res) => {
+    try {
+      const neighborhoods = await neighborhoodService.getAllNeighborhoods();
+      res.json(neighborhoods);
+    } catch (error) {
+      console.error("Error getting neighborhoods:", error);
+      res.status(500).json({ message: "Failed to get neighborhoods" });
+    }
+  });
+
+  // Search neighborhoods
+  app.get('/api/neighborhoods/search', async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+      
+      const neighborhoods = await neighborhoodService.searchNeighborhoods(q as string);
+      res.json(neighborhoods);
+    } catch (error) {
+      console.error("Error searching neighborhoods:", error);
+      res.status(500).json({ message: "Failed to search neighborhoods" });
     }
   });
 
