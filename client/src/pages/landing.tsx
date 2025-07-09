@@ -8,7 +8,7 @@ export default function Landing() {
   };
 
   const handleMerchantLogin = () => {
-    window.location.href = "/merchant-login";
+    window.location.href = "/merchant-page";
   };
 
   const handleMerchantRegister = () => {

@@ -27,6 +27,7 @@ import RealTimeMonitor from "@/pages/real-time-monitor";
 import PlatformCommission from "@/pages/platform-commission";
 import TestCredentials from "@/pages/test-credentials";
 import MerchantLogin from "@/pages/merchant-login";
+import MerchantPage from "@/pages/merchant-page";
 import MerchantRegister from "@/pages/merchant-register";
 import DelivererLogin from "@/pages/deliverer-login";
 import DelivererRegister from "@/pages/deliverer-register";
@@ -55,6 +56,7 @@ function Router() {
         <Route path="/admin-login" component={AdminLogin} />
         <Route path="/merchant-login" component={MerchantLogin} />
         <Route path="/merchant-register" component={MerchantRegister} />
+        <Route path="/merchant-page" component={MerchantPage} />
         <Route path="/deliverer-login" component={DelivererLogin} />
         <Route path="/deliverer-register" component={DelivererRegister} />
         <Route path="/clear-auth" component={ClearAuth} />

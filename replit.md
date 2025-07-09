@@ -170,6 +170,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Implemented client-focused interface with simple delivery request form and order tracking
 - July 09, 2025. Added automatic synchronization with central admin system for proper data flow
 - July 09, 2025. Enhanced installer with beautiful UI, proper validation, and offline capabilities
+- July 09, 2025. Created dedicated merchant access page at /merchant-page with combined login and registration
+- July 09, 2025. Enhanced merchant UX with benefits showcase and direct access from landing page
+- July 09, 2025. Implemented merchant-specific page with business-focused features and statistics display
 
 ## User Preferences
 
