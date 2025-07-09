@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Clock, Eye, DollarSign, TrendingUp, Users } from "lucide-react";
+import { CheckCircle, Clock, Eye, DollarSign, TrendingUp, Users, FilterX } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -42,6 +42,7 @@ interface PaymentSummary {
 export default function DelivererPaymentsPage() {
   const [selectedDeliverer, setSelectedDeliverer] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterDeliverer, setFilterDeliverer] = useState<string>('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -83,10 +84,30 @@ export default function DelivererPaymentsPage() {
     updatePaymentStatusMutation.mutate({ id, status });
   };
 
+  const clearAllFilters = () => {
+    setFilterStatus('all');
+    setFilterDeliverer('all');
+  };
+
   const filteredPayments = payments.filter(payment => {
-    if (filterStatus === 'all') return true;
-    return payment.status === filterStatus;
+    let statusMatch = true;
+    let delivererMatch = true;
+    
+    if (filterStatus !== 'all') {
+      statusMatch = payment.status === filterStatus;
+    }
+    
+    if (filterDeliverer !== 'all') {
+      delivererMatch = payment.delivererId.toString() === filterDeliverer;
+    }
+    
+    return statusMatch && delivererMatch;
   });
+
+  // Get unique deliverers for filter
+  const uniqueDeliverers = Array.from(
+    new Map(payments.map(p => [p.delivererId, { id: p.delivererId, name: p.delivererName }])).values()
+  );
 
   const formatCurrency = (value: string | number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -183,16 +204,50 @@ export default function DelivererPaymentsPage() {
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="pending">Pendentes</SelectItem>
                 <SelectItem value="paid">Pagos</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Select value={filterDeliverer} onValueChange={setFilterDeliverer}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filtrar por entregador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Entregadores</SelectItem>
+                {uniqueDeliverers.map((deliverer) => (
+                  <SelectItem key={deliverer.id} value={deliverer.id.toString()}>
+                    {deliverer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button
+              variant="outline"
+              onClick={clearAllFilters}
+              className="w-full sm:w-auto"
+              disabled={filterStatus === 'all' && filterDeliverer === 'all'}
+            >
+              <FilterX className="h-4 w-4 mr-2" />
+              Limpar Filtros
+            </Button>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Pagamentos por Entrega</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>Pagamentos por Entrega</span>
+                <div className="text-sm text-muted-foreground">
+                  {filteredPayments.length} de {payments.length} registros
+                  {(filterStatus !== 'all' || filterDeliverer !== 'all') && (
+                    <span className="ml-2 text-blue-600 font-medium">
+                      (filtrado)
+                    </span>
+                  )}
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
