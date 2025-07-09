@@ -15,6 +15,7 @@ import DelivererApp from "@/pages/deliverer-app";
 import MerchantApp from "@/pages/merchant-app";
 import AdminLogin from "@/pages/admin-login";
 import AdminSettings from "@/pages/admin-settings";
+import PlanManagement from "@/pages/plan-management";
 import MerchantLogin from "@/pages/merchant-login";
 import DelivererLogin from "@/pages/deliverer-login";
 import NotFound from "@/pages/not-found";
@@ -56,6 +57,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/financial" component={Financial} />
           <Route path="/settings" component={AdminSettings} />
+          <Route path="/plans" component={PlanManagement} />
           <Route component={NotFound} />
         </Switch>
       </Layout>

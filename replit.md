@@ -114,6 +114,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Integrated ViaCEP API for fallback geocoding without requiring paid services
 - July 09, 2025. Added multiple subscription plan options: weekly, monthly, quarterly, annual, basic, and premium
 - July 09, 2025. Expanded admin settings with comprehensive plan configuration for different subscription types
+- July 09, 2025. Created dedicated plan management page with detailed plan configuration including delivery limits
+- July 09, 2025. Implemented visual plan cards with features, pricing, and delivery limits (unlimited or specific numbers)
+- July 09, 2025. Added plan editor modal for creating/editing plans with custom features and delivery restrictions
 
 ## User Preferences
 
