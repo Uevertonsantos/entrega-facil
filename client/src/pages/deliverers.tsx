@@ -5,15 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { 
   Users, 
   Plus, 
@@ -48,7 +42,7 @@ export default function Deliverers() {
 
 
   const updateDelivererMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<DelivererFormData> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       await apiRequest(`/api/deliverers/${id}`, "PUT", data);
     },
     onSuccess: () => {
@@ -60,7 +54,6 @@ export default function Deliverers() {
         description: "O entregador foi atualizado com sucesso.",
       });
       setEditingDeliverer(null);
-      form.reset();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -247,114 +240,13 @@ export default function Deliverers() {
                     {deliverer.isOnline ? "Offline" : "Online"}
                   </Button>
                   
-                  <Dialog 
-                    open={editingDeliverer?.id === deliverer.id} 
-                    onOpenChange={(open) => {
-                      if (!open) {
-                        setEditingDeliverer(null);
-                        form.reset();
-                      }
-                    }}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
                   >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(deliverer)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Editar Entregador</DialogTitle>
-                      </DialogHeader>
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nome</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Ex: João Silva" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="phone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Telefone</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="(11) 99999-9999" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="flex items-center justify-between">
-                            <FormField
-                              control={form.control}
-                              name="isActive"
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormLabel>Ativo</FormLabel>
-                                  <FormControl>
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="isOnline"
-                              render={({ field }) => (
-                                <FormItem className="flex items-center space-x-2">
-                                  <FormLabel>Online</FormLabel>
-                                  <FormControl>
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingDeliverer(null);
-                                form.reset();
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button 
-                              type="submit" 
-                              disabled={updateDelivererMutation.isPending}
-                            >
-                              Atualizar
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
+                    <Edit className="h-3 w-3" />
+                  </Button>
                 </div>
                 
                 <div className="flex space-x-2">
