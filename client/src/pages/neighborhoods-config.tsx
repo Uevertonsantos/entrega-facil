@@ -37,25 +37,23 @@ export default function NeighborhoodsConfig() {
 
   const loadCities = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const data = await apiRequest('/api/cities', 'GET', undefined, {
-        'Authorization': `Bearer ${token}`
-      });
-      setCities(data);
+      const response = await apiRequest('/api/cities', 'GET');
+      const data = await response.json();
+      setCities(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading cities:', error);
+      setCities([]);
     }
   };
 
   const loadNeighborhoods = async (cityName: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const data = await apiRequest(`/api/neighborhoods/city/${cityName}`, 'GET', undefined, {
-        'Authorization': `Bearer ${token}`
-      });
-      setNeighborhoods(data);
+      const response = await apiRequest(`/api/neighborhoods/city/${cityName}`, 'GET');
+      const data = await response.json();
+      setNeighborhoods(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading neighborhoods:', error);
+      setNeighborhoods([]);
     }
   };
 
@@ -72,15 +70,12 @@ export default function NeighborhoodsConfig() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       await apiRequest('/api/neighborhoods', 'POST', {
         name: formData.name,
         city: formData.city,
         state: formData.state,
         averageDistance: parseFloat(formData.averageDistance),
         baseFare: parseFloat(formData.baseFare)
-      }, {
-        'Authorization': `Bearer ${token}`
       });
 
       toast({
@@ -201,7 +196,7 @@ export default function NeighborhoodsConfig() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {cities.map((city) => (
+              {cities && cities.length > 0 ? cities.map((city) => (
                 <div
                   key={city.city}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -219,11 +214,10 @@ export default function NeighborhoodsConfig() {
                     <MapPin className="h-4 w-4 text-gray-400" />
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-gray-500 text-sm">Nenhuma cidade encontrada</p>
+              )}
             </div>
-            {cities.length === 0 && (
-              <p className="text-gray-500 text-sm">Nenhuma cidade encontrada</p>
-            )}
           </CardContent>
         </Card>
 
@@ -241,7 +235,7 @@ export default function NeighborhoodsConfig() {
               <p className="text-gray-500 text-sm">Selecione uma cidade para ver os bairros</p>
             ) : (
               <div className="space-y-2">
-                {neighborhoods.map((neighborhood) => (
+                {neighborhoods && neighborhoods.length > 0 ? neighborhoods.map((neighborhood) => (
                   <div
                     key={neighborhood.id}
                     className="p-3 rounded-lg border hover:border-gray-300 transition-colors"
@@ -266,11 +260,10 @@ export default function NeighborhoodsConfig() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-gray-500 text-sm">Nenhum bairro cadastrado para esta cidade</p>
+                )}
               </div>
-            )}
-            {selectedCity && neighborhoods.length === 0 && (
-              <p className="text-gray-500 text-sm">Nenhum bairro cadastrado para esta cidade</p>
             )}
           </CardContent>
         </Card>

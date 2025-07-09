@@ -11,6 +11,7 @@ export async function apiRequest(
   url: string,
   method: string,
   data?: unknown | undefined,
+  customHeaders?: Record<string, string>,
 ): Promise<Response> {
   // Add tokens if available
   const adminToken = localStorage.getItem("adminToken");
@@ -25,6 +26,11 @@ export async function apiRequest(
     headers.Authorization = `Bearer ${merchantToken}`;
   } else if (delivererToken) {
     headers.Authorization = `Bearer ${delivererToken}`;
+  }
+  
+  // Override with custom headers if provided
+  if (customHeaders) {
+    Object.assign(headers, customHeaders);
   }
   
   const res = await fetch(url, {
