@@ -148,6 +148,13 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Enhanced cache management system for better Chrome compatibility with external domains
 - July 09, 2025. Implemented aggressive cache clearing and service worker updates for consistent page loading
 - July 09, 2025. Added version-based cache invalidation to ensure users see the latest application version
+- July 09, 2025. Implemented comprehensive user registration system for merchants and deliverers
+- July 09, 2025. Added merchant registration form with business validation (CNPJ/CPF), address, plan selection
+- July 09, 2025. Created deliverer registration form with personal data, vehicle information, and payment details
+- July 09, 2025. Built complete CPF/CNPJ validation system with Brazilian document format verification
+- July 09, 2025. Added registration endpoints in server with duplicate email validation and proper error handling
+- July 09, 2025. Enhanced landing page with registration buttons for both user types
+- July 09, 2025. Fixed navigation buttons in registration forms to properly redirect to homepage
 
 ## User Preferences
 
