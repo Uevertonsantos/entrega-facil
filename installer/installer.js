@@ -350,6 +350,7 @@ const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
+const WebSocket = require('ws');
 
 const CONFIG_FILE = '${this.configFile}';
 const DB_FILE = '${this.dbFile}';
@@ -358,6 +359,137 @@ class SyncService {
   constructor() {
     this.config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
     this.db = new sqlite3.Database(DB_FILE);
+    this.ws = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectDelay = 5000;
+    this.setupWebSocket();
+  }
+
+  setupWebSocket() {
+    try {
+      const wsUrl = this.config.adminApiUrl.replace('http', 'ws').replace('/api', '/ws');
+      this.ws = new WebSocket(wsUrl);
+      
+      this.ws.on('open', () => {
+        console.log('WebSocket connected for real-time sync');
+        this.reconnectAttempts = 0;
+        
+        // Register client for real-time notifications
+        this.ws.send(JSON.stringify({
+          type: 'client_register',
+          clientId: this.config.clientId
+        }));
+      });
+      
+      this.ws.on('message', (data) => {
+        try {
+          const message = JSON.parse(data);
+          this.handleWebSocketMessage(message);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      });
+      
+      this.ws.on('close', () => {
+        console.log('WebSocket disconnected');
+        this.attemptReconnect();
+      });
+      
+      this.ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        this.attemptReconnect();
+      });
+      
+      // Send ping every 30 seconds to keep connection alive
+      setInterval(() => {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 30000);
+      
+    } catch (error) {
+      console.error('Error setting up WebSocket:', error);
+      this.attemptReconnect();
+    }
+  }
+
+  attemptReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(\`Attempting to reconnect WebSocket (\${this.reconnectAttempts}/\${this.maxReconnectAttempts})...\`);
+      
+      setTimeout(() => {
+        this.setupWebSocket();
+      }, this.reconnectDelay);
+    } else {
+      console.log('Max reconnect attempts reached. Will retry on next sync cycle.');
+    }
+  }
+
+  handleWebSocketMessage(message) {
+    switch (message.type) {
+      case 'registration_success':
+        console.log('Successfully registered for real-time sync');
+        break;
+        
+      case 'delivery_update':
+        console.log('Received delivery update from admin:', message.payload);
+        this.handleDeliveryUpdate(message.payload);
+        break;
+        
+      case 'new_delivery':
+        console.log('New delivery created:', message.payload);
+        break;
+        
+      case 'delivery_accepted':
+        console.log('Delivery accepted:', message.payload);
+        break;
+        
+      case 'delivery_completed':
+        console.log('Delivery completed:', message.payload);
+        break;
+        
+      case 'pong':
+        // Keep-alive response
+        break;
+        
+      default:
+        console.log('Unknown message type:', message.type);
+    }
+  }
+
+  handleDeliveryUpdate(payload) {
+    // Process delivery updates received from admin panel
+    const delivery = payload.delivery;
+    
+    if (delivery) {
+      // Update local database with admin changes
+      this.db.run(
+        'UPDATE deliveries SET status = ?, updated_at = ? WHERE id = ?',
+        [delivery.status, new Date().toISOString(), delivery.id],
+        function(err) {
+          if (err) {
+            console.error('Error updating delivery from admin:', err);
+          } else {
+            console.log(\`Updated delivery \${delivery.id} status to \${delivery.status}\`);
+          }
+        }
+      );
+    }
+  }
+
+  sendRealTimeDeliveryUpdate(deliveryData) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'delivery_update',
+        payload: {
+          delivery: deliveryData,
+          clientId: this.config.clientId,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    }
   }
 
   async syncData() {
@@ -456,6 +588,9 @@ class SyncService {
             
             this.db.run("UPDATE deliveries SET sync_status = 'synced', synced_at = ? WHERE id = ?", 
               [new Date().toISOString(), delivery.id]);
+              
+            // Send real-time notification for this delivery
+            this.sendRealTimeDeliveryUpdate(delivery);
               
           } catch (error) {
             console.error(\`Erro ao sincronizar delivery \${delivery.id}:\`, error.message);
@@ -695,7 +830,10 @@ app.listen(PORT, () => {
       dependencies: {
         express: "^4.18.2",
         sqlite3: "^5.1.6",
-        dotenv: "^16.3.1"
+        dotenv: "^16.3.1",
+        ws: "^8.14.0",
+        axios: "^1.6.0",
+        "node-cron": "^3.0.3"
       }
     }, null, 2);
   }

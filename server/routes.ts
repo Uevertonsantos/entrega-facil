@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
@@ -631,6 +632,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const parsedData = insertDeliverySchema.parse(deliveryData);
       const delivery = await storage.createDelivery(parsedData);
+      
+      // Send real-time notification to all connected clients
+      const broadcastToClients = (app as any).broadcastToClients;
+      if (broadcastToClients) {
+        broadcastToClients('new_delivery', {
+          delivery,
+          action: 'created',
+          merchantId: userInfo.id
+        });
+      }
+      
       res.status(201).json(delivery);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -702,6 +714,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delivererId: delivererId,
         status: "in_progress"
       });
+      
+      // Send real-time notification
+      const broadcastToClients = (app as any).broadcastToClients;
+      if (broadcastToClients) {
+        broadcastToClients('delivery_accepted', {
+          delivery,
+          action: 'accepted',
+          delivererId: delivererId
+        });
+      }
+      
       res.json(delivery);
     } catch (error) {
       console.error("Error accepting delivery:", error);
@@ -747,6 +770,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedAt: new Date(),
         notes: notes || null
       });
+      
+      // Send real-time notification
+      const broadcastToClients = (app as any).broadcastToClients;
+      if (broadcastToClients) {
+        broadcastToClients('delivery_completed', {
+          delivery,
+          action: 'completed',
+          delivererId: userInfo.id
+        });
+      }
+      
       res.json(delivery);
     } catch (error) {
       console.error("Error completing delivery:", error);
@@ -932,6 +966,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Received delivery data from client ${clientId}:`, deliveryData.id);
       
+      // Send real-time notification to admin panel
+      const broadcastToClients = (app as any).broadcastToClients;
+      if (broadcastToClients) {
+        broadcastToClients('client_delivery_sync', {
+          delivery: extendedDeliveryData,
+          action: 'synced',
+          clientId: clientId
+        });
+      }
+      
       res.json({ 
         success: true, 
         message: "Delivery data received successfully",
@@ -1050,5 +1094,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server for real-time sync
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients
+  const connectedClients = new Map<string, WebSocket>();
+  
+  wss.on('connection', (ws: WebSocket, req) => {
+    console.log('WebSocket client connected');
+    
+    ws.on('message', (message: string) => {
+      try {
+        const data = JSON.parse(message);
+        
+        if (data.type === 'client_register') {
+          const clientId = data.clientId;
+          connectedClients.set(clientId, ws);
+          console.log(`Client ${clientId} registered for real-time sync`);
+          
+          ws.send(JSON.stringify({
+            type: 'registration_success',
+            clientId: clientId,
+            timestamp: new Date().toISOString()
+          }));
+        }
+        
+        if (data.type === 'delivery_update') {
+          // Broadcast delivery update to all connected clients
+          broadcastToClients('delivery_update', data.payload);
+        }
+        
+        if (data.type === 'ping') {
+          ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+        }
+        
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove client from connected clients
+      for (const [clientId, client] of connectedClients) {
+        if (client === ws) {
+          connectedClients.delete(clientId);
+          console.log(`Client ${clientId} disconnected`);
+          break;
+        }
+      }
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+  
+  // Helper function to broadcast to all connected clients
+  function broadcastToClients(type: string, payload: any) {
+    const message = JSON.stringify({
+      type,
+      payload,
+      timestamp: new Date().toISOString()
+    });
+    
+    connectedClients.forEach((ws, clientId) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(message);
+      }
+    });
+  }
+  
+  // Helper function to send to specific client
+  function sendToClient(clientId: string, type: string, payload: any) {
+    const ws = connectedClients.get(clientId);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  }
+  
+  // Store broadcast function globally for use in other routes
+  (app as any).broadcastToClients = broadcastToClients;
+  (app as any).sendToClient = sendToClient;
+  
   return httpServer;
 }
