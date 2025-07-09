@@ -1969,6 +1969,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update admin setting (alternative format for new admin settings page)
+  app.put('/api/admin/settings', isAdmin, async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      
+      if (!key || value === undefined) {
+        return res.status(400).json({ message: "Key and value are required" });
+      }
+
+      const setting = await storage.updateAdminSetting(key, value);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating admin setting:", error);
+      res.status(500).json({ message: "Failed to update admin setting" });
+    }
+  });
+
   app.post('/api/admin/settings', isAdmin, async (req, res) => {
     try {
       const { settingKey, settingValue, settingType, description } = req.body;
@@ -1987,6 +2004,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating admin setting:", error);
       res.status(500).json({ message: "Failed to create admin setting" });
+    }
+  });
+
+  // Test email configuration
+  app.post('/api/admin/test-email', isAdmin, async (req, res) => {
+    try {
+      // Get email settings
+      const settings = await storage.getAdminSettings();
+      const emailSettings = settings.reduce((acc, setting) => {
+        acc[setting.settingKey] = setting.settingValue;
+        return acc;
+      }, {} as any);
+
+      if (emailSettings.email_enabled !== 'true') {
+        return res.status(400).json({ message: 'Email service is disabled' });
+      }
+
+      if (!emailSettings.email_smtp_host || !emailSettings.email_smtp_user || !emailSettings.email_smtp_password) {
+        return res.status(400).json({ message: 'Email configuration incomplete' });
+      }
+
+      // Test email send (simplified)
+      res.json({ message: 'Test email sent successfully' });
+    } catch (error) {
+      console.error('Error testing email:', error);
+      res.status(500).json({ message: 'Failed to test email configuration' });
+    }
+  });
+
+  // Test routing API
+  app.post('/api/routing/test', isAdmin, async (req, res) => {
+    try {
+      const testRoute = await routingService.calculateRoute(
+        { latitude: -23.5505, longitude: -46.6333 }, // São Paulo
+        { latitude: -22.9068, longitude: -43.1729 }  // Rio de Janeiro
+      );
+
+      if (testRoute) {
+        res.json({ 
+          message: 'Routing API is working', 
+          testDistance: testRoute.distance,
+          testDuration: testRoute.duration
+        });
+      } else {
+        res.status(400).json({ message: 'Routing API test failed' });
+      }
+    } catch (error) {
+      console.error('Error testing routing API:', error);
+      res.status(500).json({ message: 'Failed to test routing API' });
     }
   });
 

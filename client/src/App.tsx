@@ -19,6 +19,7 @@ import AdminLogin from "@/pages/admin-login";
 import AdminForgotPassword from "@/pages/admin-forgot-password";
 import AdminResetPassword from "@/pages/admin-reset-password";
 import AdminSettings from "@/pages/admin-settings";
+import AdminSystemSettings from "@/pages/admin-settings";
 import EmailSettings from "@/pages/email-settings";
 import PlanManagement from "@/pages/plan-management";
 import ClientsOverview from "@/pages/clients-overview";
@@ -93,6 +94,7 @@ function Router() {
           <Route path="/merchant-payments" component={MerchantPayments} />
           <Route path="/deliverer-payments" component={DelivererPayments} />
           <Route path="/settings" component={AdminSettings} />
+          <Route path="/admin-settings" component={AdminSystemSettings} />
           <Route path="/email-settings" component={EmailSettings} />
           <Route path="/plans" component={PlanManagement} />
           <Route path="/clients" component={ClientsOverview} />

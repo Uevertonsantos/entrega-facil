@@ -44,14 +44,16 @@ class RoutingService {
         [destination.longitude, destination.latitude]
       ];
 
-      const response = await fetch(`${this.baseUrl}/directions/driving-car/geojson`, {
+      const response = await fetch(`${this.baseUrl}/directions/driving-car`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': this.apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          coordinates: coordinates
+          coordinates: coordinates,
+          format: 'json',
+          preference: 'fastest'
         })
       });
 
@@ -66,11 +68,11 @@ class RoutingService {
       }
 
       const route = data.features[0];
-      const properties = route.properties.segments[0];
+      const summary = route.properties.summary;
       
       return {
-        distance: properties.distance, // metros
-        duration: properties.duration, // segundos
+        distance: summary.distance, // metros
+        duration: summary.duration, // segundos
         geometry: route.geometry.coordinates // pontos da rota
       };
     } catch (error) {
@@ -110,7 +112,7 @@ class RoutingService {
       const response = await fetch(`${this.baseUrl}/matrix/driving-car`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': this.apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -192,7 +194,7 @@ class RoutingService {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`
+            'Authorization': this.apiKey
           }
         }
       );
