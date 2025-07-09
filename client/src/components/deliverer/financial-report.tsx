@@ -197,8 +197,8 @@ export default function DelivererFinancialReport() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">R$ {financialSummary.totalEarned.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{financialSummary.totalDeliveries} entregas</p>
+            <div className="text-2xl font-bold text-green-600">R$ {(financialSummary.totalEarned || 0).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">{financialSummary.totalDeliveries || 0} entregas</p>
           </CardContent>
         </Card>
 
@@ -208,7 +208,7 @@ export default function DelivererFinancialReport() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">R$ {financialSummary.totalPlatformFees.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-red-600">R$ {(financialSummary.totalPlatformFees || 0).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Descontado</p>
           </CardContent>
         </Card>
@@ -219,7 +219,7 @@ export default function DelivererFinancialReport() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">R$ {financialSummary.totalReceived.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-blue-600">R$ {(financialSummary.totalReceived || 0).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Pago</p>
           </CardContent>
         </Card>
@@ -230,7 +230,7 @@ export default function DelivererFinancialReport() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">R$ {financialSummary.totalPending.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-yellow-600">R$ {(financialSummary.totalPending || 0).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">A receber</p>
           </CardContent>
         </Card>
