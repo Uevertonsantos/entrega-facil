@@ -426,6 +426,8 @@
       if (installData.nodeInstalled) {
         goToStep(2);
         setupStep2();
+      } else {
+        alert('Por favor, instale o Node.js primeiro antes de continuar.');
       }
     });
     
@@ -521,6 +523,11 @@
       updateInstallStatus('Criando diretórios...');
       
       try {
+        // Simular progresso da instalação
+        setTimeout(() => updateInstallStatus('Instalando dependências...'), 1000);
+        setTimeout(() => updateInstallStatus('Configurando sistema...'), 3000);
+        setTimeout(() => updateInstallStatus('Criando atalhos...'), 5000);
+        
         const result = await ipcRenderer.invoke('start-installation', config);
         
         if (result.success) {
@@ -539,6 +546,7 @@
       } catch (error) {
         updateInstallStatus('Erro na instalação');
         showInstallResult(false, error.message);
+        console.error('Erro detalhado:', error);
       }
     }
     
