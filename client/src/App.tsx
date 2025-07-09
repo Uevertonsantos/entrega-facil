@@ -37,6 +37,8 @@ import DelivererLogin from "@/pages/deliverer-login";
 import DelivererRegister from "@/pages/deliverer-register";
 import ClearAuth from "@/pages/clear-auth";
 import RoutingTest from "@/pages/routing-test";
+import RoutingTestSimple from "@/pages/routing-test-simple";
+import QuickLogin from "@/pages/quick-login";
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/layout/layout";
 
@@ -59,6 +61,7 @@ function Router() {
         <Route path="/admin/forgot-password" component={AdminForgotPassword} />
         <Route path="/admin/reset-password" component={AdminResetPassword} />
         <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/quick-login" component={QuickLogin} />
         <Route path="/merchant-login" component={MerchantLogin} />
         <Route path="/merchant-register" component={MerchantRegister} />
         <Route path="/merchant-page" component={MerchantPage} />
@@ -104,6 +107,7 @@ function Router() {
           <Route path="/commissions" component={PlatformCommission} />
           <Route path="/test-credentials" component={TestCredentials} />
           <Route path="/routing-test" component={RoutingTest} />
+          <Route path="/routing-test-simple" component={RoutingTestSimple} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
