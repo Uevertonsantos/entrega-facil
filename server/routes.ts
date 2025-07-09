@@ -1578,13 +1578,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Plan management endpoints
-  app.get('/api/admin/plans', isAdmin, async (req, res) => {
+  app.get('/api/admin/plans', async (req, res) => {
     try {
       const plans = await storage.getAdminSettings();
-      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_'));
+      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_') && setting.settingType === 'plan');
       
       // If no plans exist, create default plans
       if (planSettings.length === 0) {
+        console.log("No plans found, creating default plans...");
         const defaultPlans = [
           {
             id: 'basic',
@@ -1634,14 +1635,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
+        console.log("Default plans created successfully");
         res.json(defaultPlans);
       } else {
-        const parsedPlans = planSettings.map(setting => JSON.parse(setting.settingValue));
-        res.json(parsedPlans);
+        try {
+          const parsedPlans = planSettings.map(setting => {
+            try {
+              return JSON.parse(setting.settingValue);
+            } catch (e) {
+              console.error("Error parsing plan setting:", setting.settingKey, e);
+              return null;
+            }
+          }).filter(plan => plan !== null);
+          
+          console.log("Returning parsed plans:", parsedPlans.length);
+          res.json(parsedPlans);
+        } catch (parseError) {
+          console.error("Error parsing plans:", parseError);
+          res.status(500).json({ message: "Failed to parse plans" });
+        }
       }
     } catch (error) {
       console.error("Error fetching plans:", error);
       res.status(500).json({ message: "Failed to fetch plans" });
+    }
+  });
+
+  // Public endpoint for getting active plans (used in client setup)
+  app.get('/api/plans/active', async (req, res) => {
+    try {
+      const plans = await storage.getAdminSettings();
+      const planSettings = plans.filter(setting => setting.settingKey.startsWith('plan_') && setting.settingType === 'plan');
+      
+      if (planSettings.length === 0) {
+        // Create default plans if none exist
+        const defaultPlans = [
+          {
+            id: 'basic',
+            name: 'Plano Básico',
+            price: 99.00,
+            period: 'monthly',
+            deliveryLimit: 50,
+            features: ['Até 50 entregas por mês', 'Suporte por email', 'Painel básico'],
+            description: 'Ideal para pequenos negócios que estão começando',
+            isActive: true,
+            priority: 1,
+            color: '#3b82f6'
+          },
+          {
+            id: 'standard',
+            name: 'Plano Padrão',
+            price: 149.00,
+            period: 'monthly',
+            deliveryLimit: 150,
+            features: ['Até 150 entregas por mês', 'Suporte prioritário', 'Relatórios avançados', 'Integração com WhatsApp'],
+            description: 'Perfeito para negócios em crescimento',
+            isActive: true,
+            priority: 2,
+            color: '#10b981'
+          },
+          {
+            id: 'premium',
+            name: 'Plano Premium',
+            price: 299.00,
+            period: 'monthly',
+            deliveryLimit: null,
+            features: ['Entregas ilimitadas', 'Suporte 24/7', 'API personalizada', 'Múltiplos usuários', 'Relatórios em tempo real'],
+            description: 'Para negócios que precisam de máxima flexibilidade',
+            isActive: true,
+            priority: 3,
+            color: '#f59e0b'
+          }
+        ];
+        
+        // Create default plans
+        for (const plan of defaultPlans) {
+          await storage.createAdminSetting({
+            settingKey: `plan_${plan.id}`,
+            settingValue: JSON.stringify(plan),
+            settingType: 'plan',
+            description: `Configuração do ${plan.name}`
+          });
+        }
+        
+        // Return only active plans
+        res.json(defaultPlans.filter(plan => plan.isActive));
+      } else {
+        const parsedPlans = planSettings.map(setting => {
+          try {
+            return JSON.parse(setting.settingValue);
+          } catch (e) {
+            console.error("Error parsing plan setting:", setting.settingKey, e);
+            return null;
+          }
+        }).filter(plan => plan !== null && plan.isActive);
+        
+        res.json(parsedPlans);
+      }
+    } catch (error) {
+      console.error("Error fetching active plans:", error);
+      res.status(500).json({ message: "Failed to fetch active plans" });
     }
   });
 

@@ -61,10 +61,10 @@ export default function ClientSetup() {
 
   // Query to fetch active plans
   const { data: plans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/admin/plans'],
+    queryKey: ['/api/plans/active'],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/plans', 'GET');
-      return (response as Plan[]).filter(plan => plan.isActive);
+      const response = await apiRequest('/api/plans/active', 'GET');
+      return response as Plan[];
     },
   });
   const [generatedCredentials, setGeneratedCredentials] = useState<{
