@@ -33,7 +33,15 @@ import Layout from "@/components/layout/layout";
 function Router() {
   const { isAuthenticated, isLoading, isAdmin, isMerchant, isDeliverer } = useAuth();
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <Switch>
         <Route path="/" component={Landing} />

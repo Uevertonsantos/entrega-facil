@@ -1,20 +1,8 @@
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, Users, Route, DollarSign, Store, User, Shield } from "lucide-react";
 
 export default function Landing() {
-  // Limpar qualquer estado de autenticação residual
-  useEffect(() => {
-    // Só limpa se não há tokens válidos
-    const adminToken = localStorage.getItem("adminToken");
-    const merchantToken = localStorage.getItem("merchantToken");
-    const delivererToken = localStorage.getItem("delivererToken");
-    
-    if (!adminToken && !merchantToken && !delivererToken) {
-      localStorage.removeItem("userType");
-    }
-  }, []);
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
