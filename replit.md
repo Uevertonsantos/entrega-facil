@@ -165,6 +165,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Added robust backup system with automatic daily backups and manual backup options
 - July 09, 2025. Implemented advanced logging system with separate logs for access, errors, and info
 - July 09, 2025. Created complete installer package v2.0 with documentation and troubleshooting tools
+- July 09, 2025. Corrected installer architecture - removed admin panel access for client installations
+- July 09, 2025. Created proper merchant-only installer v3.0 focused on delivery request functionality
+- July 09, 2025. Implemented client-focused interface with simple delivery request form and order tracking
+- July 09, 2025. Added automatic synchronization with central admin system for proper data flow
+- July 09, 2025. Enhanced installer with beautiful UI, proper validation, and offline capabilities
 
 ## User Preferences
 
