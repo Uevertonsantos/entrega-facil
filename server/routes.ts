@@ -2045,7 +2045,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           message: 'Routing API is working', 
           testDistance: testRoute.distance,
-          testDuration: testRoute.duration
+          testDuration: testRoute.duration,
+          usingFallback: !process.env.OPENROUTESERVICE_API_KEY
         });
       } else {
         res.status(400).json({ message: 'Routing API test failed' });
@@ -2053,6 +2054,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error testing routing API:', error);
       res.status(500).json({ message: 'Failed to test routing API' });
+    }
+  });
+
+  // Test routing API (public endpoint for testing)
+  app.get('/api/routing/test-public', async (req, res) => {
+    try {
+      const testRoute = await routingService.calculateRoute(
+        { latitude: -23.5505, longitude: -46.6333 }, // São Paulo
+        { latitude: -22.9068, longitude: -43.1729 }  // Rio de Janeiro
+      );
+
+      if (testRoute) {
+        res.json({ 
+          message: 'Routing system is working correctly',
+          status: 'success',
+          testDistance: `${(testRoute.distance / 1000).toFixed(2)} km`,
+          testDuration: `${Math.round(testRoute.duration / 60)} minutes`,
+          usingFallback: !process.env.OPENROUTESERVICE_API_KEY,
+          fallbackMethod: 'Haversine distance calculation'
+        });
+      } else {
+        res.status(400).json({ message: 'Routing system test failed' });
+      }
+    } catch (error) {
+      console.error('Error testing routing API:', error);
+      res.status(500).json({ message: 'Failed to test routing system' });
     }
   });
 

@@ -25,60 +25,93 @@ class RoutingService {
   constructor() {
     this.apiKey = process.env.OPENROUTESERVICE_API_KEY || '';
     if (!this.apiKey) {
-      console.warn('OpenRouteService API key not configured. Route calculations will be disabled.');
+      console.warn('OpenRouteService API key not configured. Using fallback distance calculations.');
     }
+  }
+
+  /**
+   * Calcula a distância haversine entre dois pontos
+   */
+  private calculateHaversineDistance(origin: RoutePoint, destination: RoutePoint): number {
+    const R = 6371000; // Raio da Terra em metros
+    const lat1Rad = origin.latitude * Math.PI / 180;
+    const lat2Rad = destination.latitude * Math.PI / 180;
+    const deltaLatRad = (destination.latitude - origin.latitude) * Math.PI / 180;
+    const deltaLonRad = (destination.longitude - origin.longitude) * Math.PI / 180;
+
+    const a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+              Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+              Math.sin(deltaLonRad / 2) * Math.sin(deltaLonRad / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
+
+  /**
+   * Gera geometria de linha reta entre dois pontos
+   */
+  private generateStraightLineGeometry(origin: RoutePoint, destination: RoutePoint): Array<[number, number]> {
+    return [
+      [origin.longitude, origin.latitude],
+      [destination.longitude, destination.latitude]
+    ];
   }
 
   /**
    * Calcula a rota entre dois pontos
    */
   async calculateRoute(origin: RoutePoint, destination: RoutePoint): Promise<RouteData | null> {
-    if (!this.apiKey) {
-      console.error('OpenRouteService API key not configured');
-      return null;
+    // Primeiro, tenta usar a API do OpenRouteService
+    if (this.apiKey) {
+      try {
+        const coordinates = [
+          [origin.longitude, origin.latitude],
+          [destination.longitude, destination.latitude]
+        ];
+
+        const response = await fetch(`${this.baseUrl}/directions/driving-car`, {
+          method: 'POST',
+          headers: {
+            'Authorization': this.apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            coordinates: coordinates,
+            format: 'json',
+            preference: 'fastest'
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.features && data.features.length > 0) {
+            const route = data.features[0];
+            const summary = route.properties.summary;
+            
+            return {
+              distance: summary.distance, // metros
+              duration: summary.duration, // segundos
+              geometry: route.geometry.coordinates // pontos da rota
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('OpenRouteService API failed, using fallback calculation:', error);
+      }
     }
 
-    try {
-      const coordinates = [
-        [origin.longitude, origin.latitude],
-        [destination.longitude, destination.latitude]
-      ];
-
-      const response = await fetch(`${this.baseUrl}/directions/driving-car`, {
-        method: 'POST',
-        headers: {
-          'Authorization': this.apiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          coordinates: coordinates,
-          format: 'json',
-          preference: 'fastest'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenRouteService API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.features || data.features.length === 0) {
-        throw new Error('No route found');
-      }
-
-      const route = data.features[0];
-      const summary = route.properties.summary;
-      
-      return {
-        distance: summary.distance, // metros
-        duration: summary.duration, // segundos
-        geometry: route.geometry.coordinates // pontos da rota
-      };
-    } catch (error) {
-      console.error('Error calculating route:', error);
-      return null;
-    }
+    // Fallback: usa cálculo de distância direta
+    console.log('Using fallback distance calculation');
+    const distance = this.calculateHaversineDistance(origin, destination);
+    const averageSpeed = 30; // km/h velocidade média urbana
+    const duration = (distance / 1000) / averageSpeed * 3600; // segundos
+    
+    return {
+      distance: Math.round(distance), // metros
+      duration: Math.round(duration), // segundos
+      geometry: this.generateStraightLineGeometry(origin, destination)
+    };
   }
 
   /**
@@ -101,36 +134,50 @@ class RoutingService {
    * Calcula matriz de distâncias entre múltiplos pontos
    */
   async calculateDistanceMatrix(locations: RoutePoint[]): Promise<number[][] | null> {
-    if (!this.apiKey) {
-      console.error('OpenRouteService API key not configured');
-      return null;
-    }
+    // Primeiro, tenta usar a API do OpenRouteService
+    if (this.apiKey) {
+      try {
+        const coordinates = locations.map(loc => [loc.longitude, loc.latitude]);
 
-    try {
-      const coordinates = locations.map(loc => [loc.longitude, loc.latitude]);
+        const response = await fetch(`${this.baseUrl}/matrix/driving-car`, {
+          method: 'POST',
+          headers: {
+            'Authorization': this.apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            locations: coordinates,
+            metrics: ['distance', 'duration']
+          })
+        });
 
-      const response = await fetch(`${this.baseUrl}/matrix/driving-car`, {
-        method: 'POST',
-        headers: {
-          'Authorization': this.apiKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          locations: coordinates,
-          metrics: ['distance', 'duration']
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenRouteService API error: ${response.status}`);
+        if (response.ok) {
+          const data = await response.json();
+          return data.distances; // matriz de distâncias em metros
+        }
+      } catch (error) {
+        console.warn('OpenRouteService matrix API failed, using fallback calculation:', error);
       }
-
-      const data = await response.json();
-      return data.distances; // matriz de distâncias em metros
-    } catch (error) {
-      console.error('Error calculating distance matrix:', error);
-      return null;
     }
+
+    // Fallback: calcula distância direta entre todos os pontos
+    console.log('Using fallback distance matrix calculation');
+    const matrix: number[][] = [];
+    
+    for (let i = 0; i < locations.length; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < locations.length; j++) {
+        if (i === j) {
+          row.push(0);
+        } else {
+          const distance = this.calculateHaversineDistance(locations[i], locations[j]);
+          row.push(Math.round(distance));
+        }
+      }
+      matrix.push(row);
+    }
+    
+    return matrix;
   }
 
   /**
