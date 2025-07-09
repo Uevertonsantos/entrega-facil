@@ -27,7 +27,7 @@ export default function Deliveries() {
 
   const updateDeliveryMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<DeliveryWithRelations> }) => {
-      await apiRequest("PUT", `/api/deliveries/${id}`, data);
+      await apiRequest(`/api/deliveries/${id}`, "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deliveries"] });
@@ -60,7 +60,7 @@ export default function Deliveries() {
 
   const deleteDeliveryMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/deliveries/${id}`);
+      await apiRequest(`/api/deliveries/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deliveries"] });

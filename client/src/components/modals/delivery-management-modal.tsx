@@ -27,7 +27,7 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
 
   const completeDeliveryMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/deliveries/${delivery.id}/complete`, {
+      await apiRequest(`/api/deliveries/${delivery.id}/complete`, "POST", {
         notes: completionNotes.trim() || null
       });
     },
@@ -52,7 +52,7 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
 
   const cancelDeliveryMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/deliveries/${delivery.id}/cancel`, {
+      await apiRequest(`/api/deliveries/${delivery.id}/cancel`, "POST", {
         reason: cancellationReason.trim() || "Cancelada pelo entregador"
       });
     },
@@ -77,7 +77,7 @@ export default function DeliveryManagementModal({ delivery, children }: Delivery
 
   const updateNotesMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/deliveries/${delivery.id}/notes`, {
+      await apiRequest(`/api/deliveries/${delivery.id}/notes`, "POST", {
         notes: notes.trim() || null
       });
     },

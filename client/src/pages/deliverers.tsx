@@ -60,7 +60,7 @@ export default function Deliverers() {
 
   const createDelivererMutation = useMutation({
     mutationFn: async (data: DelivererFormData) => {
-      await apiRequest("POST", "/api/deliverers", data);
+      await apiRequest("/api/deliverers", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deliverers"] });
@@ -95,7 +95,7 @@ export default function Deliverers() {
 
   const updateDelivererMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<DelivererFormData> }) => {
-      await apiRequest("PUT", `/api/deliverers/${id}`, data);
+      await apiRequest(`/api/deliverers/${id}`, "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/deliverers"] });

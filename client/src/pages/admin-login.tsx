@@ -32,7 +32,7 @@ export default function AdminLogin() {
   const handleSubmit = async (data: AdminLoginData) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', '/api/admin/login', data);
+      const response = await apiRequest('/api/admin/login', 'POST', data);
       const result = await response.json();
       
       if (result.success) {

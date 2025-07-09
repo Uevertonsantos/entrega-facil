@@ -32,7 +32,7 @@ export default function MerchantLogin() {
   const handleSubmit = async (data: MerchantLoginData) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', '/api/merchant/login', data);
+      const response = await apiRequest('/api/merchant/login', 'POST', data);
       const result = await response.json();
       
       if (result.success) {

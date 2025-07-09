@@ -70,7 +70,7 @@ export default function Merchants() {
 
   const createMerchantMutation = useMutation({
     mutationFn: async (data: MerchantFormData) => {
-      await apiRequest("POST", "/api/merchants", data);
+      await apiRequest("/api/merchants", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });
@@ -104,7 +104,7 @@ export default function Merchants() {
 
   const updateMerchantMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: MerchantFormData }) => {
-      await apiRequest("PUT", `/api/merchants/${id}`, data);
+      await apiRequest(`/api/merchants/${id}`, "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/merchants"] });

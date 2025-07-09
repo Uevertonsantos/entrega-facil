@@ -81,7 +81,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
 
   const createDeliveryMutation = useMutation({
     mutationFn: async (data: DeliveryFormData) => {
-      await apiRequest("POST", "/api/deliveries", {
+      await apiRequest("/api/deliveries", "POST", {
         merchantId: parseInt(data.merchantId),
         delivererId: data.delivererId && data.delivererId !== "none" ? parseInt(data.delivererId) : null,
         customerName: data.customerName,
@@ -142,7 +142,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
 
     setIsCalculating(true);
     try {
-      const response = await apiRequest('POST', '/api/calculate-delivery-fee', {
+      const response = await apiRequest('/api/calculate-delivery-fee', 'POST', {
         pickupAddress,
         deliveryAddress
       });
