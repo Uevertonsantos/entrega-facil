@@ -178,6 +178,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Successfully integrated active plan selection in both admin modal and merchant registration page
 - July 09, 2025. Cleaned up installer directory - removed outdated installers and kept only essential documentation
 - July 09, 2025. Simplified installer structure focusing on online access and basic local installation guide
+- July 09, 2025. Implemented correct financial flow: Cliente → Comerciante → Plataforma → Entregador
+- July 09, 2025. Added merchant balance tracking with currentBalance and totalOwed fields
+- July 09, 2025. Created merchant payments page for tracking payment obligations
+- July 09, 2025. Updated financial dashboard to reflect new payment flow structure
+- July 09, 2025. Added automatic balance updates when deliveries are completed
 
 ## User Preferences
 

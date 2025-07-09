@@ -351,7 +351,7 @@ export default function Financial() {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-green-600">
-                    R$ {totalRevenue.toFixed(2)}
+                    R$ {totalMerchantOwes.toFixed(2)}
                   </p>
                   <p className="text-sm text-green-700">
                     {completedDeliveries.length} entregas
@@ -372,7 +372,7 @@ export default function Financial() {
                     R$ {totalDelivererPayments.toFixed(2)}
                   </p>
                   <p className="text-sm text-blue-700">
-                    {Math.round((totalDelivererPayments / totalRevenue) * 100)}% da receita
+                    {Math.round((totalDelivererPayments / totalMerchantOwes) * 100)}% da receita
                   </p>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function Financial() {
                     R$ {netProfit.toFixed(2)}
                   </p>
                   <p className="text-sm text-primary/80">
-                    {Math.round((netProfit / totalRevenue) * 100)}% margem
+                    {Math.round((netProfit / totalMerchantOwes) * 100)}% margem
                   </p>
                 </div>
               </div>
@@ -408,13 +408,13 @@ export default function Financial() {
                 <div className="flex justify-between mb-2">
                   <span className="text-sm font-medium">Meta Mensal</span>
                   <span className="text-sm text-gray-600">
-                    R$ {totalRevenue.toFixed(2)} / R$ 2.000,00
+                    R$ {totalMerchantOwes.toFixed(2)} / R$ 2.000,00
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-primary h-2 rounded-full" 
-                    style={{ width: `${Math.min((totalRevenue / 2000) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((totalMerchantOwes / 2000) * 100, 100)}%` }}
                   />
                 </div>
               </div>
