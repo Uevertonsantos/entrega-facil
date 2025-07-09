@@ -45,7 +45,7 @@ export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const sidebarContent = (
-    <nav className="mt-5 px-2 mobile-scroll-smooth h-full overflow-y-auto">
+    <nav className="mt-5 px-2 mobile-scroll-smooth">
       <div className="space-y-1 pb-4">
         {navigation.map((item) => {
           const Icon = item.icon;
