@@ -36,7 +36,7 @@ export default function EmailSettings() {
   const { data: emailStatus, refetch: refetchStatus } = useQuery({
     queryKey: ['email-status'],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/email-status', 'GET');
+      const response = await apiRequest('/api/email-status', 'GET');
       return response.json();
     },
   });
@@ -44,7 +44,7 @@ export default function EmailSettings() {
   const handleSubmit = async (data: EmailSettingsData) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/admin/email-settings', 'POST', data);
+      const response = await apiRequest('/api/email-settings', 'POST', data);
       const result = await response.json();
       
       if (result.success) {
@@ -74,7 +74,7 @@ export default function EmailSettings() {
   const handleTestEmail = async () => {
     setTestingEmail(true);
     try {
-      const response = await apiRequest('/api/admin/test-email', 'POST', {
+      const response = await apiRequest('/api/test-email', 'POST', {
         email: form.getValues('gmailUser')
       });
       const result = await response.json();

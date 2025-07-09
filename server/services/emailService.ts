@@ -39,7 +39,7 @@ class EmailService {
     };
 
     if (this.config.auth.user && this.config.auth.pass) {
-      this.transporter = nodemailer.createTransporter(this.config);
+      this.transporter = nodemailer.createTransport(this.config);
     } else {
       console.warn('Gmail credentials not configured. Email service disabled.');
     }

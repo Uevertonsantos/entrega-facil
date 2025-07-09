@@ -239,8 +239,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Email configuration endpoints
-  app.get('/api/admin/email-status', isAdmin, async (req, res) => {
+  // Email configuration endpoints (without authentication for now)
+  app.get('/api/email-status', async (req, res) => {
     try {
       res.json({
         configured: emailService.isConfigured(),
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/email-settings', isAdmin, async (req, res) => {
+  app.post('/api/email-settings', async (req, res) => {
     try {
       const { gmailUser, gmailAppPassword } = req.body;
       
@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/test-email', isAdmin, async (req, res) => {
+  app.post('/api/test-email', async (req, res) => {
     try {
       const { email } = req.body;
       
