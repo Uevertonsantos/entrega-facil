@@ -155,15 +155,6 @@ async function getCepCoordinates(cep: string): Promise<{lat: number, lon: number
  */
 export async function geocodeAddress(address: string, cep?: string): Promise<{lat: number, lon: number} | null> {
   try {
-    // First, try to use CEP if provided
-    if (cep) {
-      const cepCoords = await getCepCoordinates(cep);
-      if (cepCoords) {
-        console.log('Used CEP coordinates for:', cep);
-        return cepCoords;
-      }
-    }
-    
     // Clean and enhance the address
     let cleanAddress = address.trim().toLowerCase();
     
@@ -200,13 +191,15 @@ export async function geocodeAddress(address: string, cep?: string): Promise<{la
     
     console.log('Geocoding address:', cleanAddress);
     
-    // Try multiple geocoding approaches
+    // Try multiple geocoding approaches prioritizing street name
     const geocodingAttempts = [
-      // Nominatim with detailed search
+      // 1. Try with full address including street name
       () => geocodeWithNominatim(cleanAddress),
-      // Simplified address search
-      () => geocodeWithNominatim(`${city}, ${state}, Brasil`),
-      // Use approximate coordinates for known cities
+      // 2. Try with simplified street name + city
+      () => geocodeWithStreetName(cleanAddress, city, state),
+      // 3. Try with CEP if provided (fallback)
+      () => cep ? getCepCoordinates(cep) : null,
+      // 4. Use approximate coordinates for known cities
       () => getApproximateCoordinates(cleanAddress, city, state)
     ];
     
@@ -257,7 +250,34 @@ async function geocodeWithNominatim(address: string): Promise<{lat: number, lon:
 }
 
 /**
- * Get approximate coordinates for known cities
+ * Extract street name and try geocoding with just street + city
+ */
+async function geocodeWithStreetName(address: string, city: string, state: string): Promise<{lat: number, lon: number} | null> {
+  try {
+    // Extract street name from address
+    const streetMatch = address.match(/(?:rua|avenida|travessa|av\.?|r\.?)\s+([^,]+)/i);
+    if (!streetMatch) return null;
+    
+    const streetName = streetMatch[1].trim();
+    const simplifiedAddress = `${streetName}, ${city}, ${state}, Brasil`;
+    
+    console.log('Trying simplified street geocoding:', simplifiedAddress);
+    
+    const result = await geocodeWithNominatim(simplifiedAddress);
+    if (result) {
+      console.log('Successfully geocoded with street name:', streetName);
+      return result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Street name geocoding error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get approximate coordinates for known cities and neighborhoods
  */
 function getApproximateCoordinates(address: string, city: string, state: string): {lat: number, lon: number} | null {
   const cityCoords: Record<string, {lat: number, lon: number}> = {
@@ -273,11 +293,57 @@ function getApproximateCoordinates(address: string, city: string, state: string)
     'juazeiro': { lat: -9.4111, lon: -40.4986 }
   };
   
-  // Check if the address contains a known city
+  // Street-specific coordinates for interior cities (especially Conde)
+  const streetCoords: Record<string, {lat: number, lon: number}> = {
+    // Conde specific streets
+    'rua floriano peixoto': { lat: -11.8139, lon: -37.6132 },
+    'floriano peixoto': { lat: -11.8139, lon: -37.6132 },
+    'rua baixa da areia': { lat: -11.8130, lon: -37.6140 },
+    'baixa da areia': { lat: -11.8130, lon: -37.6140 },
+    'rua da vila': { lat: -11.8135, lon: -37.6135 },
+    'vila': { lat: -11.8135, lon: -37.6135 },
+    'centro': { lat: -11.8139, lon: -37.6132 },
+    'centro conde': { lat: -11.8139, lon: -37.6132 },
+    'rua principal': { lat: -11.8139, lon: -37.6132 },
+    'principal': { lat: -11.8139, lon: -37.6132 },
+    
+    // Common street names in interior cities
+    'rua do comércio': { lat: -11.8140, lon: -37.6130 },
+    'comércio': { lat: -11.8140, lon: -37.6130 },
+    'rua da igreja': { lat: -11.8145, lon: -37.6125 },
+    'igreja': { lat: -11.8145, lon: -37.6125 },
+    'rua do mercado': { lat: -11.8142, lon: -37.6128 },
+    'mercado': { lat: -11.8142, lon: -37.6128 }
+  };
+  
+  // Check for specific streets first
   const addressLower = address.toLowerCase();
+  for (const [streetName, coords] of Object.entries(streetCoords)) {
+    if (addressLower.includes(streetName)) {
+      console.log(`Used street-specific coordinates for ${streetName}`);
+      return coords;
+    }
+  }
+  
+  // Check for neighborhood/bairro references
+  const neighborhoods: Record<string, {lat: number, lon: number}> = {
+    'vila': { lat: -11.8135, lon: -37.6135 },
+    'centro': { lat: -11.8139, lon: -37.6132 },
+    'bairro novo': { lat: -11.8145, lon: -37.6140 },
+    'novo': { lat: -11.8145, lon: -37.6140 }
+  };
+  
+  for (const [neighborhood, coords] of Object.entries(neighborhoods)) {
+    if (addressLower.includes(neighborhood)) {
+      console.log(`Used neighborhood coordinates for ${neighborhood}`);
+      return coords;
+    }
+  }
+  
+  // Check if the address contains a known city
   for (const [cityName, coords] of Object.entries(cityCoords)) {
     if (addressLower.includes(cityName)) {
-      console.log(`Used approximate coordinates for ${cityName}`);
+      console.log(`Used city coordinates for ${cityName}`);
       return coords;
     }
   }

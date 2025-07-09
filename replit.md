@@ -107,6 +107,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Fixed merchant and deliverer login authentication to use password field instead of phone field
 - July 09, 2025. Added delete functionality for merchants and deliverers with confirmation dialogs and error handling
 - July 09, 2025. Enhanced UI with delete buttons (trash icon) for both merchants and deliverers management pages
+- July 09, 2025. Implemented automatic pickup address filling from merchant establishment data
+- July 09, 2025. Added CEP field to merchant schema for better address geocoding
+- July 09, 2025. Created robust geocoding system prioritizing street names over CEP for interior cities
+- July 09, 2025. Built street-specific coordinate database for Conde and common interior street names
+- July 09, 2025. Integrated ViaCEP API for fallback geocoding without requiring paid services
 
 ## User Preferences
 
