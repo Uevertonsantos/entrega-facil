@@ -74,6 +74,12 @@ export default function ClientSetup() {
     selectedMerchantId: undefined
   });
 
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    installationId: string;
+    apiKey: string;
+    accessUrl: string;
+  } | null>(null);
+
   // Query to fetch active plans
   const { data: plans = [], isLoading: plansLoading, error: plansError } = useQuery({
     queryKey: ['/api/plans/active'],
@@ -106,32 +112,6 @@ export default function ClientSetup() {
     },
   });
 
-  // Log errors and data for debugging
-  console.log('Plans data:', plans);
-  console.log('Plans loading:', plansLoading);
-  console.log('Plans error:', plansError);
-  console.log('Merchants data:', merchants);
-  console.log('Merchants loading:', merchantsLoading);
-  console.log('Merchants error:', merchantsError);
-
-  // Show loading while fetching data
-  if (plansLoading || merchantsLoading) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Configurar Novo Cliente</h1>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando dados...</p>
-        </div>
-      </div>
-    );
-  }
-  const [generatedCredentials, setGeneratedCredentials] = useState<{
-    installationId: string;
-    apiKey: string;
-    accessUrl: string;
-  } | null>(null);
-
   const setupMutation = useMutation({
     mutationFn: async (data: ClientSetupData) => {
       const response = await apiRequest('/api/admin/setup-client', 'POST', data);
@@ -152,6 +132,27 @@ export default function ClientSetup() {
       });
     },
   });
+
+  // Log errors and data for debugging
+  console.log('Plans data:', plans);
+  console.log('Plans loading:', plansLoading);
+  console.log('Plans error:', plansError);
+  console.log('Merchants data:', merchants);
+  console.log('Merchants loading:', merchantsLoading);
+  console.log('Merchants error:', merchantsError);
+
+  // Show loading while fetching data
+  if (plansLoading || merchantsLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Configurar Novo Cliente</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (field: keyof ClientSetupData, value: string) => {
     setSetupData(prev => ({
