@@ -105,18 +105,64 @@ function calculateDeliveryFee(distance: number, config: PricingConfig = DEFAULT_
 }
 
 /**
- * Enhanced geocoding using OpenStreetMap Nominatim with better Brazilian address handling
- * @param address Address to geocode
+ * Get approximate coordinates for a CEP using ViaCEP API
+ * @param cep CEP to lookup
  * @returns Coordinates {lat, lon} or null if not found
  */
-export async function geocodeAddress(address: string): Promise<{lat: number, lon: number} | null> {
+async function getCepCoordinates(cep: string): Promise<{lat: number, lon: number} | null> {
   try {
-    // Get default city and state from settings
-    const { storage } = await import('../storage');
-    const [defaultCity, defaultState] = await Promise.all([
-      storage.getAdminSetting('default_city'),
-      storage.getAdminSetting('default_state')
-    ]);
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return null;
+    
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    if (data.erro) return null;
+    
+    // Use approximate coordinates for common Brazilian cities
+    const cityCoords: Record<string, {lat: number, lon: number}> = {
+      'salvador': { lat: -12.9714, lon: -38.5014 },
+      'conde': { lat: -11.8139, lon: -37.6132 },
+      'alagoinhas': { lat: -12.1353, lon: -38.4201 },
+      'camaçari': { lat: -12.6974, lon: -38.3245 },
+      'feira de santana': { lat: -12.2664, lon: -38.9663 },
+      'lauro de freitas': { lat: -12.8944, lon: -38.3275 },
+      'vitória da conquista': { lat: -14.8661, lon: -40.8444 },
+      'itabuna': { lat: -14.7856, lon: -39.2803 },
+      'ilhéus': { lat: -14.7880, lon: -39.0448 },
+      'juazeiro': { lat: -9.4111, lon: -40.4986 }
+    };
+    
+    const cityName = data.localidade?.toLowerCase();
+    if (cityName && cityCoords[cityName]) {
+      return cityCoords[cityName];
+    }
+    
+    // Return approximate coordinates for Bahia state center if no specific city found
+    return { lat: -12.5, lon: -38.5 };
+  } catch (error) {
+    console.error('CEP geocoding error:', error);
+    return null;
+  }
+}
+
+/**
+ * Enhanced geocoding using multiple sources with Brazilian address handling
+ * @param address Address to geocode
+ * @param cep Optional CEP for fallback
+ * @returns Coordinates {lat, lon} or null if not found
+ */
+export async function geocodeAddress(address: string, cep?: string): Promise<{lat: number, lon: number} | null> {
+  try {
+    // First, try to use CEP if provided
+    if (cep) {
+      const cepCoords = await getCepCoordinates(cep);
+      if (cepCoords) {
+        console.log('Used CEP coordinates for:', cep);
+        return cepCoords;
+      }
+    }
     
     // Clean and enhance the address
     let cleanAddress = address.trim().toLowerCase();
@@ -125,13 +171,25 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
     cleanAddress = cleanAddress
       .replace(/\s+/g, ' ')
       .replace(/,+/g, ',')
-      .replace(/\s*,\s*/g, ', ');
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/\b(rua|r\.)\b/g, 'rua')
+      .replace(/\b(avenida|av\.)\b/g, 'avenida')
+      .replace(/\b(travessa|tv\.)\b/g, 'travessa')
+      .replace(/\b(bairro|b\.)\b/g, 'bairro');
     
-    // If address doesn't contain city/state, add defaults
+    // Get default city and state from settings
+    const { storage } = await import('../storage');
+    const [defaultCity, defaultState] = await Promise.all([
+      storage.getAdminSetting('default_city'),
+      storage.getAdminSetting('default_state')
+    ]);
+    
     const city = defaultCity?.settingValue || 'Salvador';
     const state = defaultState?.settingValue || 'BA';
     
-    if (!cleanAddress.includes('salvador') && 
+    // Ensure city and state are included
+    if (!cleanAddress.includes(city.toLowerCase()) && 
+        !cleanAddress.includes('salvador') && 
         !cleanAddress.includes('bahia') && 
         !cleanAddress.includes(' ba') &&
         !cleanAddress.includes(',ba')) {
@@ -142,35 +200,21 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
     
     console.log('Geocoding address:', cleanAddress);
     
-    const encodedAddress = encodeURIComponent(cleanAddress);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=3&countrycodes=br&addressdetails=1`;
+    // Try multiple geocoding approaches
+    const geocodingAttempts = [
+      // Nominatim with detailed search
+      () => geocodeWithNominatim(cleanAddress),
+      // Simplified address search
+      () => geocodeWithNominatim(`${city}, ${state}, Brasil`),
+      // Use approximate coordinates for known cities
+      () => getApproximateCoordinates(cleanAddress, city, state)
+    ];
     
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'DeliveryExpress/1.0 (delivery management system)'
+    for (const attempt of geocodingAttempts) {
+      const result = await attempt();
+      if (result) {
+        return result;
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Geocoding response:', data);
-    
-    if (data && data.length > 0) {
-      // Prefer results with higher importance or more specific location
-      const bestResult = data.find(result => 
-        result.importance > 0.4 || 
-        result.address?.city || 
-        result.address?.town ||
-        result.address?.municipality
-      ) || data[0];
-      
-      return {
-        lat: parseFloat(bestResult.lat),
-        lon: parseFloat(bestResult.lon)
-      };
     }
     
     return null;
@@ -181,27 +225,101 @@ export async function geocodeAddress(address: string): Promise<{lat: number, lon
 }
 
 /**
+ * Geocode using Nominatim API
+ */
+async function geocodeWithNominatim(address: string): Promise<{lat: number, lon: number} | null> {
+  try {
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=br&addressdetails=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'DeliveryExpress/1.0 (delivery management system)'
+      }
+    });
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon)
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Nominatim geocoding error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get approximate coordinates for known cities
+ */
+function getApproximateCoordinates(address: string, city: string, state: string): {lat: number, lon: number} | null {
+  const cityCoords: Record<string, {lat: number, lon: number}> = {
+    'salvador': { lat: -12.9714, lon: -38.5014 },
+    'conde': { lat: -11.8139, lon: -37.6132 },
+    'alagoinhas': { lat: -12.1353, lon: -38.4201 },
+    'camaçari': { lat: -12.6974, lon: -38.3245 },
+    'feira de santana': { lat: -12.2664, lon: -38.9663 },
+    'lauro de freitas': { lat: -12.8944, lon: -38.3275 },
+    'vitória da conquista': { lat: -14.8661, lon: -40.8444 },
+    'itabuna': { lat: -14.7856, lon: -39.2803 },
+    'ilhéus': { lat: -14.7880, lon: -39.0448 },
+    'juazeiro': { lat: -9.4111, lon: -40.4986 }
+  };
+  
+  // Check if the address contains a known city
+  const addressLower = address.toLowerCase();
+  for (const [cityName, coords] of Object.entries(cityCoords)) {
+    if (addressLower.includes(cityName)) {
+      console.log(`Used approximate coordinates for ${cityName}`);
+      return coords;
+    }
+  }
+  
+  // Use city from settings as fallback
+  const defaultCity = city.toLowerCase();
+  if (cityCoords[defaultCity]) {
+    console.log(`Used default city coordinates for ${defaultCity}`);
+    return cityCoords[defaultCity];
+  }
+  
+  // Final fallback - Bahia state center
+  console.log('Used Bahia state center coordinates');
+  return { lat: -12.5, lon: -38.5 };
+}
+
+/**
  * Calculate distance and delivery fee between two addresses using dynamic pricing
  * @param pickupAddress Pickup address
  * @param deliveryAddress Delivery address
+ * @param pickupCep Optional pickup CEP
+ * @param deliveryCep Optional delivery CEP
  * @returns Distance result with fee calculation
  */
 export async function calculateDeliveryDistance(
   pickupAddress: string,
-  deliveryAddress: string
+  deliveryAddress: string,
+  pickupCep?: string,
+  deliveryCep?: string
 ): Promise<DistanceResult | null> {
   try {
     // Get dynamic pricing configuration from database
     const config = await getPricingConfig();
     
-    // Geocode both addresses
+    // Geocode both addresses with optional CEPs
     const [pickupCoords, deliveryCoords] = await Promise.all([
-      geocodeAddress(pickupAddress),
-      geocodeAddress(deliveryAddress)
+      geocodeAddress(pickupAddress, pickupCep),
+      geocodeAddress(deliveryAddress, deliveryCep)
     ]);
     
     if (!pickupCoords || !deliveryCoords) {
-      console.error('Failed to geocode addresses:', { pickupAddress, deliveryAddress });
+      console.error('Failed to geocode addresses:', { pickupAddress, deliveryAddress, pickupCep, deliveryCep });
       return null;
     }
     

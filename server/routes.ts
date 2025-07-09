@@ -794,7 +794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Calculate delivery fee endpoint
   app.post('/api/calculate-delivery-fee', async (req, res) => {
     try {
-      const { pickupAddress, deliveryAddress } = req.body;
+      const { pickupAddress, deliveryAddress, pickupCep, deliveryCep } = req.body;
       
       if (!pickupAddress || !deliveryAddress) {
         return res.status(400).json({ 
@@ -802,7 +802,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const result = await calculateDeliveryDistance(pickupAddress, deliveryAddress);
+      const result = await calculateDeliveryDistance(
+        pickupAddress, 
+        deliveryAddress, 
+        pickupCep, 
+        deliveryCep
+      );
       
       if (!result) {
         return res.status(400).json({ 

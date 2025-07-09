@@ -135,7 +135,7 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
     createDeliveryMutation.mutate(data);
   };
 
-  const calculateFee = async (pickupAddress: string, deliveryAddress: string) => {
+  const calculateFee = async (pickupAddress: string, deliveryAddress: string, pickupCep?: string, deliveryCep?: string) => {
     if (!pickupAddress || !deliveryAddress) {
       return;
     }
@@ -144,7 +144,9 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
     try {
       const response = await apiRequest('/api/calculate-delivery-fee', 'POST', {
         pickupAddress,
-        deliveryAddress
+        deliveryAddress,
+        pickupCep,
+        deliveryCep
       });
       
       const result = await response.json();
@@ -172,7 +174,9 @@ export default function NewDeliveryModal({ isOpen, onClose }: NewDeliveryModalPr
   const handleCalculateFee = () => {
     const pickupAddress = form.getValues('pickupAddress');
     const deliveryAddress = form.getValues('deliveryAddress');
-    calculateFee(pickupAddress, deliveryAddress);
+    const pickupCep = form.getValues('pickupCep');
+    const deliveryCep = form.getValues('deliveryCep');
+    calculateFee(pickupAddress, deliveryAddress, pickupCep, deliveryCep);
   };
 
   // Clean up state when modal is closed and set merchant ID
