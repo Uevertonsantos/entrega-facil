@@ -32,21 +32,22 @@ export default function AdminLogin() {
   const handleSubmit = async (data: AdminLoginData) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/admin/login', 'POST', data);
-      const result = await response.json();
+      const result = await apiRequest('/api/admin/login', 'POST', data);
       
       if (result.success) {
         // Armazenar token de admin no localStorage
         localStorage.setItem("adminToken", result.token);
         localStorage.setItem("userType", "admin");
         
-        // Redirecionar para o dashboard admin
-        window.location.href = "/";
-        
         toast({
           title: "Login realizado com sucesso",
           description: "Bem-vindo ao painel administrativo!",
         });
+        
+        // Redirecionar para o dashboard admin
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
       } else {
         toast({
           title: "Erro no login",
@@ -55,6 +56,7 @@ export default function AdminLogin() {
         });
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Erro no login",
         description: error.message || "Credenciais inválidas",

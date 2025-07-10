@@ -12,7 +12,7 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
   customHeaders?: Record<string, string>,
-): Promise<Response> {
+): Promise<any> {
   // Add tokens if available
   const adminToken = localStorage.getItem("adminToken");
   const merchantToken = localStorage.getItem("merchantToken");
@@ -40,8 +40,13 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
-  return res;
+  const result = await res.json();
+  
+  if (!res.ok) {
+    throw new Error(result.message || `HTTP ${res.status}: ${res.statusText}`);
+  }
+  
+  return result;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

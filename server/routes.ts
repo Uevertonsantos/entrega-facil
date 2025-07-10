@@ -11,6 +11,7 @@ import { z } from "zod";
 import { calculateDeliveryDistance, applySurgePricing, getDeliveryZone } from "./services/distanceService";
 import { neighborhoodService } from "./services/neighborhoodService";
 import { isAdmin, isMerchant, isDeliverer, isAuthenticated, generateToken, verifyToken } from "./auth";
+import path from "path";
 
 // Admin credentials (in production, these should be in environment variables)
 const ADMIN_CREDENTIALS = {
@@ -19,6 +20,67 @@ const ADMIN_CREDENTIALS = {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Database initialization endpoint (for new deployments)
+  app.post('/api/init-db', async (req, res) => {
+    try {
+      // Check if admin user already exists
+      const existingAdmin = await storage.getAdminUser(1);
+      if (existingAdmin) {
+        return res.json({ 
+          success: false, 
+          message: "Database already initialized" 
+        });
+      }
+
+      // Create admin user
+      await storage.createAdminUser({
+        username: 'admin',
+        email: 'admin@entregafacil.com',
+        password: 'admin123',
+        name: 'Administrator'
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Database initialized successfully. Admin user created.",
+        credentials: {
+          username: 'admin',
+          password: 'admin123'
+        }
+      });
+    } catch (error) {
+      console.error("Error initializing database:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to initialize database" 
+      });
+    }
+  });
+
+  // Database initialization page
+  app.get('/init-db', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'init-db.html'));
+  });
+
+  // Health check endpoint
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Test database connection
+      await storage.getDashboardStats();
+      res.json({ 
+        success: true, 
+        message: "System is healthy",
+        database: "connected" 
+      });
+    } catch (error) {
+      console.error("Health check failed:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Database connection failed" 
+      });
+    }
+  });
+
   // Public endpoints (no authentication required)
   
   // Public endpoint for getting merchants (for client setup)
