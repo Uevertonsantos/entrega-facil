@@ -226,6 +226,10 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 10, 2025. Diagnosticado problema específico no Render: falta configuração do banco PostgreSQL
 - July 10, 2025. Criado guia completo para configuração do banco de dados no Render (RENDER-DATABASE-SETUP.md)
 - July 10, 2025. Melhorado sistema de logs para identificar problemas de conexão específicos do PostgreSQL
+- July 10, 2025. Migração completa para ambiente Replit - corrigidos endpoints de criação de comerciantes e cidades
+- July 10, 2025. Ajustados schemas e validações para compatibilidade com PostgreSQL do Replit
+- July 10, 2025. Implementados logs detalhados para debugging de endpoints que falhavam
+- July 10, 2025. Corrigidos mapeamentos de campos entre frontend e backend (planValue, type, etc.)
 
 ## User Preferences
 

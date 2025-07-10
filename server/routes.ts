@@ -842,7 +842,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Merchant register endpoint
   app.post('/api/merchant/register', async (req, res) => {
     try {
-      const { name, email, phone, password, businessName, cnpjCpf, type, address, cep, city, state, planType, planInterval } = req.body;
+      const { name, email, phone, password, businessName, cnpjCpf, type, address, cep, city, planType, planValue } = req.body;
+      
+      console.log("Merchant registration data:", req.body);
       
       // Check if email already exists
       const existingMerchant = await storage.getMerchantByEmail(email);
@@ -853,7 +855,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Create new merchant
+      // Create new merchant with correct field mapping
       const merchant = await storage.createMerchant({
         name,
         email,
@@ -861,13 +863,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password,
         businessName,
         cnpjCpf,
-        type,
+        type: type || 'comerciante',
         address,
         cep,
         city,
-        state,
         planType,
-        planInterval
+        planValue: planValue || 0
       });
       
       res.json({ 
@@ -877,9 +878,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error in merchant register:", error);
+      console.error("Error details:", error.message);
       res.status(500).json({ 
         success: false, 
-        message: "Erro interno do servidor" 
+        message: "Erro interno do servidor",
+        error: error.message
       });
     }
   });
@@ -1059,10 +1062,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received merchant data:", req.body);
       
-      const merchantData = insertMerchantSchema.parse(req.body);
-      console.log("Parsed merchant data:", merchantData);
+      // Ensure required fields are present with defaults
+      const merchantData = {
+        ...req.body,
+        type: req.body.type || 'comerciante',
+        planValue: req.body.planValue || 0
+      };
       
-      const merchant = await storage.createMerchant(merchantData);
+      console.log("Processed merchant data:", merchantData);
+      
+      const validatedData = insertMerchantSchema.parse(merchantData);
+      console.log("Parsed merchant data:", validatedData);
+      
+      const merchant = await storage.createMerchant(validatedData);
       console.log("Created merchant:", merchant);
       
       res.status(201).json(merchant);
@@ -1071,7 +1083,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (error instanceof z.ZodError) {
         console.error("Zod validation errors:", error.errors);
-        return res.status(400).json({ message: "Invalid merchant data", errors: error.errors });
+        return res.status(400).json({ 
+          message: "Dados do comerciante inválidos", 
+          errors: error.errors,
+          details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        });
       }
       
       // Check for duplicate email error
@@ -1085,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.error("Error creating merchant:", error);
-      res.status(500).json({ message: "Failed to create merchant" });
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
 
@@ -2920,6 +2936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new city
   app.post('/api/cities', isAuthenticated, async (req, res) => {
     try {
+      console.log("Creating city with data:", req.body);
       const { city, state } = req.body;
       
       if (!city || !state) {
@@ -2927,13 +2944,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const newCity = await neighborhoodService.createCity(city, state);
+      console.log("City created successfully:", newCity);
       res.json(newCity);
     } catch (error: any) {
       console.error("Error creating city:", error);
-      if (error.message.includes("já existe")) {
+      if (error.message && error.message.includes("já existe")) {
         return res.status(400).json({ message: error.message });
       }
-      res.status(500).json({ message: "Failed to create city" });
+      res.status(500).json({ message: "Failed to create city", error: error.message });
     }
   });
 
