@@ -2940,18 +2940,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { city, state } = req.body;
       
       if (!city || !state) {
+        console.error("Missing city or state in request:", { city, state });
         return res.status(400).json({ message: "City and state are required" });
+      }
+      
+      // Validate input lengths
+      if (city.length > 255 || state.length > 255) {
+        console.error("City or state name too long:", { cityLength: city.length, stateLength: state.length });
+        return res.status(400).json({ message: "City and state names must be under 255 characters" });
       }
       
       const newCity = await neighborhoodService.createCity(city, state);
       console.log("City created successfully:", newCity);
       res.json(newCity);
     } catch (error: any) {
-      console.error("Error creating city:", error);
+      console.error("Detailed error creating city:", error);
+      console.error("Error stack:", error.stack);
+      
+      // Handle specific database errors
+      if (error.code === '23505') {
+        return res.status(400).json({ message: "Cidade já existe neste estado" });
+      }
+      
+      if (error.code === '23502') {
+        return res.status(400).json({ message: "Campos obrigatórios não preenchidos" });
+      }
+      
+      if (error.code === '22P02') {
+        return res.status(400).json({ message: "Formato de dados inválido" });
+      }
+      
       if (error.message && error.message.includes("já existe")) {
         return res.status(400).json({ message: error.message });
       }
-      res.status(500).json({ message: "Failed to create city", error: error.message });
+      
+      // Generic database connection error
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        return res.status(500).json({ message: "Erro de conexão com o banco de dados" });
+      }
+      
+      res.status(500).json({ 
+        message: "Erro interno do servidor", 
+        error: error.message,
+        code: error.code 
+      });
     }
   });
 

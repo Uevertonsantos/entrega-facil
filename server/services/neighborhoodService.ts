@@ -118,20 +118,22 @@ class NeighborhoodService {
       }
       
       // Cria um bairro padrão "Centro" para a nova cidade
+      const insertData = {
+        name: 'Centro',
+        city: cityName,
+        state: stateName,
+        averageDistance: '2.00',
+        baseFare: '5.00',
+        deliveryFee: '8.00',
+        platformFee: '2.00',
+        isActive: true,
+      };
+      
+      console.log('Inserting neighborhood with data:', insertData);
+      
       const newNeighborhood = await db
         .insert(neighborhoods)
-        .values({
-          name: 'Centro',
-          city: cityName,
-          state: stateName,
-          averageDistance: '2.0',
-          baseFare: '5.00',
-          deliveryFee: '8.00',
-          platformFee: '2.00',
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
+        .values(insertData)
         .returning();
       
       return {
@@ -141,6 +143,12 @@ class NeighborhoodService {
       };
     } catch (error) {
       console.error('Erro ao criar cidade:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        constraint: error.constraint,
+        detail: error.detail
+      });
       throw error;
     }
   }
