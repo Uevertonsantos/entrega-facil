@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated as replitIsAuthenticated } from "./replitAuth";
 import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
 import { emailService } from "./services/emailService";
 import jwt from "jsonwebtoken";
@@ -204,8 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware
-  await setupAuth(app);
+  // Auth middleware removed - using local JWT authentication instead
 
   // Get current admin credentials endpoint
   app.get('/api/data/admin-credentials', async (req, res) => {
