@@ -10,93 +10,12 @@ import { insertMerchantSchema, insertDelivererSchema, insertDeliverySchema } fro
 import { z } from "zod";
 import { calculateDeliveryDistance, applySurgePricing, getDeliveryZone } from "./services/distanceService";
 import { neighborhoodService } from "./services/neighborhoodService";
+import { isAdmin, isMerchant, isDeliverer, isAuthenticated, generateToken, verifyToken } from "./auth";
 
 // Admin credentials (in production, these should be in environment variables)
 const ADMIN_CREDENTIALS = {
   email: "admin@deliveryexpress.com",
   password: "admin123", // This will be hashed
-};
-
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-
-// Middleware to verify admin token
-const isAdmin = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    req.admin = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-};
-
-// Middleware to verify merchant token
-const isMerchant = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    if (decoded.role !== 'merchant') {
-      return res.status(403).json({ message: "Merchant access required" });
-    }
-    req.merchant = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-};
-
-// Middleware to verify deliverer token
-const isDeliverer = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    if (decoded.role !== 'deliverer') {
-      return res.status(403).json({ message: "Deliverer access required" });
-    }
-    req.deliverer = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-};
-
-// Middleware to verify any authenticated user (admin, merchant, or deliverer)
-const isAuthenticated = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const token = authHeader.substring(7);
-  
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -251,10 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check password (using direct comparison for now)
       if (adminUser.password === password) {
-        const token = jwt.sign(
-          { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' },
-          JWT_SECRET,
-          { expiresIn: '24h' }
+        const token = generateToken(
+          { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' }
         );
         
         res.json({ 
@@ -536,10 +453,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For simplicity, using password field (in production, use bcrypt)
       if (merchant.email === email && merchant.password === password) {
-        const token = jwt.sign(
-          { id: merchant.id, email: merchant.email, role: 'merchant' },
-          JWT_SECRET,
-          { expiresIn: '24h' }
+        const token = generateToken(
+          { id: merchant.id, email: merchant.email, role: 'merchant' }
         );
         
         res.json({ 
@@ -697,10 +612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For simplicity, using password field (in production, use bcrypt)
       if (deliverer.email === email && deliverer.password === password) {
-        const token = jwt.sign(
-          { id: deliverer.id, email: deliverer.email, role: 'deliverer' },
-          JWT_SECRET,
-          { expiresIn: '24h' }
+        const token = generateToken(
+          { id: deliverer.id, email: deliverer.email, role: 'deliverer' }
         );
         
         res.json({ 

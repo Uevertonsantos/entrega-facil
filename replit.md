@@ -206,6 +206,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 09, 2025. Adicionada funcionalidade de exportação para Excel e PDF nos relatórios do entregador
 - July 09, 2025. Padronizada terminologia "Taxa da Plataforma" em todas as seções do aplicativo
 - July 09, 2025. Integrado sistema de relatórios financeiros na aba "Financeiro" do app do entregador
+- July 10, 2025. Migração completa para ambiente Replit e compatibilidade com Render
+- July 10, 2025. Removido sistema Replit Auth e dependências problemáticas (@neondatabase/serverless)
+- July 10, 2025. Implementado sistema de autenticação local com JWT usando PostgreSQL padrão
+- July 10, 2025. Criado arquivo server/auth.ts com middleware de autenticação centralizado
+- July 10, 2025. Atualizado server/db.ts para usar driver PostgreSQL padrão compatível com Render
 
 ## User Preferences
 
