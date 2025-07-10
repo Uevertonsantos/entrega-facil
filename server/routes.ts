@@ -120,6 +120,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'init-db.html'));
   });
 
+  // Debug page for Render troubleshooting
+  app.get('/debug-render', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'debug-render.html'));
+  });
+
   // Additional database health check for Render
   app.get('/api/db-status', async (req, res) => {
     try {
