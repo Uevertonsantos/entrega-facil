@@ -21,6 +21,27 @@ const ADMIN_CREDENTIALS = {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint (first endpoint for quick verification)
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Test database connection
+      await storage.getDashboardStats();
+      res.json({ 
+        success: true, 
+        message: "System is healthy",
+        database: "connected",
+        timestamp: new Date().toISOString() 
+      });
+    } catch (error) {
+      console.error("Health check failed:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Database connection failed",
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
+    }
+  });
+
   // Database initialization endpoint (for new deployments)
   app.post('/api/init-db', async (req, res) => {
     try {
@@ -99,21 +120,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'init-db.html'));
   });
 
-  // Health check endpoint
-  app.get('/api/health', async (req, res) => {
+  // Additional database health check for Render
+  app.get('/api/db-status', async (req, res) => {
     try {
-      // Test database connection
-      await storage.getDashboardStats();
-      res.json({ 
-        success: true, 
-        message: "System is healthy",
-        database: "connected" 
+      console.log("Testing database connection...");
+      
+      // Test basic connection
+      const result = await db.execute(`SELECT 1 as test`);
+      console.log("Basic DB test passed:", result);
+      
+      // Test admin_users table
+      const adminCheck = await storage.getAdminUsers();
+      console.log("Admin users check:", adminCheck.length);
+      
+      res.json({
+        success: true,
+        database: "connected",
+        tables: "accessible",
+        adminUsers: adminCheck.length,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Health check failed:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Database connection failed" 
+      console.error("Database status check failed:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Render deployment check endpoint - verifies everything is working
+  app.get('/api/render-check', async (req, res) => {
+    try {
+      console.log("Render deployment check started...");
+      
+      const checks = {
+        database: false,
+        adminUser: false,
+        jwt: false,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Check database connection
+      try {
+        await db.execute(`SELECT 1 as test`);
+        checks.database = true;
+        console.log("✓ Database connection working");
+      } catch (dbError) {
+        console.error("✗ Database connection failed:", dbError);
+      }
+      
+      // Check admin user exists
+      try {
+        const adminUser = await storage.getAdminUserByUsername('admin');
+        if (adminUser) {
+          checks.adminUser = true;
+          console.log("✓ Admin user exists");
+        } else {
+          console.log("✗ Admin user not found");
+        }
+      } catch (adminError) {
+        console.error("✗ Admin user check failed:", adminError);
+      }
+      
+      // Check JWT generation
+      try {
+        const testToken = generateToken({ test: 'render' });
+        if (testToken) {
+          checks.jwt = true;
+          console.log("✓ JWT generation working");
+        }
+      } catch (jwtError) {
+        console.error("✗ JWT generation failed:", jwtError);
+      }
+      
+      const allChecksPass = checks.database && checks.adminUser && checks.jwt;
+      
+      res.status(allChecksPass ? 200 : 500).json({
+        success: allChecksPass,
+        message: allChecksPass ? "All systems operational for Render deployment" : "Some systems failing",
+        checks,
+        environment: process.env.NODE_ENV || 'unknown',
+        port: process.env.PORT || '5000'
+      });
+      
+    } catch (error) {
+      console.error("Render check failed:", error);
+      res.status(500).json({
+        success: false,
+        message: "Render deployment check failed",
+        error: error.message,
+        timestamp: new Date().toISOString()
       });
     }
   });
@@ -252,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin login endpoint (with username support)
+  // Admin login endpoint (with username support and auto-creation for Render)
   app.post('/api/admin/login', async (req, res) => {
     try {
       console.log("Admin login attempt:", { body: req.body, timestamp: new Date().toISOString() });
@@ -280,6 +378,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: false, 
           message: "Erro de conexão com o banco de dados" 
         });
+      }
+      
+      // If no admin user exists and credentials are 'admin/admin123', create the default admin
+      if (!adminUser && username === 'admin' && password === 'admin123') {
+        try {
+          console.log("Creating default admin user for Render environment...");
+          adminUser = await storage.createAdminUser({
+            username: 'admin',
+            email: 'admin@entregafacil.com',
+            password: 'admin123',
+            name: 'Administrator'
+          });
+          console.log("Default admin user created successfully:", adminUser.id);
+        } catch (createError) {
+          console.error("Error creating default admin user:", createError);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Erro ao criar usuário administrativo" 
+          });
+        }
       }
       
       if (!adminUser) {
