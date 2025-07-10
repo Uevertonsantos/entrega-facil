@@ -23,22 +23,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database initialization endpoint (for new deployments)
   app.post('/api/init-db', async (req, res) => {
     try {
-      // Check if admin user already exists
-      const existingAdmin = await storage.getAdminUser(1);
-      if (existingAdmin) {
-        return res.json({ 
-          success: false, 
-          message: "Database already initialized" 
-        });
+      console.log("Iniciando inicialização do banco de dados...");
+      
+      // Primeiro, tentar criar as tabelas se não existirem
+      try {
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS admin_users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR NOT NULL UNIQUE,
+            email VARCHAR NOT NULL UNIQUE,
+            password VARCHAR NOT NULL,
+            name VARCHAR NOT NULL,
+            role VARCHAR NOT NULL DEFAULT 'admin',
+            reset_token VARCHAR,
+            reset_token_expiry TIMESTAMP,
+            is_active BOOLEAN DEFAULT true,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        
+        console.log("Tabela admin_users criada ou já existe");
+      } catch (tableError) {
+        console.warn("Erro ao criar tabela (pode já existir):", tableError);
+      }
+      
+      // Verificar se admin user já existe
+      try {
+        const existingAdmin = await storage.getAdminUserByUsername('admin');
+        if (existingAdmin) {
+          return res.json({ 
+            success: true, 
+            message: "Database already initialized",
+            credentials: {
+              username: 'admin',
+              password: 'admin123'
+            }
+          });
+        }
+      } catch (error) {
+        console.log("Admin user não encontrado, criando novo...");
       }
 
-      // Create admin user
-      await storage.createAdminUser({
+      // Criar admin user
+      const adminUser = await storage.createAdminUser({
         username: 'admin',
         email: 'admin@entregafacil.com',
         password: 'admin123',
         name: 'Administrator'
       });
+
+      console.log("Admin user criado com sucesso:", adminUser);
 
       res.json({ 
         success: true, 
@@ -49,10 +84,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Error initializing database:", error);
+      console.error("Erro completo na inicialização:", error);
       res.status(500).json({ 
         success: false, 
-        message: "Failed to initialize database" 
+        message: "Failed to initialize database",
+        error: error.message
       });
     }
   });
