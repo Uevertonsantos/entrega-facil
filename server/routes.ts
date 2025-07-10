@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
+import { db } from "./db";
 import { fetchCnpjInfo, validateCnpj, validateCpf } from "./services/cnpjService";
 import { emailService } from "./services/emailService";
 import jwt from "jsonwebtoken";
@@ -254,41 +255,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin login endpoint (with username support)
   app.post('/api/admin/login', async (req, res) => {
     try {
+      console.log("Admin login attempt:", { body: req.body, timestamp: new Date().toISOString() });
+      
       const { username, password } = req.body;
       
+      if (!username || !password) {
+        console.log("Missing credentials:", { username: !!username, password: !!password });
+        return res.status(400).json({ 
+          success: false, 
+          message: "Username e senha são obrigatórios" 
+        });
+      }
+      
+      console.log("Attempting to find admin user:", username);
+      
       // Get admin user by username
-      const adminUser = await storage.getAdminUserByUsername(username);
+      let adminUser;
+      try {
+        adminUser = await storage.getAdminUserByUsername(username);
+        console.log("Admin user found:", !!adminUser, adminUser ? adminUser.id : 'not found');
+      } catch (dbError) {
+        console.error("Database error when fetching admin user:", dbError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro de conexão com o banco de dados" 
+        });
+      }
       
       if (!adminUser) {
+        console.log("Admin user not found for username:", username);
         return res.status(401).json({ 
           success: false, 
           message: "Credenciais inválidas" 
         });
       }
       
+      console.log("Checking password for user:", adminUser.username);
+      
       // Check password (using direct comparison for now)
       if (adminUser.password === password) {
-        const token = generateToken(
-          { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' }
-        );
+        console.log("Password correct, generating token");
+        
+        let token;
+        try {
+          token = generateToken(
+            { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' }
+          );
+          console.log("Token generated successfully");
+        } catch (tokenError) {
+          console.error("Error generating token:", tokenError);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Erro ao gerar token de autenticação" 
+          });
+        }
         
         res.json({ 
           success: true, 
           token,
-          admin: adminUser,
+          admin: {
+            id: adminUser.id,
+            username: adminUser.username,
+            email: adminUser.email,
+            name: adminUser.name,
+            role: adminUser.role
+          },
           message: "Login realizado com sucesso" 
         });
       } else {
+        console.log("Password incorrect for user:", adminUser.username);
         res.status(401).json({ 
           success: false, 
           message: "Credenciais inválidas" 
         });
       }
     } catch (error) {
-      console.error("Error in admin login:", error);
+      console.error("Unexpected error in admin login:", error);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ 
         success: false, 
-        message: "Erro interno do servidor" 
+        message: "Erro interno do servidor",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   });

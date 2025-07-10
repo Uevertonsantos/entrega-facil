@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import type { Express, RequestHandler } from "express";
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+// JWT Secret - use a secure secret in production
+const JWT_SECRET = process.env.JWT_SECRET || "entrega-facil-jwt-secret-2025-replit-production";
 
 // Middleware to verify admin token
 export const isAdmin = (req: any, res: any, next: any) => {
@@ -85,7 +85,15 @@ export const isAuthenticated = (req: any, res: any, next: any) => {
 
 // Generate JWT token
 export const generateToken = (payload: any) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+  try {
+    console.log("Generating token for payload:", { ...payload, password: undefined });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+    console.log("Token generated successfully, length:", token.length);
+    return token;
+  } catch (error) {
+    console.error("Error generating JWT token:", error);
+    throw new Error("Failed to generate authentication token");
+  }
 };
 
 // Verify JWT token

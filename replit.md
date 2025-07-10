@@ -211,6 +211,11 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 10, 2025. Implementado sistema de autenticação local com JWT usando PostgreSQL padrão
 - July 10, 2025. Criado arquivo server/auth.ts com middleware de autenticação centralizado
 - July 10, 2025. Atualizado server/db.ts para usar driver PostgreSQL padrão compatível com Render
+- July 10, 2025. Corrigido sistema de login administrativo com melhor tratamento de erros e logs detalhados
+- July 10, 2025. Adicionado suporte completo a CORS para deployment no Render
+- July 10, 2025. Configurado porta dinâmica (PORT environment variable) para compatibilidade com Render
+- July 10, 2025. Criado usuário admin padrão (admin/admin123) e verificado funcionamento do sistema de autenticação
+- July 10, 2025. Implementado logs detalhados para facilitar debugging em produção (Render)
 
 ## User Preferences
 
