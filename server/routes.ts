@@ -350,83 +350,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin login endpoint (with username support and auto-creation for Render)
+  // Admin login endpoint (with enhanced Render diagnostics)
   app.post('/api/admin/login', async (req, res) => {
     try {
-      console.log("Admin login attempt:", { body: req.body, timestamp: new Date().toISOString() });
+      console.log("=== ADMIN LOGIN DEBUG START ===");
+      console.log("Environment:", process.env.NODE_ENV);
+      console.log("Database URL exists:", !!process.env.DATABASE_URL);
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("Timestamp:", new Date().toISOString());
       
       const { username, password } = req.body;
       
       if (!username || !password) {
-        console.log("Missing credentials:", { username: !!username, password: !!password });
+        console.log("❌ Missing credentials:", { username: !!username, password: !!password });
         return res.status(400).json({ 
           success: false, 
-          message: "Username e senha são obrigatórios" 
+          message: "Username e senha são obrigatórios",
+          debug: "Missing username or password"
         });
       }
       
-      console.log("Attempting to find admin user:", username);
+      console.log("✓ Credentials provided, searching for admin user:", username);
+      
+      // Test database connection first
+      try {
+        console.log("Testing database connection...");
+        await db.execute(`SELECT 1 as test`);
+        console.log("✓ Database connection successful");
+      } catch (dbTestError) {
+        console.error("❌ Database connection failed:", dbTestError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Erro de conexão com o banco de dados",
+          debug: `DB connection failed: ${dbTestError.message}`
+        });
+      }
+      
+      // Check if admin_users table exists
+      try {
+        console.log("Checking admin_users table...");
+        const tableCheck = await db.execute(`SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'admin_users'
+        )`);
+        console.log("✓ admin_users table check:", tableCheck.rows[0]);
+      } catch (tableError) {
+        console.error("❌ Table check failed:", tableError);
+      }
       
       // Get admin user by username
       let adminUser;
       try {
+        console.log("Fetching admin user from database...");
         adminUser = await storage.getAdminUserByUsername(username);
-        console.log("Admin user found:", !!adminUser, adminUser ? adminUser.id : 'not found');
+        console.log("Admin user query result:", !!adminUser ? "found" : "not found");
+        if (adminUser) {
+          console.log("Admin user details:", { 
+            id: adminUser.id, 
+            username: adminUser.username, 
+            email: adminUser.email 
+          });
+        }
       } catch (dbError) {
-        console.error("Database error when fetching admin user:", dbError);
+        console.error("❌ Database error when fetching admin user:", dbError);
+        console.error("Full error:", dbError.stack);
         return res.status(500).json({ 
           success: false, 
-          message: "Erro de conexão com o banco de dados" 
+          message: "Erro de conexão com o banco de dados",
+          debug: `DB fetch error: ${dbError.message}`
         });
       }
       
       // If no admin user exists and credentials are 'admin/admin123', create the default admin
       if (!adminUser && username === 'admin' && password === 'admin123') {
         try {
-          console.log("Creating default admin user for Render environment...");
+          console.log("🔧 Creating default admin user for Render environment...");
           adminUser = await storage.createAdminUser({
             username: 'admin',
             email: 'admin@entregafacil.com',
             password: 'admin123',
             name: 'Administrator'
           });
-          console.log("Default admin user created successfully:", adminUser.id);
+          console.log("✓ Default admin user created successfully:", adminUser.id);
         } catch (createError) {
-          console.error("Error creating default admin user:", createError);
+          console.error("❌ Error creating default admin user:", createError);
+          console.error("Create error stack:", createError.stack);
           return res.status(500).json({ 
             success: false, 
-            message: "Erro ao criar usuário administrativo" 
+            message: "Erro ao criar usuário administrativo",
+            debug: `Create user error: ${createError.message}`
           });
         }
       }
       
       if (!adminUser) {
-        console.log("Admin user not found for username:", username);
+        console.log("❌ No admin user found for username:", username);
         return res.status(401).json({ 
           success: false, 
-          message: "Credenciais inválidas" 
+          message: "Credenciais inválidas",
+          debug: "User not found after creation attempt"
         });
       }
       
-      console.log("Checking password for user:", adminUser.username);
+      console.log("✓ Admin user found, checking password...");
+      console.log("Stored password:", adminUser.password);
+      console.log("Provided password:", password);
+      console.log("Passwords match:", adminUser.password === password);
       
       // Check password (using direct comparison for now)
       if (adminUser.password === password) {
-        console.log("Password correct, generating token");
+        console.log("✓ Password correct, generating token...");
         
         let token;
         try {
           token = generateToken(
             { id: adminUser.id, username: adminUser.username, email: adminUser.email, role: 'admin' }
           );
-          console.log("Token generated successfully");
+          console.log("✓ Token generated successfully, length:", token ? token.length : 0);
         } catch (tokenError) {
-          console.error("Error generating token:", tokenError);
+          console.error("❌ Error generating token:", tokenError);
           return res.status(500).json({ 
             success: false, 
-            message: "Erro ao gerar token de autenticação" 
+            message: "Erro ao gerar token de autenticação",
+            debug: `Token error: ${tokenError.message}`
           });
         }
+        
+        console.log("✓ Login successful for user:", adminUser.username);
+        console.log("=== ADMIN LOGIN DEBUG END ===");
         
         res.json({ 
           success: true, 
@@ -441,19 +492,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Login realizado com sucesso" 
         });
       } else {
-        console.log("Password incorrect for user:", adminUser.username);
+        console.log("❌ Password incorrect for user:", adminUser.username);
+        console.log("=== ADMIN LOGIN DEBUG END ===");
         res.status(401).json({ 
           success: false, 
-          message: "Credenciais inválidas" 
+          message: "Credenciais inválidas",
+          debug: "Password mismatch"
         });
       }
     } catch (error) {
-      console.error("Unexpected error in admin login:", error);
+      console.error("❌ CRITICAL ERROR in admin login:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
+      console.log("=== ADMIN LOGIN DEBUG END ===");
       res.status(500).json({ 
         success: false, 
         message: "Erro interno do servidor",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        debug: process.env.NODE_ENV === 'development' ? error.message : "Internal error",
+        errorType: error.name
       });
     }
   });
