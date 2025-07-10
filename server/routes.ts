@@ -2987,6 +2987,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Emergency endpoint to push database schema (for Render setup)
+  app.post('/api/setup-database', async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      // Simple security check
+      if (secret !== 'setup-entrega-facil-2025') {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      console.log("🚀 Starting database setup...");
+      
+      // Import drizzle-kit programmatically
+      const { execSync } = await import('child_process');
+      
+      // Execute drizzle push
+      const result = execSync('npx drizzle-kit push', { 
+        encoding: 'utf8',
+        env: { ...process.env, NODE_ENV: 'production' }
+      });
+      
+      console.log("✅ Database setup completed:", result);
+      
+      res.json({ 
+        success: true, 
+        message: "Database schema applied successfully",
+        output: result 
+      });
+      
+    } catch (error) {
+      console.error("❌ Database setup failed:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Database setup failed", 
+        error: error.message 
+      });
+    }
+  });
+
   // Get neighborhoods by city
   app.get('/api/neighborhoods/city/:cityName', async (req, res) => {
     try {
