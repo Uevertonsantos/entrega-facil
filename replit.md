@@ -223,6 +223,9 @@ This is a full-stack web application for managing a local delivery network. The 
 - July 10, 2025. Adicionado endpoint /api/render-check para verificação completa do status do sistema
 - July 10, 2025. Configurado pool de conexões PostgreSQL otimizado para ambientes de produção
 - July 10, 2025. Implementado tratamento robusto de erros e verificações de saúde do banco de dados
+- July 10, 2025. Diagnosticado problema específico no Render: falta configuração do banco PostgreSQL
+- July 10, 2025. Criado guia completo para configuração do banco de dados no Render (RENDER-DATABASE-SETUP.md)
+- July 10, 2025. Melhorado sistema de logs para identificar problemas de conexão específicos do PostgreSQL
 
 ## User Preferences
 

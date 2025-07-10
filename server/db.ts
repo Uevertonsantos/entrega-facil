@@ -9,14 +9,27 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Enhanced PostgreSQL configuration for Render compatibility
-export const pool = new Pool({ 
+const connectionConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // Set max pool size
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 10000, // Return error after 10 seconds if connection could not be established
-  maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
+  ssl: process.env.NODE_ENV === 'production' ? { 
+    rejectUnauthorized: false,
+    sslmode: 'require'
+  } : false,
+  max: 10, // Reduced for Render free tier
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 15000, // Increased timeout for Render
+  maxUses: 7500,
+};
+
+// Log connection attempt for debugging
+console.log("Database connection config:", {
+  hasUrl: !!process.env.DATABASE_URL,
+  environment: process.env.NODE_ENV,
+  ssl: connectionConfig.ssl,
+  max: connectionConfig.max
 });
+
+export const pool = new Pool(connectionConfig);
 
 // Add error handling for the pool
 pool.on('error', (err) => {

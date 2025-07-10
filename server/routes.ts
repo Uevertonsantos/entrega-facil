@@ -375,14 +375,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Test database connection first
       try {
         console.log("Testing database connection...");
-        await db.execute(`SELECT 1 as test`);
+        console.log("DATABASE_URL present:", !!process.env.DATABASE_URL);
+        console.log("NODE_ENV:", process.env.NODE_ENV);
+        
+        const testResult = await db.execute(`SELECT 1 as test, current_database() as db_name, version() as db_version`);
         console.log("✓ Database connection successful");
+        console.log("Database info:", testResult.rows[0]);
       } catch (dbTestError) {
         console.error("❌ Database connection failed:", dbTestError);
+        console.error("Error name:", dbTestError.name);
+        console.error("Error code:", dbTestError.code);
+        console.error("Error details:", dbTestError.detail);
         return res.status(500).json({ 
           success: false, 
           message: "Erro de conexão com o banco de dados",
-          debug: `DB connection failed: ${dbTestError.message}`
+          debug: `DB connection failed: ${dbTestError.message}`,
+          errorCode: dbTestError.code,
+          errorName: dbTestError.name
         });
       }
       
